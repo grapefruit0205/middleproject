@@ -1,0 +1,320 @@
+data "aws_ssm_parameter" "al2023" {
+  name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+}
+
+resource "aws_s3_bucket" "artifacts" {
+  bucket        = var.artifact_bucket_name
+  force_destroy = var.artifact_force_destroy
+  tags          = { Name = "${var.name}-${var.environment}-artifacts" }
+}
+
+resource "aws_s3_object" "frontend_artifact" {
+  bucket       = aws_s3_bucket.artifacts.id
+  key          = var.frontend_artifact_key
+  source       = var.frontend_artifact_path
+  source_hash  = filemd5(var.frontend_artifact_path)
+  content_type = "application/zip"
+
+  depends_on = [
+    aws_s3_bucket_ownership_controls.artifacts,
+    aws_s3_bucket_public_access_block.artifacts,
+    aws_s3_bucket_server_side_encryption_configuration.artifacts,
+    aws_s3_bucket_versioning.artifacts,
+  ]
+}
+
+resource "aws_s3_object" "backend_artifact" {
+  bucket       = aws_s3_bucket.artifacts.id
+  key          = var.backend_artifact_key
+  source       = var.backend_artifact_path
+  source_hash  = filemd5(var.backend_artifact_path)
+  content_type = "application/java-archive"
+
+  depends_on = [
+    aws_s3_bucket_ownership_controls.artifacts,
+    aws_s3_bucket_public_access_block.artifacts,
+    aws_s3_bucket_server_side_encryption_configuration.artifacts,
+    aws_s3_bucket_versioning.artifacts,
+  ]
+}
+
+resource "aws_s3_bucket_ownership_controls" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "artifacts" {
+  bucket                  = aws_s3_bucket.artifacts.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_iam_role" "web" {
+  name               = "${var.name}-${var.environment}-web"
+  assume_role_policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" }, Action = "sts:AssumeRole" }] })
+}
+
+resource "aws_iam_role" "was" {
+  name               = "${var.name}-${var.environment}-was"
+  assume_role_policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" }, Action = "sts:AssumeRole" }] })
+}
+
+resource "aws_iam_role_policy" "web" {
+  name = "${var.name}-${var.environment}-web-access"
+  role = aws_iam_role.web.id
+  policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{ Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.frontend_artifact_key}" }]
+  })
+}
+
+resource "aws_iam_role_policy" "was" {
+  name = "${var.name}-${var.environment}-was-access"
+  role = aws_iam_role.was.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.backend_artifact_key}" },
+      { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = aws_db_instance.this.master_user_secret[0].secret_arn }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "web_ssm" {
+  role       = aws_iam_role.web.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy_attachment" "was_ssm" {
+  role       = aws_iam_role.was.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "web" {
+  name = "${var.name}-${var.environment}-web"
+  role = aws_iam_role.web.name
+}
+
+resource "aws_iam_instance_profile" "was" {
+  name = "${var.name}-${var.environment}-was"
+  role = aws_iam_role.was.name
+}
+
+resource "aws_lb" "public" {
+  name               = local.public_alb_name
+  internal           = false
+  load_balancer_type = "application"
+  subnets            = [aws_subnet.this["public_a"].id, aws_subnet.this["public_c"].id]
+  security_groups    = [aws_security_group.public_alb.id]
+}
+
+resource "aws_lb_target_group" "web" {
+  name     = local.web_tg_name
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.this.id
+  health_check {
+    path    = "/healthz"
+    matcher = "200"
+  }
+}
+
+resource "aws_lb_listener" "public" {
+  load_balancer_arn = aws_lb.public.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.certificate_arn
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web.arn
+  }
+}
+
+resource "aws_lb" "internal" {
+  name               = local.internal_alb_name
+  internal           = true
+  load_balancer_type = "application"
+  subnets            = [aws_subnet.this["was_a"].id, aws_subnet.this["was_c"].id]
+  security_groups    = [aws_security_group.internal_alb.id]
+}
+
+resource "aws_lb_target_group" "was" {
+  name     = local.was_tg_name
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.this.id
+  health_check {
+    path    = "/actuator/health/readiness"
+    matcher = "200"
+  }
+}
+
+resource "aws_lb_listener" "internal" {
+  load_balancer_arn = aws_lb.internal.arn
+  port              = 80
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.was.arn
+  }
+}
+
+resource "aws_launch_template" "web" {
+  depends_on = [
+    aws_s3_object.frontend_artifact,
+    aws_route_table_association.private,
+    aws_nat_gateway.zonal,
+    aws_nat_gateway.regional,
+    aws_iam_role_policy.web,
+    aws_iam_role_policy_attachment.web_ssm,
+  ]
+  name_prefix   = local.web_lt_prefix
+  image_id      = data.aws_ssm_parameter.al2023.value
+  instance_type = var.instance_type
+  iam_instance_profile {
+    name = aws_iam_instance_profile.web.name
+  }
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups             = [aws_security_group.web.id]
+  }
+  user_data = base64encode(templatefile("${path.module}/templates/web.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.frontend_artifact_key, internal_alb_dns = aws_lb.internal.dns_name }))
+  metadata_options { http_tokens = "required" }
+  tag_specifications {
+    resource_type = "instance"
+    tags          = { Name = "${var.name}-${var.environment}-web" }
+  }
+}
+
+resource "aws_autoscaling_group" "web" {
+  depends_on = [
+    aws_s3_object.frontend_artifact,
+    aws_route_table_association.private,
+    aws_nat_gateway.zonal,
+    aws_nat_gateway.regional,
+    aws_iam_role_policy.web,
+    aws_iam_role_policy_attachment.web_ssm,
+  ]
+  name                      = "${var.name}-${var.environment}-web"
+  min_size                  = 2
+  max_size                  = 2
+  desired_capacity          = 2
+  vpc_zone_identifier       = [aws_subnet.this["web_a"].id, aws_subnet.this["web_c"].id]
+  target_group_arns         = [aws_lb_target_group.web.arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 600
+  launch_template {
+    id      = aws_launch_template.web.id
+    version = aws_launch_template.web.latest_version
+  }
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      instance_warmup        = 600
+      min_healthy_percentage = 50
+    }
+  }
+}
+
+resource "aws_launch_template" "was" {
+  depends_on = [
+    aws_s3_object.backend_artifact,
+    aws_route_table_association.private,
+    aws_nat_gateway.zonal,
+    aws_nat_gateway.regional,
+    aws_iam_role_policy.was,
+    aws_iam_role_policy_attachment.was_ssm,
+  ]
+  name_prefix   = local.was_lt_prefix
+  image_id      = data.aws_ssm_parameter.al2023.value
+  instance_type = var.instance_type
+  iam_instance_profile {
+    name = aws_iam_instance_profile.was.name
+  }
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups             = [aws_security_group.was.id]
+  }
+  user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.backend_artifact_key, tomcat_version = var.tomcat_version, db_secret_arn = aws_db_instance.this.master_user_secret[0].secret_arn, db_host = aws_db_instance.this.address, db_name = var.db_name, db_username = var.db_username }))
+  metadata_options { http_tokens = "required" }
+  tag_specifications {
+    resource_type = "instance"
+    tags          = { Name = "${var.name}-${var.environment}-was" }
+  }
+}
+
+resource "aws_autoscaling_group" "was" {
+  depends_on = [
+    aws_s3_object.backend_artifact,
+    aws_route_table_association.private,
+    aws_nat_gateway.zonal,
+    aws_nat_gateway.regional,
+    aws_iam_role_policy.was,
+    aws_iam_role_policy_attachment.was_ssm,
+  ]
+  name                      = "${var.name}-${var.environment}-was"
+  min_size                  = 2
+  max_size                  = 2
+  desired_capacity          = 2
+  vpc_zone_identifier       = [aws_subnet.this["was_a"].id, aws_subnet.this["was_c"].id]
+  target_group_arns         = [aws_lb_target_group.was.arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 600
+  launch_template {
+    id      = aws_launch_template.was.id
+    version = aws_launch_template.was.latest_version
+  }
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      instance_warmup        = 600
+      min_healthy_percentage = 50
+    }
+  }
+}
+
+resource "aws_db_subnet_group" "this" {
+  name       = "${var.name}-${var.environment}-db"
+  subnet_ids = [aws_subnet.this["db_a"].id, aws_subnet.this["db_c"].id]
+}
+
+resource "aws_db_instance" "this" {
+  identifier                  = "${var.name}-${var.environment}"
+  engine                      = "postgres"
+  engine_version              = var.postgres_engine_version
+  instance_class              = var.db_instance_class
+  allocated_storage           = var.db_allocated_storage
+  storage_type                = "gp3"
+  storage_encrypted           = true
+  multi_az                    = true
+  db_name                     = var.db_name
+  username                    = var.db_username
+  manage_master_user_password = true
+  db_subnet_group_name        = aws_db_subnet_group.this.name
+  vpc_security_group_ids      = [aws_security_group.rds.id]
+  skip_final_snapshot         = var.skip_final_snapshot
+  backup_retention_period     = 7
+  backup_window               = "18:00-18:30"
+  deletion_protection         = var.deletion_protection
+}

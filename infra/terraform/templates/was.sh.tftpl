@@ -1,0 +1,56 @@
+#!/bin/bash
+set -euo pipefail
+for attempt in 1 2 3 4 5; do
+  if dnf install -y java-21-amazon-corretto unzip jq awscli; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "ERROR: unable to install application server packages after 5 attempts" >&2
+    exit 1
+  fi
+  sleep $((attempt * 5))
+done
+useradd --system --home-dir /opt/tomcat --shell /sbin/nologin tomcat || true
+mkdir -p /opt/tomcat/webapps
+tomcat_archive="/tmp/apache-tomcat-${tomcat_version}.tar.gz"
+for attempt in 1 2 3 4 5; do
+  if curl --fail --show-error --location --retry 0 "https://dlcdn.apache.org/tomcat/tomcat-10/v${tomcat_version}/bin/apache-tomcat-${tomcat_version}.tar.gz" -o "$tomcat_archive"; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "ERROR: unable to download Tomcat ${tomcat_version} after 5 attempts" >&2
+    exit 1
+  fi
+  sleep $((attempt * 5))
+done
+tar -xzf "$tomcat_archive" --strip-components=1 -C /opt/tomcat
+rm -rf /opt/tomcat/webapps/*
+for attempt in 1 2 3 4 5; do
+  if aws s3 cp "s3://${bucket}/${artifact_key}" /opt/tomcat/webapps/ROOT.war; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "ERROR: unable to download backend artifact after 5 attempts" >&2
+    exit 1
+  fi
+  sleep $((attempt * 5))
+done
+cat >/etc/systemd/system/tomcat.service <<'EOF'
+[Unit]
+After=network-online.target
+[Service]
+User=tomcat
+WorkingDirectory=/opt/tomcat
+Environment=JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
+Environment=DB_URL=jdbc:postgresql://${db_host}:5432/${db_name}
+Environment=DB_USERNAME=${db_username}
+Environment=DB_SECRET_ARN=${db_secret_arn}
+ExecStart=/usr/bin/bash -c 'set -euo pipefail; export DB_PASSWORD="$(aws secretsmanager get-secret-value --secret-id "$DB_SECRET_ARN" --query SecretString --output text | jq -r .password)"; exec /opt/tomcat/bin/catalina.sh run'
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+EOF
+chown -R tomcat:tomcat /opt/tomcat
+systemctl daemon-reload
+systemctl enable --now tomcat
+rm -f /tmp/*

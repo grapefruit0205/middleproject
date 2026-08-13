@@ -1,0 +1,40 @@
+#!/bin/bash
+set -euo pipefail
+for attempt in 1 2 3 4 5; do
+  if dnf install -y httpd unzip awscli; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "ERROR: unable to install web server packages after 5 attempts" >&2
+    exit 1
+  fi
+  sleep $((attempt * 5))
+done
+mkdir -p /var/www/html
+printf 'ok\n' >/var/www/html/healthz
+for attempt in 1 2 3 4 5; do
+  if aws s3 cp "s3://${bucket}/${artifact_key}" /tmp/frontend.zip; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "ERROR: unable to download frontend artifact after 5 attempts" >&2
+    exit 1
+  fi
+  sleep $((attempt * 5))
+done
+unzip -oq /tmp/frontend.zip -d /var/www/html
+cat >/etc/httpd/conf.d/reminder.conf <<EOF
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+ProxyRequests Off
+ProxyPass /healthz !
+ProxyPass /api/actuator/health/readiness http://${internal_alb_dns}/actuator/health/readiness
+ProxyPassReverse /api/actuator/health/readiness http://${internal_alb_dns}/actuator/health/readiness
+ProxyPass /api/ http://${internal_alb_dns}/api/
+ProxyPassReverse /api/ http://${internal_alb_dns}/api/
+<Location /healthz>
+  SetHandler none
+  Require all granted
+</Location>
+EOF
+systemctl enable --now httpd

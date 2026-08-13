@@ -20,10 +20,40 @@ output "security_group_ids" {
 
 output "ssm_instance_profile_name" {
   value       = aws_iam_instance_profile.ssm.name
-  description = "Instance profile for SSM-managed WEB/WAS instances."
+  description = "Legacy shared SSM profile retained for compatibility; tier launch templates use scoped profiles."
+}
+
+output "web_instance_profile_name" {
+  value       = aws_iam_instance_profile.web.name
+  description = "WEB instance profile with SSM and frontend artifact read access only."
+}
+
+output "was_instance_profile_name" {
+  value       = aws_iam_instance_profile.was.name
+  description = "WAS instance profile with SSM, backend artifact, and database secret access."
 }
 
 output "nat_profile" {
   value       = var.environment
-  description = "Selected NAT profile: local, development/single-zonal, or HA/Regional NAT."
+  description = "Selected AWS application NAT profile: development/single-zonal or HA/Regional NAT."
+}
+
+output "public_alb_dns_name" {
+  value       = aws_lb.public.dns_name
+  description = "Public HTTPS entry point used for Phase 05 acceptance checks."
+}
+
+output "internal_alb_dns_name" {
+  value       = aws_lb.internal.dns_name
+  description = "Private ALB endpoint used by the Apache reverse proxy."
+}
+
+output "rds_endpoint" {
+  value       = aws_db_instance.this.endpoint
+  description = "Private PostgreSQL endpoint used by the WAS tier."
+}
+
+output "artifact_bucket_name" {
+  value       = aws_s3_bucket.artifacts.id
+  description = "Private bucket containing the deployed frontend and WAR artifacts."
 }

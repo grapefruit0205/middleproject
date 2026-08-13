@@ -2,6 +2,14 @@ locals {
   az_a = var.availability_zones[0]
   az_c = var.availability_zones[1]
 
+  name_slug         = substr(replace(replace(lower("${var.name}-${var.environment}"), "_", "-"), " ", "-"), 0, 20)
+  public_alb_name   = substr("${local.name_slug}-public", 0, 32)
+  internal_alb_name = substr("${local.name_slug}-internal", 0, 32)
+  web_tg_name       = substr("${local.name_slug}-web-tg", 0, 32)
+  was_tg_name       = substr("${local.name_slug}-was-tg", 0, 32)
+  web_lt_prefix     = substr("${local.name_slug}-web-", 0, 37)
+  was_lt_prefix     = substr("${local.name_slug}-was-", 0, 37)
+
   cost_tags = {
     Project     = var.name
     Environment = var.environment

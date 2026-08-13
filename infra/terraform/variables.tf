@@ -10,13 +10,13 @@ variable "aws_region" {
 }
 
 variable "environment" {
-  description = "Deployment profile: local, development (single-zonal NAT), or ha (regional NAT)."
+  description = "AWS application deployment profile: development (single-zonal NAT) or ha (regional NAT)."
   type        = string
   default     = "development"
 
   validation {
-    condition     = contains(["local", "development", "ha"], var.environment)
-    error_message = "environment must be local, development, or ha."
+    condition     = contains(["development", "ha"], var.environment)
+    error_message = "environment must be development or ha when application tiers are present; local has no supported tier bootstrap path."
   }
 }
 
@@ -62,4 +62,88 @@ variable "owner" {
   description = "Owning team tag value."
   type        = string
   default     = "application-team"
+}
+
+variable "certificate_arn" {
+  description = "ACM certificate ARN for the public ALB HTTPS listener."
+  type        = string
+  sensitive   = true
+}
+
+variable "artifact_bucket_name" {
+  description = "Private S3 bucket containing the frontend archive and ROOT.war."
+  type        = string
+}
+
+variable "artifact_force_destroy" {
+  description = "Allow Terraform to delete non-empty artifact buckets during approved ephemeral teardown."
+  type        = bool
+  default     = false
+}
+
+variable "frontend_artifact_path" {
+  description = "Local path to the frontend archive published by Terraform."
+  type        = string
+}
+
+variable "backend_artifact_path" {
+  description = "Local path to the backend ROOT.war published by Terraform."
+  type        = string
+}
+
+variable "frontend_artifact_key" {
+  description = "S3 key for the built frontend archive."
+  type        = string
+  default     = "frontend/frontend.zip"
+}
+
+variable "backend_artifact_key" {
+  description = "S3 key for ROOT.war."
+  type        = string
+  default     = "backend/ROOT.war"
+}
+
+variable "instance_type" {
+  type    = string
+  default = "t3.small"
+}
+
+variable "db_instance_class" {
+  type    = string
+  default = "db.t4g.micro"
+}
+
+variable "db_allocated_storage" {
+  type    = number
+  default = 20
+}
+
+variable "db_name" {
+  type    = string
+  default = "reminder"
+}
+
+variable "db_username" {
+  type    = string
+  default = "reminder_app"
+}
+
+variable "postgres_engine_version" {
+  type    = string
+  default = "16.14"
+}
+
+variable "skip_final_snapshot" {
+  type    = bool
+  default = false
+}
+
+variable "deletion_protection" {
+  type    = bool
+  default = true
+}
+
+variable "tomcat_version" {
+  type    = string
+  default = "10.1.57"
 }
