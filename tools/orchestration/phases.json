@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "model": "gpt-5.6-luna",
+  "effort": "max",
+  "maxTurns": 100,
+  "maxInvocationsPerPhase": 3,
+  "phases": [
+    {
+      "phase": 1,
+      "slug": "local-foundation",
+      "branch": "codex/phase-01-local-foundation",
+      "briefPath": "docs/phases/phase-01/brief.md",
+      "implementationPromptPath": "docs/phases/phase-01/implement.prompt.md",
+      "resultPath": "docs/phases/phase-01/result.md",
+      "reviewPath": "docs/phases/phase-01/review.md",
+      "allowedPaths": ["frontend/**", "backend/**", ".github/workflows/**", "docs/phases/phase-01/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 2,
+      "slug": "reminder-core-calendar",
+      "branch": "codex/phase-02-reminder-core-calendar",
+      "briefPath": "docs/phases/phase-02/brief.md",
+      "implementationPromptPath": "docs/phases/phase-02/implement.prompt.md",
+      "resultPath": "docs/phases/phase-02/result.md",
+      "reviewPath": "docs/phases/phase-02/review.md",
+      "allowedPaths": ["backend/**", "docs/phases/phase-02/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 3,
+      "slug": "natural-language-parsing",
+      "branch": "codex/phase-03-natural-language-parsing",
+      "briefPath": "docs/phases/phase-03/brief.md",
+      "implementationPromptPath": "docs/phases/phase-03/implement.prompt.md",
+      "resultPath": "docs/phases/phase-03/result.md",
+      "reviewPath": "docs/phases/phase-03/review.md",
+      "allowedPaths": ["backend/**", "docs/phases/phase-03/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 4,
+      "slug": "aws-network-terraform",
+      "branch": "codex/phase-04-aws-network-terraform",
+      "briefPath": "docs/phases/phase-04/brief.md",
+      "implementationPromptPath": "docs/phases/phase-04/implement.prompt.md",
+      "resultPath": "docs/phases/phase-04/result.md",
+      "reviewPath": "docs/phases/phase-04/review.md",
+      "allowedPaths": ["infra/terraform/**", "docs/phases/phase-04/result.md"],
+      "requiresExternalApproval": true
+    },
+    {
+      "phase": 5,
+      "slug": "three-tier-deployment",
+      "branch": "codex/phase-05-three-tier-deployment",
+      "briefPath": "docs/phases/phase-05/brief.md",
+      "implementationPromptPath": "docs/phases/phase-05/implement.prompt.md",
+      "resultPath": "docs/phases/phase-05/result.md",
+      "reviewPath": "docs/phases/phase-05/review.md",
+      "allowedPaths": ["frontend/**", "backend/**", "infra/terraform/**", "docs/phases/phase-05/result.md"],
+      "requiresExternalApproval": true
+    },
+    {
+      "phase": 6,
+      "slug": "scheduler-integration",
+      "branch": "codex/phase-06-scheduler-integration",
+      "briefPath": "docs/phases/phase-06/brief.md",
+      "implementationPromptPath": "docs/phases/phase-06/implement.prompt.md",
+      "resultPath": "docs/phases/phase-06/result.md",
+      "reviewPath": "docs/phases/phase-06/review.md",
+      "allowedPaths": ["backend/**", "infra/terraform/**", "docs/phases/phase-06/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 7,
+      "slug": "notification-delivery",
+      "branch": "codex/phase-07-notification-delivery",
+      "briefPath": "docs/phases/phase-07/brief.md",
+      "implementationPromptPath": "docs/phases/phase-07/implement.prompt.md",
+      "resultPath": "docs/phases/phase-07/result.md",
+      "reviewPath": "docs/phases/phase-07/review.md",
+      "allowedPaths": ["backend/**", "infra/terraform/**", "docs/phases/phase-07/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 8,
+      "slug": "reliability-idempotency",
+      "branch": "codex/phase-08-reliability-idempotency",
+      "briefPath": "docs/phases/phase-08/brief.md",
+      "implementationPromptPath": "docs/phases/phase-08/implement.prompt.md",
+      "resultPath": "docs/phases/phase-08/result.md",
+      "reviewPath": "docs/phases/phase-08/review.md",
+      "allowedPaths": ["backend/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-08/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 9,
+      "slug": "mcp-adapter",
+      "branch": "codex/phase-09-mcp-adapter",
+      "briefPath": "docs/phases/phase-09/brief.md",
+      "implementationPromptPath": "docs/phases/phase-09/implement.prompt.md",
+      "resultPath": "docs/phases/phase-09/result.md",
+      "reviewPath": "docs/phases/phase-09/review.md",
+      "allowedPaths": ["backend/**", "docs/phases/phase-09/result.md"],
+      "requiresExternalApproval": false
+    }
+  ]
+}
