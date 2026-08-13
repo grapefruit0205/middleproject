@@ -17,4 +17,4 @@
 
 ## Output
 
-발견 항목을 Critical/High/Medium/Low로 분류하고 근거 파일을 적어라. 추정으로 내용을 바꾸지 마라.
+발견 항목을 Critical/High/Medium/Low로 분류하고 근거 파일을 적어라. 실행한 명령, Exit Code, 변경 파일, 한계를 `docs/phases/phase-00/result.md`에 기록하라. 추정으로 내용을 바꾸지 마라.
