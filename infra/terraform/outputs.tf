@@ -57,3 +57,23 @@ output "artifact_bucket_name" {
   value       = aws_s3_bucket.artifacts.id
   description = "Private bucket containing the deployed frontend and WAR artifacts."
 }
+
+output "reminder_queue_url" {
+  value       = aws_sqs_queue.reminder.url
+  description = "Reminder delivery SQS queue URL."
+}
+
+output "reminder_queue_arn" {
+  value       = aws_sqs_queue.reminder.arn
+  description = "Reminder delivery SQS queue ARN."
+}
+
+output "scheduler_role_arn" {
+  value       = aws_iam_role.scheduler.arn
+  description = "EventBridge Scheduler execution role ARN."
+}
+
+output "scheduler_group" {
+  value       = var.scheduler_group
+  description = "EventBridge Scheduler group name."
+}

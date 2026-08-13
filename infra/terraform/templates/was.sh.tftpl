@@ -45,6 +45,13 @@ Environment=JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
 Environment=DB_URL=jdbc:postgresql://${db_host}:5432/${db_name}
 Environment=DB_USERNAME=${db_username}
 Environment=DB_SECRET_ARN=${db_secret_arn}
+Environment=SCHEDULER_AWS_ENABLED=${scheduler_aws_enabled}
+Environment=SCHEDULER_GROUP=${scheduler_group}
+Environment=SCHEDULER_ROLE_ARN=${scheduler_role_arn}
+Environment=SCHEDULER_QUEUE_ARN=${scheduler_queue_arn}
+Environment=SCHEDULER_TIMEZONE=${scheduler_timezone}
+Environment=DELIVERY_SQS_ENABLED=${delivery_sqs_enabled}
+Environment=DELIVERY_SQS_QUEUE_URL=${delivery_queue_url}
 ExecStart=/usr/bin/bash -c 'set -euo pipefail; export DB_PASSWORD="$(aws secretsmanager get-secret-value --secret-id "$DB_SECRET_ARN" --query SecretString --output text | jq -r .password)"; exec /opt/tomcat/bin/catalina.sh run'
 Restart=on-failure
 [Install]

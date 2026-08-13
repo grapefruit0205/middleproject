@@ -147,3 +147,23 @@ variable "tomcat_version" {
   type    = string
   default = "10.1.57"
 }
+
+variable "scheduler_group" {
+  type    = string
+  default = "default"
+}
+
+variable "scheduler_aws_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "delivery_sqs_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "scheduler_timezone" {
+  type    = string
+  default = "Asia/Seoul"
+}

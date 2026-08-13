@@ -74,6 +74,46 @@ resource "aws_iam_role" "web" {
   assume_role_policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" }, Action = "sts:AssumeRole" }] })
 }
 
+resource "aws_sqs_queue" "reminder_dlq" {
+  name                      = "${var.name}-${var.environment}-reminder-dlq"
+  message_retention_seconds = 1209600
+}
+
+resource "aws_sqs_queue" "reminder" {
+  name                       = "${var.name}-${var.environment}-reminder"
+  visibility_timeout_seconds = 60
+  redrive_policy             = jsonencode({ deadLetterTargetArn = aws_sqs_queue.reminder_dlq.arn, maxReceiveCount = 5 })
+}
+
+resource "aws_cloudwatch_metric_alarm" "reminder_dlq" {
+  alarm_name          = "${var.name}-${var.environment}-reminder-dlq-nonempty"
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  dimensions          = { QueueName = aws_sqs_queue.reminder_dlq.name }
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  threshold           = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+}
+
+resource "aws_scheduler_schedule_group" "this" {
+  count = var.scheduler_group == "default" ? 0 : 1
+  name  = var.scheduler_group
+}
+
+resource "aws_iam_role" "scheduler" {
+  name               = "${var.name}-${var.environment}-scheduler"
+  description        = "EventBridge Scheduler execution role for ${var.scheduler_group}"
+  assume_role_policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Principal = { Service = "scheduler.amazonaws.com" }, Action = "sts:AssumeRole" }] })
+}
+
+resource "aws_iam_role_policy" "scheduler" {
+  name   = "${var.name}-${var.environment}-scheduler-sqs"
+  role   = aws_iam_role.scheduler.id
+  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Action = ["sqs:SendMessage"], Resource = aws_sqs_queue.reminder.arn }] })
+}
+
 resource "aws_iam_role" "was" {
   name               = "${var.name}-${var.environment}-was"
   assume_role_policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" }, Action = "sts:AssumeRole" }] })
@@ -95,7 +135,10 @@ resource "aws_iam_role_policy" "was" {
     Version = "2012-10-17"
     Statement = [
       { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.backend_artifact_key}" },
-      { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = aws_db_instance.this.master_user_secret[0].secret_arn }
+      { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = aws_db_instance.this.master_user_secret[0].secret_arn },
+      { Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes"], Resource = aws_sqs_queue.reminder.arn },
+      { Effect = "Allow", Action = ["scheduler:CreateSchedule", "scheduler:UpdateSchedule", "scheduler:DeleteSchedule"], Resource = "arn:aws:scheduler:${var.aws_region}:*:schedule/${var.scheduler_group}/reminder-*" },
+      { Effect = "Allow", Action = ["iam:PassRole"], Resource = aws_iam_role.scheduler.arn, Condition = { StringEquals = { "iam:PassedToService" = "scheduler.amazonaws.com" } } }
     ]
   })
 }
@@ -256,7 +299,7 @@ resource "aws_launch_template" "was" {
     associate_public_ip_address = false
     security_groups             = [aws_security_group.was.id]
   }
-  user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.backend_artifact_key, tomcat_version = var.tomcat_version, db_secret_arn = aws_db_instance.this.master_user_secret[0].secret_arn, db_host = aws_db_instance.this.address, db_name = var.db_name, db_username = var.db_username }))
+  user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.backend_artifact_key, tomcat_version = var.tomcat_version, db_secret_arn = aws_db_instance.this.master_user_secret[0].secret_arn, db_host = aws_db_instance.this.address, db_name = var.db_name, db_username = var.db_username, scheduler_aws_enabled = var.scheduler_aws_enabled, scheduler_group = var.scheduler_group, scheduler_role_arn = aws_iam_role.scheduler.arn, scheduler_queue_arn = aws_sqs_queue.reminder.arn, scheduler_timezone = var.scheduler_timezone, delivery_sqs_enabled = var.delivery_sqs_enabled, delivery_queue_url = aws_sqs_queue.reminder.url }))
   metadata_options { http_tokens = "required" }
   tag_specifications {
     resource_type = "instance"

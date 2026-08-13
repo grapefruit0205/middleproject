@@ -8,6 +8,19 @@ spring:
   flyway:
     enabled: true
 
+delivery:
+  sqs:
+    enabled: ${DELIVERY_SQS_ENABLED:false}
+    queue-url: ${DELIVERY_SQS_QUEUE_URL:}
+
+scheduler:
+  aws:
+    enabled: ${SCHEDULER_AWS_ENABLED:false}
+  group: ${SCHEDULER_GROUP:default}
+  role-arn: ${SCHEDULER_ROLE_ARN:}
+  queue-arn: ${SCHEDULER_QUEUE_ARN:}
+  timezone: ${SCHEDULER_TIMEZONE:Asia/Seoul}
+
 management:
   endpoint:
     health:
