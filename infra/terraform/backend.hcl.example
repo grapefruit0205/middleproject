@@ -1,0 +1,5 @@
+bucket         = "example-fake-middleproject-terraform-state"
+key            = "middleproject/phase-04/terraform.tfstate"
+region         = "ap-northeast-2"
+encrypt        = true
+use_lockfile   = true

@@ -1,0 +1,1 @@
+availability_zones = ["ap-northeast-2a", "ap-northeast-2a"]
