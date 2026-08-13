@@ -18,6 +18,7 @@ dependencies {
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("com.networknt:json-schema-validator:1.5.6")
     testRuntimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
     providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")

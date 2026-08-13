@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://middleproject.com/schemas/reminder-command.schema.json",
+  "type": "object",
+  "required": ["title", "scheduledAt", "timezone", "confirmationRequired"],
+  "properties": {
+    "title": {"type": "string", "minLength": 1},
+    "scheduledAt": {"type": "string", "minLength": 20},
+    "timezone": {"const": "Asia/Seoul"},
+    "confirmationRequired": {"type": "boolean"},
+    "ambiguityReason": {"type": "string"}
+  },
+  "additionalProperties": false
+}
