@@ -1,6 +1,6 @@
 # Phase 01 Local Application Foundation Design
 
-- Status: Design approved; written spec awaiting review
+- Status: Approved
 - Date: 2026-08-13
 - Base commit: `fb5cc0a6e0ad54fa6cd83f7b5ca881fd0c2f6a73`
 - Branch: `codex/phase-01-local-foundation`
