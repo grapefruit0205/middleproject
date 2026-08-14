@@ -1,0 +1,24 @@
+logging:
+  file:
+    name: /var/log/middleproject/application.json
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 7
+      total-size-cap: 350MB
+  structured:
+    format:
+      file: ecs
+    ecs:
+      service:
+        name: ${spring.application.name}
+        environment: ${ENVIRONMENT:local}
+        node-name: ${INSTANCE_ID:local}
+
+management:
+  cloudwatch:
+    metrics:
+      export:
+        enabled: true
+        namespace: MiddleProject/Reminder/${ENVIRONMENT:development}
+        step: 60s

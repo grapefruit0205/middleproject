@@ -6,6 +6,9 @@ import com.middleproject.reminder.port.NotificationSender;
 import com.middleproject.reminder.port.NotificationTimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,23 +29,27 @@ public class NotificationDeliveryService {
     private final JdbcTemplate db;
     private final List<NotificationSender> senders;
     private final ObjectMapper mapper;
+    private static final Logger log = LoggerFactory.getLogger(NotificationDeliveryService.class);
     private final String defaultRecipient;
+    private final ObservabilityMetrics metrics;
 
     @Autowired
     public NotificationDeliveryService(JdbcTemplate db, List<NotificationSender> senders, ObjectMapper mapper,
-                                       @Value("${notification.email.to:}") String defaultRecipient) {
+                                       @Value("${notification.email.to:}") String defaultRecipient,
+                                       ObservabilityMetrics metrics) {
         this.db = db;
         this.senders = senders;
         this.mapper = mapper;
         this.defaultRecipient = defaultRecipient;
+        this.metrics = metrics;
     }
 
     public NotificationDeliveryService(JdbcTemplate db, NotificationSender sender) {
-        this(db, List.of(sender), new ObjectMapper(), "");
+        this(db, List.of(sender), new ObjectMapper(), "", new ObservabilityMetrics(new io.micrometer.core.instrument.simple.SimpleMeterRegistry()));
     }
 
     public NotificationDeliveryService(JdbcTemplate db, List<NotificationSender> senders) {
-        this(db, senders, new ObjectMapper(), "");
+        this(db, senders, new ObjectMapper(), "", new ObservabilityMetrics(new io.micrometer.core.instrument.simple.SimpleMeterRegistry()));
     }
 
     @Transactional
@@ -153,6 +160,16 @@ public class NotificationDeliveryService {
             }
         }
         complete(correlationId, status, provider, errorClass, error);
+        metrics.deliveryAttempt(rawChannel, status);
+        MDC.put("reminderId", reminderId.toString());
+        MDC.put("deliveryKey", deliveryKey);
+        MDC.put("notificationAttemptCorrelationId", correlationId.toString());
+        MDC.put("deliveryStatus", status);
+        log.info("notification_delivery_completed");
+        MDC.remove("reminderId");
+        MDC.remove("deliveryKey");
+        MDC.remove("notificationAttemptCorrelationId");
+        MDC.remove("deliveryStatus");
         ReminderStatus target = "SUCCEEDED".equals(status)
                 ? ReminderStatus.DELIVERED
                 : ("RETRYABLE_TIMEOUT".equals(status) || "RETRYABLE_PROVIDER".equals(status)

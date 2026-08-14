@@ -77,3 +77,24 @@ output "scheduler_group" {
   value       = var.scheduler_group
   description = "EventBridge Scheduler group name."
 }
+
+output "observability_log_groups" {
+  value = {
+    apache_access = aws_cloudwatch_log_group.apache_access.name
+    apache_error  = aws_cloudwatch_log_group.apache_error.name
+    tomcat_access = aws_cloudwatch_log_group.tomcat_access.name
+    application   = aws_cloudwatch_log_group.application.name
+    ssm_session   = aws_cloudwatch_log_group.ssm_session.name
+  }
+  description = "CloudWatch log groups for Phase 10 operational evidence."
+}
+
+output "alb_access_log_bucket_name" {
+  value       = aws_s3_bucket.alb_access_logs.id
+  description = "Private encrypted bucket receiving both ALB access logs."
+}
+
+output "session_logging_document_name" {
+  value       = aws_ssm_document.session_logging.name
+  description = "Project-scoped SSM Session Manager document with CloudWatch recording."
+}

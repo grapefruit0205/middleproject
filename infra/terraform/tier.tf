@@ -85,21 +85,8 @@ resource "aws_sqs_queue" "reminder" {
   redrive_policy             = jsonencode({ deadLetterTargetArn = aws_sqs_queue.reminder_dlq.arn, maxReceiveCount = 5 })
 }
 
-resource "aws_cloudwatch_metric_alarm" "reminder_dlq" {
-  alarm_name          = "${var.name}-${var.environment}-reminder-dlq-nonempty"
-  namespace           = "AWS/SQS"
-  metric_name         = "ApproximateNumberOfMessagesVisible"
-  dimensions          = { QueueName = aws_sqs_queue.reminder_dlq.name }
-  statistic           = "Maximum"
-  period              = 60
-  evaluation_periods  = 1
-  threshold           = 1
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-}
-
 resource "aws_scheduler_schedule_group" "this" {
-  count = var.scheduler_group == "default" ? 0 : 1
-  name  = var.scheduler_group
+  name = var.scheduler_group
 }
 
 resource "aws_iam_role" "scheduler" {
@@ -169,6 +156,12 @@ resource "aws_lb" "public" {
   load_balancer_type = "application"
   subnets            = [aws_subnet.this["public_a"].id, aws_subnet.this["public_c"].id]
   security_groups    = [aws_security_group.public_alb.id]
+
+  access_logs {
+    bucket  = aws_s3_bucket.alb_access_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
 }
 
 resource "aws_lb_target_group" "web" {
@@ -200,6 +193,12 @@ resource "aws_lb" "internal" {
   load_balancer_type = "application"
   subnets            = [aws_subnet.this["was_a"].id, aws_subnet.this["was_c"].id]
   security_groups    = [aws_security_group.internal_alb.id]
+
+  access_logs {
+    bucket  = aws_s3_bucket.alb_access_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
 }
 
 resource "aws_lb_target_group" "was" {
@@ -230,6 +229,7 @@ resource "aws_launch_template" "web" {
     aws_nat_gateway.zonal,
     aws_nat_gateway.regional,
     aws_iam_role_policy.web,
+    aws_iam_role_policy.web_observability,
     aws_iam_role_policy_attachment.web_ssm,
   ]
   name_prefix   = local.web_lt_prefix
@@ -242,7 +242,21 @@ resource "aws_launch_template" "web" {
     associate_public_ip_address = false
     security_groups             = [aws_security_group.web.id]
   }
-  user_data = base64encode(templatefile("${path.module}/templates/web.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.frontend_artifact_key, internal_alb_dns = aws_lb.internal.dns_name }))
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      encrypted   = true
+      volume_type = "gp3"
+    }
+  }
+  user_data = base64encode(templatefile("${path.module}/templates/web.sh.tftpl", {
+    bucket                  = aws_s3_bucket.artifacts.id
+    artifact_key            = var.frontend_artifact_key
+    internal_alb_dns        = aws_lb.internal.dns_name
+    apache_access_log_group = aws_cloudwatch_log_group.apache_access.name
+    apache_error_log_group  = aws_cloudwatch_log_group.apache_error.name
+    environment             = var.environment
+  }))
   metadata_options { http_tokens = "required" }
   tag_specifications {
     resource_type = "instance"
@@ -257,6 +271,7 @@ resource "aws_autoscaling_group" "web" {
     aws_nat_gateway.zonal,
     aws_nat_gateway.regional,
     aws_iam_role_policy.web,
+    aws_iam_role_policy.web_observability,
     aws_iam_role_policy_attachment.web_ssm,
   ]
   name                      = "${var.name}-${var.environment}-web"
@@ -287,6 +302,7 @@ resource "aws_launch_template" "was" {
     aws_nat_gateway.zonal,
     aws_nat_gateway.regional,
     aws_iam_role_policy.was,
+    aws_iam_role_policy.was_observability,
     aws_iam_role_policy_attachment.was_ssm,
   ]
   name_prefix   = local.was_lt_prefix
@@ -299,7 +315,35 @@ resource "aws_launch_template" "was" {
     associate_public_ip_address = false
     security_groups             = [aws_security_group.was.id]
   }
-  user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.backend_artifact_key, tomcat_version = var.tomcat_version, db_secret_arn = aws_db_instance.this.master_user_secret[0].secret_arn, db_host = aws_db_instance.this.address, db_name = var.db_name, db_username = var.db_username, scheduler_aws_enabled = var.scheduler_aws_enabled, scheduler_group = var.scheduler_group, scheduler_role_arn = aws_iam_role.scheduler.arn, scheduler_queue_arn = aws_sqs_queue.reminder.arn, scheduler_timezone = var.scheduler_timezone, delivery_sqs_enabled = var.delivery_sqs_enabled, delivery_queue_url = aws_sqs_queue.reminder.url, notification_email_enabled = var.notification_email_enabled, notification_email_from = var.notification_email_from, notification_email_to = var.notification_email_to }))
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      encrypted   = true
+      volume_type = "gp3"
+    }
+  }
+  user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", {
+    bucket                     = aws_s3_bucket.artifacts.id
+    artifact_key               = var.backend_artifact_key
+    tomcat_version             = var.tomcat_version
+    db_secret_arn              = aws_db_instance.this.master_user_secret[0].secret_arn
+    db_host                    = aws_db_instance.this.address
+    db_name                    = var.db_name
+    db_username                = var.db_username
+    scheduler_aws_enabled      = var.scheduler_aws_enabled
+    scheduler_group            = var.scheduler_group
+    scheduler_role_arn         = aws_iam_role.scheduler.arn
+    scheduler_queue_arn        = aws_sqs_queue.reminder.arn
+    scheduler_timezone         = var.scheduler_timezone
+    delivery_sqs_enabled       = var.delivery_sqs_enabled
+    delivery_queue_url         = aws_sqs_queue.reminder.url
+    notification_email_enabled = var.notification_email_enabled
+    notification_email_from    = var.notification_email_from
+    notification_email_to      = var.notification_email_to
+    tomcat_access_log_group    = aws_cloudwatch_log_group.tomcat_access.name
+    application_log_group      = aws_cloudwatch_log_group.application.name
+    environment                = var.environment
+  }))
   metadata_options { http_tokens = "required" }
   tag_specifications {
     resource_type = "instance"
@@ -314,6 +358,7 @@ resource "aws_autoscaling_group" "was" {
     aws_nat_gateway.zonal,
     aws_nat_gateway.regional,
     aws_iam_role_policy.was,
+    aws_iam_role_policy.was_observability,
     aws_iam_role_policy_attachment.was_ssm,
   ]
   name                      = "${var.name}-${var.environment}-was"

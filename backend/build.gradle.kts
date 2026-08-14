@@ -13,6 +13,7 @@ repositories { mavenCentral() }
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-cloudwatch2")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 for attempt in 1 2 3 4 5; do
-  if dnf install -y java-21-amazon-corretto unzip jq awscli; then
+  if dnf install -y java-21-amazon-corretto unzip jq awscli amazon-cloudwatch-agent; then
     break
   fi
   if [ "$attempt" -eq 5 ]; then
@@ -11,7 +11,8 @@ for attempt in 1 2 3 4 5; do
   sleep $((attempt * 5))
 done
 useradd --system --home-dir /opt/tomcat --shell /sbin/nologin tomcat || true
-mkdir -p /opt/tomcat/webapps
+mkdir -p /opt/tomcat/webapps /var/log/middleproject
+chown tomcat:tomcat /var/log/middleproject
 tomcat_archive="/tmp/apache-tomcat-${tomcat_version}.tar.gz"
 for attempt in 1 2 3 4 5; do
   if curl --fail --show-error --location --retry 0 "https://dlcdn.apache.org/tomcat/tomcat-10/v${tomcat_version}/bin/apache-tomcat-${tomcat_version}.tar.gz" -o "$tomcat_archive"; then
@@ -35,13 +36,19 @@ for attempt in 1 2 3 4 5; do
   fi
   sleep $((attempt * 5))
 done
-cat >/etc/systemd/system/tomcat.service <<'EOF'
+sed -i '/<Host name="localhost"/a\\        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="access." suffix=".log" pattern="%h %l %u %t &quot;%r&quot; %s %b trace=&quot;%%{X-Alb-Trace-Root}i&quot; correlation=&quot;%%{X-Correlation-Id}i&quot;" />' /opt/tomcat/conf/server.xml
+IMDS_TOKEN="$(curl --fail --silent --show-error -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600')"
+INSTANCE_ID="$(curl --fail --silent --show-error -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id)"
+cat >/etc/systemd/system/tomcat.service <<EOF
 [Unit]
 After=network-online.target
 [Service]
 User=tomcat
 WorkingDirectory=/opt/tomcat
 Environment=JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
+Environment=SPRING_PROFILES_ACTIVE=aws
+Environment=ENVIRONMENT=${environment}
+Environment=INSTANCE_ID=$INSTANCE_ID
 Environment=DB_URL=jdbc:postgresql://${db_host}:5432/${db_name}
 Environment=DB_USERNAME=${db_username}
 Environment=DB_SECRET_ARN=${db_secret_arn}
@@ -60,7 +67,40 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
+cat >/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<EOF
+{
+  "agent": { "metrics_collection_interval": 60 },
+  "metrics": {
+    "namespace": "MiddleProject/Host/${environment}",
+    "metrics_collected": {
+      "cpu": { "measurement": ["cpu_usage_idle"] },
+      "mem": { "measurement": ["mem_used_percent"] },
+      "disk": { "measurement": ["used_percent"], "resources": ["*"] }
+    }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          { "file_path": "/opt/tomcat/logs/access.*.log", "log_group_name": "${tomcat_access_log_group}", "log_stream_name": "{instance_id}" },
+          { "file_path": "/var/log/middleproject/application.json", "log_group_name": "${application_log_group}", "log_stream_name": "{instance_id}" }
+        ]
+      }
+    }
+  }
+}
+EOF
+for attempt in 1 2 3 4 5; do
+  if /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "ERROR: unable to configure CloudWatch Agent after 5 attempts" >&2
+    exit 1
+  fi
+  sleep $((attempt * 5))
+done
 chown -R tomcat:tomcat /opt/tomcat
 systemctl daemon-reload
 systemctl enable --now tomcat
-rm -f /tmp/*
+rm -f "$tomcat_archive"

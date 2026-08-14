@@ -29,7 +29,21 @@ scheduler:
   queue-arn: ${SCHEDULER_QUEUE_ARN:}
   timezone: ${SCHEDULER_TIMEZONE:Asia/Seoul}
 
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name}
+        environment: ${ENVIRONMENT:local}
+        node-name: ${INSTANCE_ID:local}
+
 management:
+  cloudwatch:
+    metrics:
+      export:
+        enabled: false
   endpoint:
     health:
       probes:
