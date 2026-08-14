@@ -133,13 +133,13 @@ resource "aws_iam_role_policy" "was" {
   role = aws_iam_role.was.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
+    Statement = concat([
       { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.backend_artifact_key}" },
       { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = aws_db_instance.this.master_user_secret[0].secret_arn },
       { Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes"], Resource = aws_sqs_queue.reminder.arn },
       { Effect = "Allow", Action = ["scheduler:CreateSchedule", "scheduler:UpdateSchedule", "scheduler:DeleteSchedule"], Resource = "arn:aws:scheduler:${var.aws_region}:*:schedule/${var.scheduler_group}/reminder-*" },
       { Effect = "Allow", Action = ["iam:PassRole"], Resource = aws_iam_role.scheduler.arn, Condition = { StringEquals = { "iam:PassedToService" = "scheduler.amazonaws.com" } } }
-    ]
+    ], var.notification_email_enabled ? [{ Effect = "Allow", Action = ["ses:SendEmail"], Resource = var.notification_email_identity_arn }] : [])
   })
 }
 
@@ -299,7 +299,7 @@ resource "aws_launch_template" "was" {
     associate_public_ip_address = false
     security_groups             = [aws_security_group.was.id]
   }
-  user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.backend_artifact_key, tomcat_version = var.tomcat_version, db_secret_arn = aws_db_instance.this.master_user_secret[0].secret_arn, db_host = aws_db_instance.this.address, db_name = var.db_name, db_username = var.db_username, scheduler_aws_enabled = var.scheduler_aws_enabled, scheduler_group = var.scheduler_group, scheduler_role_arn = aws_iam_role.scheduler.arn, scheduler_queue_arn = aws_sqs_queue.reminder.arn, scheduler_timezone = var.scheduler_timezone, delivery_sqs_enabled = var.delivery_sqs_enabled, delivery_queue_url = aws_sqs_queue.reminder.url }))
+  user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", { bucket = aws_s3_bucket.artifacts.id, artifact_key = var.backend_artifact_key, tomcat_version = var.tomcat_version, db_secret_arn = aws_db_instance.this.master_user_secret[0].secret_arn, db_host = aws_db_instance.this.address, db_name = var.db_name, db_username = var.db_username, scheduler_aws_enabled = var.scheduler_aws_enabled, scheduler_group = var.scheduler_group, scheduler_role_arn = aws_iam_role.scheduler.arn, scheduler_queue_arn = aws_sqs_queue.reminder.arn, scheduler_timezone = var.scheduler_timezone, delivery_sqs_enabled = var.delivery_sqs_enabled, delivery_queue_url = aws_sqs_queue.reminder.url, notification_email_enabled = var.notification_email_enabled, notification_email_from = var.notification_email_from, notification_email_to = var.notification_email_to }))
   metadata_options { http_tokens = "required" }
   tag_specifications {
     resource_type = "instance"

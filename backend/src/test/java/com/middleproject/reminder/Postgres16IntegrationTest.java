@@ -3,9 +3,11 @@ package com.middleproject.reminder;
 import com.middleproject.reminder.application.EventService;
 import com.middleproject.reminder.application.PolicyService;
 import com.middleproject.reminder.application.ReminderDeliveryService;
+import com.middleproject.reminder.application.NotificationDeliveryService;
 import com.middleproject.reminder.application.ReminderService;
 import com.middleproject.reminder.application.SchedulerOutboxService;
 import com.middleproject.reminder.port.SchedulerPort;
+import com.middleproject.reminder.port.NotificationSender;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {ReminderPlatformApplication.class, Postgres16IntegrationTest.Configuration.class})
@@ -47,6 +50,8 @@ class Postgres16IntegrationTest {
     @Autowired JdbcTemplate db;
     @Autowired RecordingScheduler scheduler;
     @Autowired PlatformTransactionManager transactionManager;
+    @Autowired NotificationDeliveryService notifications;
+    @Autowired BlockingSender notificationSender;
 
     @DynamicPropertySource
     static void postgresProperties(DynamicPropertyRegistry registry) {
@@ -61,6 +66,7 @@ class Postgres16IntegrationTest {
         Assumptions.assumeTrue(db.queryForObject("show server_version_num", String.class).startsWith("16"), "PostgreSQL 16 is required");
         cleanRows();
         scheduler.reset();
+        notificationSender.reset();
     }
 
     @AfterEach
@@ -72,6 +78,7 @@ class Postgres16IntegrationTest {
         var policy = policies.create("EMAIL", 10, "pg-policy-" + UUID.randomUUID());
         var reminder = reminders.create(event.id(), policy.id(), "pg-reminder-" + UUID.randomUUID());
 
+        makeAvailable(reminder.id());
         assertEquals(1, outbox.reconcile(10));
         assertEquals(1, scheduler.calls.get());
         String body = "{\"reminderId\":\"" + reminder.id() + "\",\"schedulerVersion\":1,\"idempotencyKey\":\"" + reminder.id() + ":1\"}";
@@ -79,6 +86,41 @@ class Postgres16IntegrationTest {
         assertEquals(ReminderDeliveryService.AcceptResult.IGNORED, delivery.acceptResult(body));
     }
 
+    @Test
+    void duplicatePayloadsInvokeProviderExactlyOnceAcrossWorkers() throws Exception {
+        var event = events.create("duplicate notification", OffsetDateTime.parse("2030-01-01T10:00:00Z"), null, "event-notification-" + UUID.randomUUID());
+        var policy = policies.create("EMAIL", 10, "policy-notification-" + UUID.randomUUID());
+        var reminder = reminders.create(event.id(), policy.id(), "reminder-notification-" + UUID.randomUUID());
+        makeAvailable(reminder.id());
+        assertEquals(1, outbox.reconcile(10));
+        String body = "{\"reminderId\":\"" + reminder.id() + "\",\"schedulerVersion\":1,\"idempotencyKey\":\"" + reminder.id() + ":1\"}";
+        assertEquals(ReminderDeliveryService.AcceptResult.ACCEPTED, delivery.acceptResult(body));
+
+        notificationSender.blockFirst = true;
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<NotificationDeliveryService.AttemptResult> first = executor.submit(() -> notifications.deliver(body));
+            assertTrue(notificationSender.firstCallEntered.await(5, TimeUnit.SECONDS));
+            CountDownLatch secondWorkerStarted = new CountDownLatch(1);
+            Future<NotificationDeliveryService.AttemptResult> second = executor.submit(() -> {
+                secondWorkerStarted.countDown();
+                return notifications.deliver(body);
+            });
+            assertTrue(secondWorkerStarted.await(5, TimeUnit.SECONDS));
+            assertThrows(java.util.concurrent.TimeoutException.class, () -> second.get(250, TimeUnit.MILLISECONDS));
+            notificationSender.releaseFirst.countDown();
+            assertEquals("SUCCEEDED", first.get(5, TimeUnit.SECONDS).status());
+            assertEquals("ALREADY_DELIVERED", second.get(5, TimeUnit.SECONDS).status());
+            assertEquals(1, notificationSender.calls.get());
+            assertEquals(1, db.queryForObject("select count(*) from notification_attempt", Integer.class));
+            assertEquals("DELIVERED", db.queryForObject("select status from reminders where id=?", String.class, reminder.id()));
+        } finally {
+            notificationSender.releaseFirst.countDown();
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+            notificationSender.blockFirst = false;
+        }
+    }
     @Test
     void concurrentWorkersSkipLockedClaimsAndPreserveSameReminderOrdering() throws Exception {
         var first = newReminder("first");
@@ -134,7 +176,12 @@ class Postgres16IntegrationTest {
         return db.queryForObject("select status from schedule_outbox where reminder_id=? and scheduler_version=?", String.class, reminderId, version);
     }
 
+    private void makeAvailable(UUID reminderId) {
+        db.update("update schedule_outbox set available_at=? where reminder_id=?", OffsetDateTime.now().minusMinutes(1), reminderId);
+    }
+
     private void cleanRows() {
+        db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");
         db.update("delete from idempotency_record");
@@ -146,9 +193,36 @@ class Postgres16IntegrationTest {
     @TestConfiguration
     static class Configuration {
         @Bean RecordingScheduler recordingScheduler() { return new RecordingScheduler(); }
+        @Bean BlockingSender blockingSender() { return new BlockingSender(); }
         @Bean @Primary SchedulerPort schedulerPort(RecordingScheduler scheduler) { return scheduler; }
+        @Bean @Primary NotificationSender notificationSender(BlockingSender sender) { return sender; }
     }
 
+    static class BlockingSender implements NotificationSender {
+        final AtomicInteger calls = new AtomicInteger();
+        volatile boolean blockFirst;
+        volatile CountDownLatch firstCallEntered = new CountDownLatch(1);
+        volatile CountDownLatch releaseFirst = new CountDownLatch(1);
+
+        public Channel channel() { return Channel.EMAIL; }
+
+        void reset() {
+            calls.set(0);
+            blockFirst = false;
+            firstCallEntered = new CountDownLatch(1);
+            releaseFirst = new CountDownLatch(1);
+        }
+
+        public SendResult send(SendRequest request) {
+            calls.incrementAndGet();
+            if (blockFirst) {
+                firstCallEntered.countDown();
+                try { releaseFirst.await(5, TimeUnit.SECONDS); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); }
+            }
+            return new SendResult("postgres-provider");
+        }
+    }
     static class RecordingScheduler implements SchedulerPort {
         final AtomicInteger calls = new AtomicInteger();
         final AtomicInteger independentCalls = new AtomicInteger();

@@ -12,7 +12,7 @@ public enum ReminderStatus {
             case DISPATCHED -> target == DELIVERED || target == DELIVERY_FAILED || target == RETRYING;
             case DELIVERED -> target == ACKNOWLEDGED;
             case SCHEDULE_FAILED, DELIVERY_FAILED -> target == RETRYING || target == CANCELLED;
-            case RETRYING -> target == SCHEDULE_PENDING || target == SCHEDULED || target == CANCELLED;
+            case RETRYING -> target == SCHEDULE_PENDING || target == SCHEDULED || target == DELIVERED || target == DELIVERY_FAILED || target == RETRYING || target == CANCELLED;
             case ACKNOWLEDGED, CANCELLED -> false;
         };
     }

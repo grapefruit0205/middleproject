@@ -163,6 +163,36 @@ variable "delivery_sqs_enabled" {
   default = true
 }
 
+variable "notification_email_enabled" {
+  type    = bool
+  default = false
+
+  validation {
+    condition     = !var.notification_email_enabled || (trimspace(var.notification_email_from) != "" && trimspace(var.notification_email_to) != "" && trimspace(var.notification_email_identity_arn) != "")
+    error_message = "Enabled email delivery requires nonblank from, to, and identity ARN settings."
+  }
+}
+
+variable "notification_email_from" {
+  type    = string
+  default = ""
+}
+
+variable "notification_email_to" {
+  type    = string
+  default = ""
+}
+
+variable "notification_email_identity_arn" {
+  type    = string
+  default = ""
+
+  validation {
+    condition     = var.notification_email_identity_arn == "" || can(regex("^arn:aws:ses:ap-northeast-2:[0-9]{12}:identity/.+$", var.notification_email_identity_arn))
+    error_message = "notification_email_identity_arn must be a Seoul SES identity ARN."
+  }
+}
+
 variable "scheduler_timezone" {
   type    = string
   default = "Asia/Seoul"

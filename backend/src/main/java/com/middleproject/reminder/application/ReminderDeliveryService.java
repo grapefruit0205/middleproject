@@ -31,9 +31,11 @@ public class ReminderDeliveryService {
                 ? db.update(receiptInsert, m.idempotencyKey, m.reminderId, m.schedulerVersion, m.idempotencyKey)
                 : db.update(receiptInsert, m.idempotencyKey, m.reminderId, m.schedulerVersion);
         if (inserted == 0) return AcceptResult.IGNORED;
-        return db.update("update reminders set status='DISPATCHED',updated_at=?,version=version+1 where id=? and version=? and status='SCHEDULED'",
-                java.time.OffsetDateTime.now(), m.reminderId, m.schedulerVersion) > 0
-                ? AcceptResult.ACCEPTED : AcceptResult.IGNORED;
+        int updated = db.update("update reminders set status='DISPATCHED',updated_at=?,version=version+1 where id=? and version=? and status='SCHEDULED'",
+                java.time.OffsetDateTime.now(), m.reminderId, m.schedulerVersion);
+        if (updated > 0) return AcceptResult.ACCEPTED;
+        db.update("delete from reminder_delivery_receipt where idempotency_key=?", m.idempotencyKey);
+        return AcceptResult.IGNORED;
     }
     private boolean isH2() {
         try (var connection = db.getDataSource().getConnection()) {

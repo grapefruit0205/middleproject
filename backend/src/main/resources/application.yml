@@ -13,6 +13,14 @@ delivery:
     enabled: ${DELIVERY_SQS_ENABLED:false}
     queue-url: ${DELIVERY_SQS_QUEUE_URL:}
 
+notification:
+  email:
+    enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+    from: ${NOTIFICATION_EMAIL_FROM:}
+    to: ${NOTIFICATION_EMAIL_TO:}
+  push:
+    enabled: ${NOTIFICATION_PUSH_ENABLED:false}
+
 scheduler:
   aws:
     enabled: ${SCHEDULER_AWS_ENABLED:false}

@@ -52,6 +52,9 @@ Environment=SCHEDULER_QUEUE_ARN=${scheduler_queue_arn}
 Environment=SCHEDULER_TIMEZONE=${scheduler_timezone}
 Environment=DELIVERY_SQS_ENABLED=${delivery_sqs_enabled}
 Environment=DELIVERY_SQS_QUEUE_URL=${delivery_queue_url}
+Environment=NOTIFICATION_EMAIL_ENABLED=${notification_email_enabled}
+Environment=NOTIFICATION_EMAIL_FROM=${notification_email_from}
+Environment=NOTIFICATION_EMAIL_TO=${notification_email_to}
 ExecStart=/usr/bin/bash -c 'set -euo pipefail; export DB_PASSWORD="$(aws secretsmanager get-secret-value --secret-id "$DB_SECRET_ARN" --query SecretString --output text | jq -r .password)"; exec /opt/tomcat/bin/catalina.sh run'
 Restart=on-failure
 [Install]
