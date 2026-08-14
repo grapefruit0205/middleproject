@@ -463,7 +463,7 @@ Describe 'Command Code process boundary' {
 
         $plan.command | Should Be $fakeCmdcPath
         $plan.workingDirectory | Should Be $repositoryRoot
-        (@($plan.arguments) -join '|') | Should Be '-p|implement phase one|--model|gpt-5.6-luna|--effort|max|--auto-accept|--max-turns|100|--output-format|json|--name|phase-01-implementation'
+        (@($plan.arguments) -join '|') | Should Be '-p|implement phase one|--model|gpt-5.6-luna|--effort|max|--auto-accept|--yolo|--max-turns|100|--output-format|json|--name|phase-01-implementation'
     }
 
     It 'uses the Phase 10 initial and repair turn budgets' {
@@ -472,8 +472,8 @@ Describe 'Command Code process boundary' {
         $initial = New-CommandCodeRunPlan -PhaseDefinition $phaseTen -RuntimePrompt 'initial' -CmdcPath $fakeCmdcPath -RepositoryRoot $repositoryRoot -AttemptNumber 1
         $repair = New-CommandCodeRunPlan -PhaseDefinition $phaseTen -RuntimePrompt 'repair' -CmdcPath $fakeCmdcPath -RepositoryRoot $repositoryRoot -AttemptNumber 2
 
-        (@($initial.arguments) -join '|') | Should Be '-p|initial|--model|gpt-5.6-terra|--effort|xhigh|--auto-accept|--max-turns|50|--output-format|json|--name|phase-10-implementation'
-        (@($repair.arguments) -join '|') | Should Be '-p|repair|--model|gpt-5.6-terra|--effort|xhigh|--auto-accept|--max-turns|30|--output-format|json|--name|phase-10-implementation'
+        (@($initial.arguments) -join '|') | Should Be '-p|initial|--model|gpt-5.6-terra|--effort|xhigh|--auto-accept|--yolo|--max-turns|50|--output-format|json|--name|phase-10-implementation'
+        (@($repair.arguments) -join '|') | Should Be '-p|repair|--model|gpt-5.6-terra|--effort|xhigh|--auto-accept|--yolo|--max-turns|30|--output-format|json|--name|phase-10-implementation'
     }
 
     It 'captures stdout stderr exit code timestamps and baseline metadata' {

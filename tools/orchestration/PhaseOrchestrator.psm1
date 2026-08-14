@@ -460,6 +460,7 @@ function New-CommandCodeRunPlan {
             '--effort',
             [string]$PhaseDefinition.effort,
             '--auto-accept',
+            '--yolo',
             '--max-turns',
             [string]$maxTurns,
             '--output-format',

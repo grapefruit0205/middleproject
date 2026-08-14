@@ -1,6 +1,6 @@
 # Phase 01-10 Command Code Orchestrator
 
-Codex Desktop owns phase state and review decisions. Command Code implements one phase per process. Phases 01-09 retain `gpt-5.6-luna`, `max` effort, 100 turns, and three invocations. Phase 10 uses `gpt-5.6-terra`, `xhigh`, 50 turns for the initial attempt, 30 turns for one repair, and two invocations total. Every run uses `--auto-accept`.
+Codex Desktop owns phase state and review decisions. Command Code implements one phase per process. Phases 01-09 retain `gpt-5.6-luna`, `max` effort, 100 turns, and three invocations. Phase 10 uses `gpt-5.6-terra`, `xhigh`, 50 turns for the initial attempt, 30 turns for one repair, and two invocations total. Every print-mode run uses `--auto-accept` and `--yolo`. Command Code 1.24.0 otherwise blocks file-write and shell tools even when auto-accept is active. The prompt and post-run HEAD, branch, review-file, and path-scope checks remain mandatory because `--yolo` removes the CLI permission prompt.
 
 The runner does not push, merge, apply Terraform, mutate AWS, store credentials, edit architecture records, write Codex reviews, or create Git commits. It stops when another coding-agent writer is active.
 
@@ -53,6 +53,8 @@ attemptNumber: 1
 autoAccept: True
 workingDirectory: C:\middleproject
 ```
+
+Confirm that `arguments` contains both `--auto-accept` and `--yolo`. The runner uses `--yolo` only for the local Command Code process. It does not grant live AWS authority.
 
 ## Run One Attempt
 

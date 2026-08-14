@@ -12,7 +12,7 @@ Implement the approved Phase 10 design on `codex/phase-10-observability-security
 - Keep metric dimensions bounded. Never use a Reminder ID, recipient, correlation ID, exception message, or raw path as a metric tag.
 - Never log authorization values, Secret values, database passwords, notification bodies, or raw personal data.
 - Do not run `terraform apply`, mutate an Alarm, replace an instance, inject a live failure, or read a live Secret during local implementation.
-- Command Code uses `gpt-5.6-terra`, `xhigh`, and auto-accept. Attempt 1 receives 50 turns. One repair may receive 30 turns. Phase 10 permits two invocations total.
+- Command Code uses `gpt-5.6-terra`, `xhigh`, `--auto-accept`, and `--yolo`. CMDC 1.24.0 print mode needs `--yolo` to enable file-write and shell tools. The runner still enforces the prompt and post-run HEAD, branch, review-file, and path-scope checks. Attempt 1 receives 50 turns. One repair may receive 30 turns. Phase 10 permits two invocations total.
 - Command Code may edit only `backend/**`, `infra/terraform/**`, `docs/runbooks/**`, and `docs/phases/phase-10/result.md`.
 - Command Code cannot edit `docs/phases/phase-10/review.md`, create a commit, push, or change architecture records.
 - Use a dedicated ignored state file, `.orchestration/phase-10-state.json`, so the completed Phase 01-09 state remains intact.

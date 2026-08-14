@@ -10,7 +10,7 @@ You own review and state transitions. Command Code implements one attempt at a t
 Before a paid invocation:
 1. Read docs/orchestration/README.md, tools/orchestration/phases.json, docs/architecture/project-invariants.md, and the active phase documents.
 2. Confirm the Git branch and baseline commit.
-3. Run Invoke-Phase.ps1 with -DryRun and verify the model, effort, maxTurns, attemptNumber, autoAccept, working directory, and arguments.
+3. Run Invoke-Phase.ps1 with -DryRun and verify the model, effort, maxTurns, attemptNumber, autoAccept, `--yolo`, working directory, and arguments. CMDC print mode needs `--yolo` for file-write and shell tools; this flag does not authorize live AWS actions.
 4. Confirm that no other Command Code or coding-agent writer is active.
 
 For each attempt:
