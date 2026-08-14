@@ -2,7 +2,7 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. 다음은 별도 승인 후 진행할 `Phase 10` Observability and Security Hardening 단계입니다.
+현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 구현·검증을 마쳤으며, 실 AWS 증거 수집 전 승인 게이트에서 대기합니다.
 
 > AWS 상태: Phase 05에서 승인된 검증 배포를 완료한 뒤 전부 철거했습니다. 현재 프로젝트 VPC, ALB, RDS, Auto Scaling Group은 배포되어 있지 않습니다.
 
@@ -43,6 +43,7 @@ EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 | 07 · Notification Delivery | ✅ PASS | SES Email·Push Provider 경계, Attempt 영속화, 동시 중복 발송 방지, 최소 권한 SES 정책 구현 | `222d6d7` |
 | 08 · Reliability | ✅ PASS | Idempotency lease·fencing, 원자적 결과 재사용, 장애 복구 Matrix, DLQ Runbook 구현 | `81cfc51` |
 | 09 · MCP Adapter | ✅ PASS | 동일 Application Service 기반 6개 제한 Tool, Principal 인증·소유권 인가, Schema·Lifecycle·Retry·Audit 구현 | `1ff7c23` |
+| 10 · Observability & Security | ⏸ AWS 승인 대기 | Correlation ID, ECS JSON 로그, Micrometer, CloudWatch Agent·Logs·Metrics·Alarms, SSM/IAM/IMDSv2 보강과 로컬 검증 완료 | 현재 Phase 10 브랜치 |
 
 각 단계의 구현 증거와 Codex 독립 검토는 [`docs/phases`](docs/phases) 아래 `result.md`와 `review.md`에 기록합니다. Phase는 검토 결과가 `PASS`일 때만 다음 단계의 기준 커밋이 됩니다.
 
@@ -60,7 +61,7 @@ cd backend
 Terraform은 원격 State나 실제 AWS 변경 없이 포맷과 구문을 확인할 수 있습니다.
 
 ```powershell
-terraform -chdir=infra/terraform fmt -check -recursive
+terraform -chdir=infra/terraform fmt -check
 terraform -chdir=infra/terraform init -backend=false
 terraform -chdir=infra/terraform validate
 ```
@@ -75,6 +76,6 @@ terraform -chdir=infra/terraform validate
 - [`docs/architecture`](docs/architecture): 승인된 Architecture와 불변 조건
 - [`docs/adr`](docs/adr): Architecture Decision Records
 - [`docs/phases`](docs/phases): Phase별 계약, 구현 결과, 독립 검토
-- [`tools/orchestration`](tools/orchestration): Phase 01~09 구현·검증 오케스트레이터
+- [`tools/orchestration`](tools/orchestration): Phase 01~10 구현·검증 오케스트레이터
 
 Git 저장소가 기술적 Source of Truth이며, Notion의 `Reliable Multi-Channel Reminder Platform · Project Hub`는 탐색과 프로젝트 운영을 위한 허브로 사용합니다.

@@ -29,7 +29,7 @@ LoadModule proxy_http_module modules/mod_proxy_http.so
 LoadModule headers_module modules/mod_headers.so
 ProxyRequests Off
 SetEnvIf X-Amzn-Trace-Id "(?:^|;)Root=(1-[0-9A-Fa-f]{8}-[0-9A-Fa-f]{24})(?:;|$)" alb_trace_root=$1
-RequestHeader set X-Alb-Trace-Root "%{alb_trace_root}e" env=alb_trace_root
+RequestHeader set X-Alb-Trace-Root "%%{alb_trace_root}e" env=alb_trace_root
 LogFormat "%h %l %u %t \\"%r\\" %>s %b \\"%%{Referer}i\\" \\"%%{User-Agent}i\\" trace=\\"%%{alb_trace_root}e\\" correlation=\\"%%{X-Correlation-Id}o\\"" reminder_trace
 CustomLog /var/log/httpd/reminder-access.log reminder_trace
 ProxyPass /healthz !

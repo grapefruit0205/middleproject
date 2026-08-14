@@ -36,7 +36,7 @@ for attempt in 1 2 3 4 5; do
   fi
   sleep $((attempt * 5))
 done
-sed -i '/<Host name="localhost"/a\\        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="access." suffix=".log" pattern="%h %l %u %t &quot;%r&quot; %s %b trace=&quot;%%{X-Alb-Trace-Root}i&quot; correlation=&quot;%%{X-Correlation-Id}i&quot;" />' /opt/tomcat/conf/server.xml
+sed -i '/<Host name="localhost"/a\\        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="access." suffix=".log" pattern="%h %l %u %t &quot;%r&quot; %s %b trace=&quot;%%{X-Amzn-Trace-Id}i&quot; correlation=&quot;%%{X-Correlation-Id}i&quot;" />' /opt/tomcat/conf/server.xml
 IMDS_TOKEN="$(curl --fail --silent --show-error -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600')"
 INSTANCE_ID="$(curl --fail --silent --show-error -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id)"
 cat >/etc/systemd/system/tomcat.service <<EOF

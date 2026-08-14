@@ -35,6 +35,10 @@ resource "aws_internet_gateway" "this" {
   tags   = { Name = "${var.name}-${var.environment}-igw" }
 }
 
+resource "aws_default_security_group" "this" {
+  vpc_id = aws_vpc.this.id
+}
+
 locals {
   subnets = {
     public_a = { cidr = cidrsubnet(var.vpc_cidr, 8, 0), az = local.az_a, tier = "public" }
@@ -129,8 +133,9 @@ resource "aws_route_table_association" "db" {
 }
 
 resource "aws_security_group" "public_alb" {
-  name   = "${var.name}-${var.environment}-public-alb"
-  vpc_id = aws_vpc.this.id
+  name        = "${var.name}-${var.environment}-public-alb"
+  description = "Public ALB traffic boundary"
+  vpc_id      = aws_vpc.this.id
   ingress {
     description = "HTTPS from internet"
     from_port   = 443
@@ -139,17 +144,18 @@ resource "aws_security_group" "public_alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    description = "ALB responses"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTP to private WEB"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.this["web_a"].cidr_block, aws_subnet.this["web_c"].cidr_block]
   }
 }
 
 resource "aws_security_group" "web" {
-  name   = "${var.name}-${var.environment}-web"
-  vpc_id = aws_vpc.this.id
+  name        = "${var.name}-${var.environment}-web"
+  description = "Private Apache WEB traffic boundary"
+  vpc_id      = aws_vpc.this.id
   ingress {
     description     = "HTTP from public ALB"
     from_port       = 80
@@ -158,17 +164,25 @@ resource "aws_security_group" "web" {
     security_groups = [aws_security_group.public_alb.id]
   }
   egress {
-    description = "Outbound via NAT or local profile"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    description = "HTTP to internal ALB"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.this["was_a"].cidr_block, aws_subnet.this["was_c"].cidr_block]
+  }
+  egress {
+    description = "HTTPS to package and AWS APIs"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group" "internal_alb" {
-  name   = "${var.name}-${var.environment}-internal-alb"
-  vpc_id = aws_vpc.this.id
+  name        = "${var.name}-${var.environment}-internal-alb"
+  description = "Internal ALB traffic boundary"
+  vpc_id      = aws_vpc.this.id
   ingress {
     description     = "HTTP from WEB"
     from_port       = 80
@@ -177,17 +191,18 @@ resource "aws_security_group" "internal_alb" {
     security_groups = [aws_security_group.web.id]
   }
   egress {
-    description = "Internal ALB responses"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "Tomcat to private WAS"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.this["was_a"].cidr_block, aws_subnet.this["was_c"].cidr_block]
   }
 }
 
 resource "aws_security_group" "was" {
-  name   = "${var.name}-${var.environment}-was"
-  vpc_id = aws_vpc.this.id
+  name        = "${var.name}-${var.environment}-was"
+  description = "Private Tomcat WAS traffic boundary"
+  vpc_id      = aws_vpc.this.id
   ingress {
     description     = "Tomcat from internal ALB"
     from_port       = 8080
@@ -196,30 +211,31 @@ resource "aws_security_group" "was" {
     security_groups = [aws_security_group.internal_alb.id]
   }
   egress {
-    description = "Outbound via NAT or local profile"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    description = "PostgreSQL to private RDS"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.this["db_a"].cidr_block, aws_subnet.this["db_c"].cidr_block]
+  }
+  egress {
+    description = "HTTPS to package and AWS APIs"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group" "rds" {
-  name   = "${var.name}-${var.environment}-rds"
-  vpc_id = aws_vpc.this.id
+  name        = "${var.name}-${var.environment}-rds"
+  description = "Private PostgreSQL traffic boundary"
+  vpc_id      = aws_vpc.this.id
   ingress {
     description     = "PostgreSQL from WAS"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.was.id]
-  }
-  egress {
-    description = "RDS responses"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 

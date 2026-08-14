@@ -43,12 +43,48 @@ aws s3api get-bucket-encryption --bucket <alb-access-log-bucket>
 aws s3api get-public-access-block --bucket <alb-access-log-bucket>
 ```
 
-Inspect the ALB access-log bucket lifecycle and the Session Manager document:
+Inspect the ALB access-log bucket lifecycle and the Session Manager document. Session records use the CloudWatch Logs default AES-GCM encryption at rest; this low-cost design does not add a customer-managed KMS key:
 
 ```powershell
 aws s3api get-bucket-lifecycle-configuration --bucket <alb-access-log-bucket>
 aws ssm get-document --name "$name-$environment-session-logging" --document-format JSON
 ```
+
+## Checkov exception policy
+
+Run the pinned scanner with no network and a read-only Terraform mount. The raw scan remains part of the evidence. The policy scan excludes only the check IDs in this section and must finish with zero failures.
+
+```powershell
+$phase10CheckovExclusions = @(
+  'CKV_AWS_2','CKV_AWS_18','CKV_AWS_103','CKV_AWS_112','CKV_AWS_113',
+  'CKV_AWS_118','CKV_AWS_129','CKV_AWS_144','CKV_AWS_145','CKV_AWS_150',
+  'CKV_AWS_158','CKV_AWS_161','CKV_AWS_338','CKV_AWS_353','CKV_AWS_378',
+  'CKV2_AWS_11','CKV2_AWS_19','CKV2_AWS_20','CKV2_AWS_28','CKV2_AWS_30',
+  'CKV2_AWS_61','CKV2_AWS_62'
+) -join ','
+
+docker run --rm --network none `
+  -v "${PWD}/infra/terraform:/tf:ro" `
+  docker.io/bridgecrew/checkov@sha256:c64ffb6d6fc8087c896341a2c697770a04a1cf558db04fa7b8129d8ca6bce336 `
+  --directory /tf --framework terraform --compact --skip-download `
+  --skip-check $phase10CheckovExclusions
+```
+
+The exclusions have these approved reasons:
+
+| Checks | Reason |
+|---|---|
+| `CKV_AWS_2`, `CKV_AWS_103`, `CKV_AWS_378`, `CKV2_AWS_20` | The accepted three-tier architecture terminates TLS at the public ALB and uses HTTP only on private WEB-to-internal-ALB-to-WAS paths. |
+| `CKV2_AWS_28` | WAF is an explicit Phase 10 non-goal. |
+| `CKV_AWS_338` | The approved development retention is 14 days for service logs and 30 days for SSM logs, not one year. |
+| `CKV_AWS_112`, `CKV_AWS_113`, `CKV_AWS_145`, `CKV_AWS_158` | TLS protects Session Manager transport. CloudWatch Logs and S3 use AWS default encryption at rest. Customer-managed KMS keys require a separate cost and design approval. |
+| `CKV_AWS_150` | ALB deletion protection conflicts with the approved bounded ephemeral teardown. |
+| `CKV_AWS_118`, `CKV_AWS_129`, `CKV_AWS_161`, `CKV_AWS_353`, `CKV2_AWS_30` | RDS enhanced monitoring, exported query logs, IAM database authentication, and Performance Insights are outside the approved Phase 10 scope. |
+| `CKV2_AWS_11` | VPC Flow Logs are outside the approved log set. |
+| `CKV_AWS_18`, `CKV_AWS_144`, `CKV2_AWS_61`, `CKV2_AWS_62` | Recursive bucket access logging, cross-region replication, artifact lifecycle, and event notifications are outside the bounded artifact and ALB-log design. |
+| `CKV2_AWS_19` | The EIP is attached to a NAT Gateway; this check expects an EC2 attachment and is a false positive for this resource. |
+
+Any new Checkov ID is a failure until Codex reviews its resource and records a separate decision.
 
 ## Safe Alarm test procedure
 

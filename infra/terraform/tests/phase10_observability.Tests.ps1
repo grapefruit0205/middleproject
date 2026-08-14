@@ -65,4 +65,17 @@ Describe 'Phase 10 observability and security contract' {
         $observability | Should Match 'expiration\s*\{\s*days\s*=\s*30'
         $tier | Should Match 'access_logs\s*\{'
     }
+
+    It 'scopes SSM session logging and WEB metrics to approved resources' {
+        $security | Should Match 'cloudWatchEncryptionEnabled\s*=\s*false'
+        $security | Should Not Match 'cloudWatchEncryptionEnabled\s*=\s*true'
+        ([regex]::Matches($security, 'aws_cloudwatch_log_group\.ssm_session\.arn')).Count | Should Be 4
+        ([regex]::Matches($security, 'logs:DescribeLogGroups')).Count | Should Be 2
+
+        $webPolicyStart = $security.IndexOf('resource "aws_iam_role_policy" "web_observability"')
+        $wasPolicyStart = $security.IndexOf('resource "aws_iam_role_policy" "was_observability"')
+        $webPolicy = $security.Substring($webPolicyStart, $wasPolicyStart - $webPolicyStart)
+        $webPolicy | Should Match 'MiddleProject/Host/\$\{var\.environment\}'
+        $webPolicy | Should Not Match 'MiddleProject/Reminder/\$\{var\.environment\}'
+    }
 }

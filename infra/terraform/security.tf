@@ -21,15 +21,20 @@ resource "aws_iam_role_policy" "web_observability" {
       {
         Effect   = "Allow"
         Action   = ["logs:CreateLogStream", "logs:DescribeLogStreams", "logs:PutLogEvents"]
-        Resource = [aws_cloudwatch_log_group.apache_access.arn, "${aws_cloudwatch_log_group.apache_access.arn}:*", aws_cloudwatch_log_group.apache_error.arn, "${aws_cloudwatch_log_group.apache_error.arn}:*"]
+        Resource = [aws_cloudwatch_log_group.apache_access.arn, "${aws_cloudwatch_log_group.apache_access.arn}:*", aws_cloudwatch_log_group.apache_error.arn, "${aws_cloudwatch_log_group.apache_error.arn}:*", aws_cloudwatch_log_group.ssm_session.arn, "${aws_cloudwatch_log_group.ssm_session.arn}:*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["logs:DescribeLogGroups"]
+        Resource = "*"
       },
       {
         Effect   = "Allow"
         Action   = ["cloudwatch:PutMetricData"]
         Resource = "*"
         Condition = {
-          ForAnyValue:StringEquals = {
-            "cloudwatch:namespace" = ["MiddleProject/Host/${var.environment}", "MiddleProject/Reminder/${var.environment}"]
+          "ForAnyValue:StringEquals" = {
+            "cloudwatch:namespace" = ["MiddleProject/Host/${var.environment}"]
           }
         }
       }
@@ -47,14 +52,19 @@ resource "aws_iam_role_policy" "was_observability" {
       {
         Effect   = "Allow"
         Action   = ["logs:CreateLogStream", "logs:DescribeLogStreams", "logs:PutLogEvents"]
-        Resource = [aws_cloudwatch_log_group.tomcat_access.arn, "${aws_cloudwatch_log_group.tomcat_access.arn}:*", aws_cloudwatch_log_group.application.arn, "${aws_cloudwatch_log_group.application.arn}:*"]
+        Resource = [aws_cloudwatch_log_group.tomcat_access.arn, "${aws_cloudwatch_log_group.tomcat_access.arn}:*", aws_cloudwatch_log_group.application.arn, "${aws_cloudwatch_log_group.application.arn}:*", aws_cloudwatch_log_group.ssm_session.arn, "${aws_cloudwatch_log_group.ssm_session.arn}:*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["logs:DescribeLogGroups"]
+        Resource = "*"
       },
       {
         Effect   = "Allow"
         Action   = ["cloudwatch:PutMetricData"]
         Resource = "*"
         Condition = {
-          ForAnyValue:StringEquals = {
+          "ForAnyValue:StringEquals" = {
             "cloudwatch:namespace" = ["MiddleProject/Host/${var.environment}", "MiddleProject/Reminder/${var.environment}"]
           }
         }

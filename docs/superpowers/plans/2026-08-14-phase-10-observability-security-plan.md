@@ -256,7 +256,7 @@ Create ignored plan fixtures under `.orchestration/phase-10-plan`: compress `fro
 
 Start a temporary `postgres:16.15-alpine` container bound to `127.0.0.1:55432`, provide its test-only password through a temporary ignored environment file, wait for `pg_isready`, and run `Postgres16IntegrationTest` with the three `POSTGRES_TEST_*` environment variables. Remove the container and temporary environment file in a `finally` block.
 
-Run artifact, generated-file, secret, and scope checks. Run Checkov 3.3.8 as `docker.io/bridgecrew/checkov@sha256:c64ffb6d6fc8087c896341a2c697770a04a1cf558db04fa7b8129d8ca6bce336`. Mount only `infra/terraform` at `/tf` as read-only and pass `--directory /tf --framework terraform --no-guide --compact`. Do not mount AWS credentials, Terraform state, or the Docker socket. Record the version, digest, command, exit code, passed checks, failed checks, and skipped checks.
+Run artifact, generated-file, secret, and scope checks. Run Checkov 3.3.8 as `docker.io/bridgecrew/checkov@sha256:c64ffb6d6fc8087c896341a2c697770a04a1cf558db04fa7b8129d8ca6bce336`. Mount only `infra/terraform` at `/tf` as read-only and pass `--directory /tf --framework terraform --skip-download --compact` plus the documented Phase 10 skip list. Do not mount AWS credentials, Terraform state, or the Docker socket. Record the version, digest, command, exit code, passed checks, failed checks, and skipped checks.
 
 Compare the evidence line by line with the approved design and Phase 10 brief. Write `docs/phases/phase-10/review.md` with `PASS`, `REVISE`, or `BLOCKED` findings.
 

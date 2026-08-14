@@ -1,39 +1,39 @@
 # Phase 10 Codex Review
 
 - Reviewer: Codex Desktop
-- Verdict: STOPPED_UNVERIFIED
+- Verdict: AWAITING_APPROVAL
 - Reviewed at: 2026-08-14 (Asia/Seoul)
+- Cycle: Luna/max, 2 of 2 invocations consumed
 
-## Finding
+## Resolution
 
-### P1: Command Code received no file-write or shell permission
+The three actionable findings from the first review are resolved:
 
-Attempt 1 exited with code 0 but implemented nothing. CMDC 1.24.0 blocked all four initial `write_file` calls and reported that print mode requires `--yolo` or `--dangerously-skip-permissions`. The runner supplied `--auto-accept` but not `--yolo`. The worktree stayed clean and `docs/phases/phase-10/result.md` was not created.
+1. Session Manager logging now sets `cloudWatchEncryptionEnabled = false`, matching the log group without a customer-managed KMS key. CloudWatch Logs still applies its default encryption at rest.
+2. The WEB and WAS roles can create streams and write events in the project SSM session log group. Both roles also have the minimum `logs:DescribeLogGroups` permission required by SSM Agent.
+3. The WEB role can publish metrics only to `MiddleProject/Host/${var.environment}`. The WAS role retains the Host and Reminder namespaces.
 
-Evidence:
+The Phase 10 Pester contract covers these constraints.
 
-- State: `REVIEWING`, attempt 1 of 2, baseline `7adfce520dfc2ee828f68d1bee4070cb7399cf1f`.
-- CMDC session: `e1cbd4fa-e6e5-421d-a11f-ac5bc79a2fcf`.
-- CMDC final text: implementation blocked because file writes and shell commands require `--yolo` in print mode.
-- Git status after the attempt: clean.
+## Verification evidence
 
-## Attempt 2 outcome
+| Check | Result |
+|---|---|
+| Orchestrator Pester suite | 46 passed, 0 failed |
+| Backend `clean test bootWar` | Exit 0; 95 tests, 0 failures, 0 errors, 8 skipped |
+| Frontend install and production build | Exit 0; 0 audited vulnerabilities |
+| PostgreSQL 16.15 integration | Exit 0; temporary localhost-only container removed |
+| Phase 10 Terraform Pester contract | 6 passed, 0 failed |
+| Terraform format, initialization, and validation | Exit 0 |
+| Terraform plan with locked AWS provider 6.59.0 | Exit 0; 91 to add, 0 to change, 0 to destroy against empty temporary state |
+| Raw Checkov 3.3.8 scan | 194 passed, 35 failed; 22 unique check IDs |
+| Policy Checkov 3.3.8 scan | 188 passed, 0 failed; 22 documented check-ID exclusions |
+| Secret and generated-state cleanup checks | Passed |
 
-The repair invocation used the approved final budget and command-line settings: `gpt-5.6-terra`, `xhigh`, `--max-turns 30`, `--auto-accept`, and `--yolo`. It wrote Phase 10 application, infrastructure, test, and runbook files, then stopped at the 30-turn limit with exit code 8.
+The policy scan used the pinned Checkov image with networking disabled, a read-only Terraform mount, and `--skip-download`. Every exclusion and its reason is recorded in `docs/runbooks/phase-10-observability.md`; any new or unexplained check ID remains a failure.
 
-The implementation is not accepted:
+## Approval gate
 
-- `docs/phases/phase-10/result.md` was not created.
-- Terra found a backend `ApplicationContext` regression while constructor injection was ambiguous. The committed WIP now marks the four-argument constructor with `@Autowired`; a focused Codex rerun of `CrudApiIntegrationTest` passed all five tests on 2026-08-14. The full backend suite remains pending.
-- Terraform validation passed before Terra's final edits, so those later edits remain unverified.
-- Per the user's instruction, Codex did not run the planned independent verification suite.
-- No live AWS plan, apply, alarm action, instance replacement, or secret access was performed.
+Local implementation and verification are complete, but the live AWS evidence package is not. No `terraform apply`, failure injection, Alarm state change, instance replacement, Secret value read, or AWS resource creation ran during this review.
 
-The Phase 10 state remains `READY`, attempt 2 of 2, with reason `Command Code exited with code 8`. No third CMDC invocation is permitted under the approved limit.
-
-## Required repair before approval
-
-1. Run the full backend suite and review the final Terraform edits.
-2. Repair any evidence-backed failures and record fresh build, Terraform, and static-security evidence in `result.md`.
-3. Obtain a new explicit execution budget if another CMDC invocation is desired.
-4. Keep all live AWS mutations behind separate explicit approval.
+Phase 10 remains at `AWAITING_APPROVAL` until the user approves the exact AWS account, plan delta, cost window, live verification steps, rollback, and teardown package.

@@ -77,11 +77,13 @@ resource "aws_iam_role" "web" {
 resource "aws_sqs_queue" "reminder_dlq" {
   name                      = "${var.name}-${var.environment}-reminder-dlq"
   message_retention_seconds = 1209600
+  sqs_managed_sse_enabled   = true
 }
 
 resource "aws_sqs_queue" "reminder" {
   name                       = "${var.name}-${var.environment}-reminder"
   visibility_timeout_seconds = 60
+  sqs_managed_sse_enabled    = true
   redrive_policy             = jsonencode({ deadLetterTargetArn = aws_sqs_queue.reminder_dlq.arn, maxReceiveCount = 5 })
 }
 
@@ -151,11 +153,12 @@ resource "aws_iam_instance_profile" "was" {
 }
 
 resource "aws_lb" "public" {
-  name               = local.public_alb_name
-  internal           = false
-  load_balancer_type = "application"
-  subnets            = [aws_subnet.this["public_a"].id, aws_subnet.this["public_c"].id]
-  security_groups    = [aws_security_group.public_alb.id]
+  name                       = local.public_alb_name
+  internal                   = false
+  load_balancer_type         = "application"
+  drop_invalid_header_fields = true
+  subnets                    = [aws_subnet.this["public_a"].id, aws_subnet.this["public_c"].id]
+  security_groups            = [aws_security_group.public_alb.id]
 
   access_logs {
     bucket  = aws_s3_bucket.alb_access_logs.id
@@ -188,11 +191,12 @@ resource "aws_lb_listener" "public" {
 }
 
 resource "aws_lb" "internal" {
-  name               = local.internal_alb_name
-  internal           = true
-  load_balancer_type = "application"
-  subnets            = [aws_subnet.this["was_a"].id, aws_subnet.this["was_c"].id]
-  security_groups    = [aws_security_group.internal_alb.id]
+  name                       = local.internal_alb_name
+  internal                   = true
+  load_balancer_type         = "application"
+  drop_invalid_header_fields = true
+  subnets                    = [aws_subnet.this["was_a"].id, aws_subnet.this["was_c"].id]
+  security_groups            = [aws_security_group.internal_alb.id]
 
   access_logs {
     bucket  = aws_s3_bucket.alb_access_logs.id
@@ -286,6 +290,11 @@ resource "aws_autoscaling_group" "web" {
     id      = aws_launch_template.web.id
     version = aws_launch_template.web.latest_version
   }
+  tag {
+    key                 = "Name"
+    value               = "${var.name}-${var.environment}-web"
+    propagate_at_launch = true
+  }
   instance_refresh {
     strategy = "Rolling"
     preferences {
@@ -373,6 +382,11 @@ resource "aws_autoscaling_group" "was" {
     id      = aws_launch_template.was.id
     version = aws_launch_template.was.latest_version
   }
+  tag {
+    key                 = "Name"
+    value               = "${var.name}-${var.environment}-was"
+    propagate_at_launch = true
+  }
   instance_refresh {
     strategy = "Rolling"
     preferences {
@@ -399,6 +413,8 @@ resource "aws_db_instance" "this" {
   db_name                     = var.db_name
   username                    = var.db_username
   manage_master_user_password = true
+  auto_minor_version_upgrade  = true
+  copy_tags_to_snapshot       = true
   db_subnet_group_name        = aws_db_subnet_group.this.name
   vpc_security_group_ids      = [aws_security_group.rds.id]
   skip_final_snapshot         = var.skip_final_snapshot
