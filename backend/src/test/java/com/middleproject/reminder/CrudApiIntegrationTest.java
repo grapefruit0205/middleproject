@@ -113,7 +113,7 @@ class CrudApiIntegrationTest {
         org.junit.jupiter.api.Assertions.assertEquals(updatedReminder, replayedReminder);
         mvc.perform(delete("/api/events/" + event).header("Idempotency-Key", "event-parent-delete").param("expectedVersion", "0")).andExpect(status().isConflict());
         mvc.perform(delete("/api/notification-policies/" + policy).header("Idempotency-Key", "policy-parent-delete").param("expectedVersion", "0")).andExpect(status().isConflict());
-        mvc.perform(delete("/api/reminders/" + id).header("Idempotency-Key", "reminder-delete-1").param("expectedVersion", "1")).andExpect(status().isConflict());
+        mvc.perform(delete("/api/reminders/" + id).header("Idempotency-Key", "reminder-delete-stale").param("expectedVersion", "1")).andExpect(status().isConflict());
         var deletedReminder = mvc.perform(delete("/api/reminders/" + id).header("Idempotency-Key", "reminder-delete-1").param("expectedVersion", "2")).andExpect(status().isNoContent()).andReturn().getResponse();
         var replayedDeletedReminder = mvc.perform(delete("/api/reminders/" + id).header("Idempotency-Key", "reminder-delete-1").param("expectedVersion", "2")).andExpect(status().isNoContent()).andReturn().getResponse();
         org.junit.jupiter.api.Assertions.assertEquals(deletedReminder.getStatus(), replayedDeletedReminder.getStatus());
@@ -132,9 +132,6 @@ class CrudApiIntegrationTest {
         org.junit.jupiter.api.Assertions.assertEquals(200, firstResult.status());
         org.junit.jupiter.api.Assertions.assertEquals(200, secondResult.status());
         org.junit.jupiter.api.Assertions.assertEquals(firstResult.body(), secondResult.body());
-        String firstId = node(firstResult.body(), "id");
-        String secondId = node(secondResult.body(), "id");
-        org.junit.jupiter.api.Assertions.assertEquals(firstId, secondId);
         org.junit.jupiter.api.Assertions.assertEquals(1, db.queryForObject("select count(*) from events", Integer.class));
     }
 
