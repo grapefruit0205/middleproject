@@ -2,7 +2,7 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~06`은 구현과 독립 검증을 완료해 `main`에 반영했습니다. `Phase 07` 알림 전송 기능은 중복 발송 방지와 최소 권한 정책을 보완·검증 중입니다.
+현재 `Phase 00~07`은 구현과 독립 검증을 완료했습니다. 다음은 `Phase 08` 재처리·장애 복구·운영 신뢰성 단계입니다.
 
 > AWS 상태: Phase 05에서 승인된 검증 배포를 완료한 뒤 전부 철거했습니다. 현재 프로젝트 VPC, ALB, RDS, Auto Scaling Group은 배포되어 있지 않습니다.
 
@@ -40,7 +40,7 @@ EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 | 04 · AWS Network | ✅ PASS | 서울 리전 2-AZ VPC, WEB/WAS/DB Subnet·Route·Security Group Terraform 구현 | `9c195f7` |
 | 05 · Three-tier Deployment | ✅ PASS | Public ALB → Apache → Internal ALB → Tomcat → RDS 실배포 검증 후 전체 철거 | `bc183de` |
 | 06 · Scheduler Integration | ✅ PASS | Scheduler Port, transactional Outbox, SQS/DLQ, 다중 WAS 동시성·재조정 구현 | `dfb5ff9` |
-| 07 · Notification Delivery | 🔄 진행 중 | SES Email과 Push Provider 경계, Attempt 영속화, 중복 발송 방지 보완·검증 | 완료 후 기록 |
+| 07 · Notification Delivery | ✅ PASS | SES Email·Push Provider 경계, Attempt 영속화, 동시 중복 발송 방지, 최소 권한 SES 정책 구현 | `222d6d7` |
 | 08 · Reliability | ⏳ 예정 | 재처리, Idempotency, 장애 복구와 운영 Runbook | 예정 |
 | 09 · MCP Adapter | ⏳ 예정 | REST와 동일한 Application Service를 사용하는 MCP Adapter, 인증·감사 | 예정 |
 
