@@ -1,5 +1,6 @@
 package com.middleproject.reminder;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.middleproject.reminder.application.EventService;
 import com.middleproject.reminder.application.IdempotencyService;
@@ -29,6 +30,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
@@ -76,6 +79,38 @@ class Postgres16IntegrationTest {
     @Autowired MutableClock mutableClock;
     @Autowired TransactionalFailureService transactionalFailureService;
     @Autowired DataSource dataSource;
+
+    @Test
+    void postgresMcpOwnershipIdempotencyAuditAndFlywayEvidence() throws Exception {
+        assertEquals(6, db.queryForObject("select count(*) from flyway_schema_history where success=true and version in ('1','2','3','4','5','6')", Integer.class));
+        var data = newReminderSeed("mcp");
+        JsonNode ownerList = mcp("list_reminders", "{}", "alice", null);
+        assertTrue(ownerList.path("result").path("structuredContent").size() >= 1);
+        assertEquals(0, mcp("list_reminders", "{}", "bob", null).path("result").path("structuredContent").size());
+        String id = data.reminder().id().toString();
+        for (String tool : new String[]{"get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status"}) {
+            String args = switch (tool) {
+                case "get_reminder", "get_delivery_status" -> "{\"reminderId\":\"" + id + "\"}";
+                case "update_reminder" -> "{\"reminderId\":\"" + id + "\",\"eventId\":\"" + data.event().id() + "\",\"policyId\":\"" + data.policy().id() + "\",\"expectedVersion\":0,\"idempotencyKey\":\"pg-update\"}";
+                default -> "{\"reminderId\":\"" + id + "\",\"expectedVersion\":0,\"idempotencyKey\":\"pg-cancel\"}";
+            };
+            assertEquals(-32003, mcp(tool, args, "bob", null).path("error").path("code").asInt());
+        }
+        assertEquals(-32003, mcp("get_reminder", "{\"reminderId\":\"" + id + "\"}", "bob", "alice").path("error").path("code").asInt());
+        String createArgs = "{\"eventId\":\"" + data.event().id() + "\",\"policyId\":\"" + data.policy().id() + "\",\"idempotencyKey\":\"pg-create\"}";
+        JsonNode first = mcp("create_reminder", createArgs, "alice", null);
+        JsonNode retry = mcp("create_reminder", createArgs, "alice", null);
+        assertEquals(first.toString(), retry.toString());
+        assertEquals(2, db.queryForObject("select count(*) from reminders", Integer.class));
+        assertTrue(db.queryForObject("select count(*) from mcp_audit where user_id='alice'", Integer.class) >= 3);
+        mcp("get_reminder", "{\"reminderId\":\"" + id + "\"}", "alice", null);
+        reminders.delete(data.reminder().id(), 0, "pg-delete");
+        assertEquals(1, db.queryForObject("select count(*) from mcp_audit where user_id='alice' and tool_name='get_reminder' and reminder_id is null", Integer.class));
+    }
+
+    private record McpSeed(com.middleproject.reminder.domain.Event event, com.middleproject.reminder.domain.NotificationPolicy policy, com.middleproject.reminder.domain.Reminder reminder) {}
+    private McpSeed newReminderSeed(String key) { var event = events.create(key, OffsetDateTime.now().plusHours(2), null, key + "-event-" + UUID.randomUUID()); var policy = policies.create("EMAIL", 5, key + "-policy-" + UUID.randomUUID()); return new McpSeed(event, policy, reminders.create(event.id(), policy.id(), key + "-reminder-" + UUID.randomUUID(), "alice")); }
+    private JsonNode mcp(String tool, String args, String user, String spoofed) throws Exception { var request = post("/api/mcp").contentType(MediaType.APPLICATION_JSON).content("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"" + tool + "\",\"arguments\":" + args + "}}").principal(() -> user); if (spoofed != null) request.header("X-User-Id", spoofed); return objectMapper.readTree(mockMvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()); }
 
     @DynamicPropertySource
     static void postgresProperties(DynamicPropertyRegistry registry) {
@@ -281,6 +316,7 @@ class Postgres16IntegrationTest {
     }
 
     private void cleanRows() {
+        db.update("delete from mcp_audit");
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");

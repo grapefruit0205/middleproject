@@ -1,16 +1,3 @@
 package com.middleproject.reminder.port;
-
-import com.middleproject.reminder.domain.Reminder;
-import com.middleproject.reminder.domain.ReminderStatus;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-public interface ReminderRepository {
-    List<Reminder> findAll();
-    Optional<Reminder> findById(UUID id);
-    Reminder insert(UUID id, UUID eventId, UUID policyId);
-    boolean update(UUID id, UUID eventId, UUID policyId, long version);
-    boolean transition(UUID id, ReminderStatus oldStatus, ReminderStatus target, long version);
-    boolean delete(UUID id, long version);
-}
+import com.middleproject.reminder.domain.Reminder; import com.middleproject.reminder.domain.ReminderStatus; import java.util.*;
+public interface ReminderRepository { List<Reminder> findAll(); List<Reminder> findAllByOwner(String ownerId); Optional<Reminder> findById(UUID id); Optional<Reminder> findByIdForOwner(UUID id,String ownerId); Reminder insert(UUID id,UUID eventId,UUID policyId,String ownerId); boolean update(UUID id,UUID eventId,UUID policyId,long version); boolean updateForOwner(UUID id,UUID eventId,UUID policyId,long version,String ownerId); boolean transition(UUID id,ReminderStatus oldStatus,ReminderStatus target,long version); boolean transitionForOwner(UUID id,ReminderStatus oldStatus,ReminderStatus target,long version,String ownerId); boolean delete(UUID id,long version); }
