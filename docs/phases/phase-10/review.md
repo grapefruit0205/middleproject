@@ -24,7 +24,7 @@ The repair invocation used the approved final budget and command-line settings: 
 The implementation is not accepted:
 
 - `docs/phases/phase-10/result.md` was not created.
-- Terra found a backend `ApplicationContext` regression (`SchedulerOutboxService` has no injectable/default constructor) and did not finish repairing it.
+- Terra found a backend `ApplicationContext` regression while constructor injection was ambiguous. The committed WIP now marks the four-argument constructor with `@Autowired`; a focused Codex rerun of `CrudApiIntegrationTest` passed all five tests on 2026-08-14. The full backend suite remains pending.
 - Terraform validation passed before Terra's final edits, so those later edits remain unverified.
 - Per the user's instruction, Codex did not run the planned independent verification suite.
 - No live AWS plan, apply, alarm action, instance replacement, or secret access was performed.
@@ -33,7 +33,7 @@ The Phase 10 state remains `READY`, attempt 2 of 2, with reason `Command Code ex
 
 ## Required repair before approval
 
-1. Resolve the backend context regression and review the final Terraform edits.
-2. Record fresh build, Terraform, and static-security evidence in `result.md`.
+1. Run the full backend suite and review the final Terraform edits.
+2. Repair any evidence-backed failures and record fresh build, Terraform, and static-security evidence in `result.md`.
 3. Obtain a new explicit execution budget if another CMDC invocation is desired.
 4. Keep all live AWS mutations behind separate explicit approval.

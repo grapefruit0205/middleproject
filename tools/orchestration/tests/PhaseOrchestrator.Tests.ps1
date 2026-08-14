@@ -156,7 +156,7 @@ Describe 'Phase lookup and runtime prompt composition' {
         (@($definition.allowedPaths) -join ',') | Should Be 'frontend/**,backend/**,.github/workflows/**,docs/phases/phase-01/result.md'
     }
 
-    It 'resolves the Phase 10 Terra policy without changing historical defaults' {
+    It 'resolves the restarted Phase 10 Luna policy without changing historical defaults' {
         $historical = Get-PhaseDefinition -Phase 1 -ManifestPath $manifestPath
         $phaseTen = Get-PhaseDefinition -Phase 10 -ManifestPath $manifestPath
 
@@ -166,8 +166,8 @@ Describe 'Phase lookup and runtime prompt composition' {
         $historical.maxInvocationsPerPhase | Should Be 3
 
         $phaseTen.branch | Should Be 'codex/phase-10-observability-security'
-        $phaseTen.model | Should Be 'gpt-5.6-terra'
-        $phaseTen.effort | Should Be 'xhigh'
+        $phaseTen.model | Should Be 'gpt-5.6-luna'
+        $phaseTen.effort | Should Be 'max'
         $phaseTen.maxTurns | Should Be 50
         $phaseTen.repairMaxTurns | Should Be 30
         $phaseTen.maxInvocationsPerPhase | Should Be 2
@@ -472,8 +472,8 @@ Describe 'Command Code process boundary' {
         $initial = New-CommandCodeRunPlan -PhaseDefinition $phaseTen -RuntimePrompt 'initial' -CmdcPath $fakeCmdcPath -RepositoryRoot $repositoryRoot -AttemptNumber 1
         $repair = New-CommandCodeRunPlan -PhaseDefinition $phaseTen -RuntimePrompt 'repair' -CmdcPath $fakeCmdcPath -RepositoryRoot $repositoryRoot -AttemptNumber 2
 
-        (@($initial.arguments) -join '|') | Should Be '-p|initial|--model|gpt-5.6-terra|--effort|xhigh|--auto-accept|--yolo|--max-turns|50|--output-format|json|--name|phase-10-implementation'
-        (@($repair.arguments) -join '|') | Should Be '-p|repair|--model|gpt-5.6-terra|--effort|xhigh|--auto-accept|--yolo|--max-turns|30|--output-format|json|--name|phase-10-implementation'
+        (@($initial.arguments) -join '|') | Should Be '-p|initial|--model|gpt-5.6-luna|--effort|max|--auto-accept|--yolo|--max-turns|50|--output-format|json|--name|phase-10-implementation'
+        (@($repair.arguments) -join '|') | Should Be '-p|repair|--model|gpt-5.6-luna|--effort|max|--auto-accept|--yolo|--max-turns|30|--output-format|json|--name|phase-10-implementation'
     }
 
     It 'captures stdout stderr exit code timestamps and baseline metadata' {
@@ -592,7 +592,7 @@ Describe 'Phase execution and review entry points' {
         }
     }
 
-    It 'dry-runs Phase 10 with Terra xhigh and no runtime mutation' {
+    It 'dry-runs restarted Phase 10 with Luna max and no runtime mutation' {
         $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("middleproject-phase10-dryrun-" + [guid]::NewGuid().ToString('N'))
         $statePath = Join-Path $tempRoot 'state.json'
         $runtimeDirectory = Join-Path $tempRoot 'runs'
@@ -603,8 +603,8 @@ Describe 'Phase execution and review entry points' {
 
             $result.status | Should Be 'DRY_RUN'
             $result.phase | Should Be 10
-            $result.model | Should Be 'gpt-5.6-terra'
-            $result.effort | Should Be 'xhigh'
+            $result.model | Should Be 'gpt-5.6-luna'
+            $result.effort | Should Be 'max'
             (@($result.arguments) -join '|') | Should Match ([regex]::Escape('--max-turns|50'))
             ($before -join "`n") | Should Be ($after -join "`n")
             (Test-Path -LiteralPath $statePath) | Should Be $false

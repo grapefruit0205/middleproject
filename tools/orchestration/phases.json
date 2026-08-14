@@ -114,8 +114,8 @@
       "reviewPath": "docs/phases/phase-10/review.md",
       "allowedPaths": ["backend/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-10/result.md"],
       "requiresExternalApproval": true,
-      "model": "gpt-5.6-terra",
-      "effort": "xhigh",
+      "model": "gpt-5.6-luna",
+      "effort": "max",
       "maxTurns": 50,
       "repairMaxTurns": 30,
       "maxInvocationsPerPhase": 2

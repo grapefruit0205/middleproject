@@ -34,7 +34,7 @@ OpenTelemetry would add a Java agent or SDK, an OTLP pipeline, Collector lifecyc
 
 ### Execution budget
 
-Command Code uses `gpt-5.6-terra` with `xhigh` effort. The first implementation attempt receives at most 50 turns. Codex reviews the result. One repair attempt receives at most 30 turns. A second failure stops the phase for user direction.
+The restarted Command Code cycle uses `gpt-5.6-luna` with `max` effort. The first implementation attempt receives at most 50 turns. Codex reviews the result. One repair attempt receives at most 30 turns. A second failure stops the phase for user direction.
 
 The runner does not call Sonnet automatically. Codex may recommend a separate read-only review when it finds a security question that the repository evidence cannot settle.
 

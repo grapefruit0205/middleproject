@@ -12,7 +12,7 @@ Implement the approved Phase 10 design on `codex/phase-10-observability-security
 - Keep metric dimensions bounded. Never use a Reminder ID, recipient, correlation ID, exception message, or raw path as a metric tag.
 - Never log authorization values, Secret values, database passwords, notification bodies, or raw personal data.
 - Do not run `terraform apply`, mutate an Alarm, replace an instance, inject a live failure, or read a live Secret during local implementation.
-- Command Code uses `gpt-5.6-terra`, `xhigh`, `--auto-accept`, and `--yolo`. CMDC 1.24.0 print mode needs `--yolo` to enable file-write and shell tools. The runner still enforces the prompt and post-run HEAD, branch, review-file, and path-scope checks. Attempt 1 receives 50 turns. One repair may receive 30 turns. Phase 10 permits two invocations total.
+- The restarted Command Code cycle uses `gpt-5.6-luna`, `max`, `--auto-accept`, and `--yolo`. CMDC 1.24.0 print mode needs `--yolo` to enable file-write and shell tools. The runner enforces the prompt and post-run HEAD, branch, review-file, and path-scope checks. Attempt 1 receives 50 turns. One repair may receive 30 turns. Phase 10 permits two invocations in the restarted cycle.
 - Command Code may edit only `backend/**`, `infra/terraform/**`, `docs/runbooks/**`, and `docs/phases/phase-10/result.md`.
 - Command Code cannot edit `docs/phases/phase-10/review.md`, create a commit, push, or change architecture records.
 - Use a dedicated ignored state file, `.orchestration/phase-10-state.json`, so the completed Phase 01-09 state remains intact.
@@ -34,7 +34,7 @@ Implement the approved Phase 10 design on `codex/phase-10-observability-security
 Add focused Pester tests before changing production scripts. Each test names the production mutation that would break it. Assert that:
 
 - the manifest contains Phases 01 through 10 in order;
-- Phase 10 selects `gpt-5.6-terra`, `xhigh`, 50 initial turns, 30 repair turns, and two invocations;
+- Phase 10 selects `gpt-5.6-luna`, `max`, 50 initial turns, 30 repair turns, and two invocations in the restarted cycle;
 - historical phases retain `gpt-5.6-luna`, `max`, 100 turns, and three invocations;
 - Phase 10 uses the approved branch, documents, allowlist, and external-approval marker;
 - an initial Phase 10 run plan contains `--max-turns 50`;
@@ -69,7 +69,7 @@ Invoke-Pester .\tools\orchestration\tests\PhaseOrchestrator.Tests.ps1
   -DryRun | Format-List
 ```
 
-The dry run must show Terra, xhigh, 50 turns, auto-accept, the Phase 10 branch, and the current baseline without writing runtime state.
+The dry run must show Luna, max effort, 50 turns, auto-accept, the Phase 10 branch, and the current baseline without writing runtime state.
 
 ## Task 2: Correlate HTTP Requests
 
@@ -225,7 +225,7 @@ The process scan must show no other active Command Code writer.
   -StatePath C:\middleproject\.orchestration\phase-10-state.json
 ```
 
-The runner invokes one Terra xhigh process with 50 turns and moves to `REVIEWING` only when Command Code exits zero, keeps HEAD and branch unchanged, and edits only allowed paths.
+The runner invokes one Luna max process with 50 turns and moves to `REVIEWING` only when Command Code exits zero, keeps HEAD and branch unchanged, and edits only allowed paths.
 
 ## Task 7: Codex Independent Verification
 
@@ -262,7 +262,7 @@ Compare the evidence line by line with the approved design and Phase 10 brief. W
 
 ## Task 8: One Bounded Repair When Required
 
-If Codex records `REVISE`, move the dedicated state back to READY and run the same entry point once. The orchestrator passes the review as read-only input and invokes Terra xhigh with 30 turns. It rejects a third attempt.
+If Codex records `REVISE`, move the dedicated state back to READY and run the same entry point once. The orchestrator passes the review as read-only input and invokes Luna max with 30 turns. It rejects a third attempt in the restarted cycle.
 
 Rerun `CorrelationIdFilterTest`, `StructuredLoggingContractTest`, `ObservabilityMetricsTest`, `phase10_observability.Tests.ps1`, and the complete Task 7 verification after repair. Do not use a repair attempt for documentation polish that Codex can perform inside its review-owned files.
 

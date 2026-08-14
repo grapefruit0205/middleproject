@@ -1,6 +1,6 @@
 # Phase 01-10 Command Code Orchestrator
 
-Codex Desktop owns phase state and review decisions. Command Code implements one phase per process. Phases 01-09 retain `gpt-5.6-luna`, `max` effort, 100 turns, and three invocations. Phase 10 uses `gpt-5.6-terra`, `xhigh`, 50 turns for the initial attempt, 30 turns for one repair, and two invocations total. Every print-mode run uses `--auto-accept` and `--yolo`. Command Code 1.24.0 otherwise blocks file-write and shell tools even when auto-accept is active. The prompt and post-run HEAD, branch, review-file, and path-scope checks remain mandatory because `--yolo` removes the CLI permission prompt.
+Codex Desktop owns phase state and review decisions. Command Code implements one phase per process. Phases 01-09 retain `gpt-5.6-luna`, `max` effort, 100 turns, and three invocations. The restarted Phase 10 uses `gpt-5.6-luna`, `max` effort, 50 turns for the initial attempt, 30 turns for one repair, and two invocations total. Every print-mode run uses `--auto-accept` and `--yolo`. Command Code 1.24.0 otherwise blocks file-write and shell tools even when auto-accept is active. The prompt and post-run HEAD, branch, review-file, and path-scope checks remain mandatory because `--yolo` removes the CLI permission prompt.
 
 The runner does not push, merge, apply Terraform, mutate AWS, store credentials, edit architecture records, write Codex reviews, or create Git commits. It stops when another coding-agent writer is active.
 
@@ -46,8 +46,8 @@ Confirm these values in the output:
 
 ```text
 status: DRY_RUN
-model: gpt-5.6-terra
-effort: xhigh
+model: gpt-5.6-luna
+effort: max
 maxTurns: 50
 attemptNumber: 1
 autoAccept: True

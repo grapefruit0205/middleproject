@@ -21,7 +21,7 @@ For each attempt:
 5. Compare the evidence with the brief, design, implementation plan, project invariants, ADRs, and allowlist.
 6. Write docs/phases/phase-NN/review.md. Command Code cannot edit that file or choose the verdict.
 
-For a repairable defect, record exact file, line, expected behavior, and failing command evidence. Record REVISE with Set-PhaseReview.ps1, then rerun the same phase. The next prompt treats review.md as read-only input. Respect the manifest invocation limit. Phase 10 permits a 50-turn initial attempt and one 30-turn repair.
+For a repairable defect, record exact file, line, expected behavior, and failing command evidence. Record REVISE with Set-PhaseReview.ps1, then rerun the same phase. The next prompt treats review.md as read-only input. Respect the manifest invocation limit. The restarted Phase 10 uses Luna/max and permits a 50-turn initial attempt and one 30-turn repair.
 
 After local evidence passes, stage only verified phase files and review.md. Exclude .commandcode, .orchestration, credentials, Terraform state, build output, and unrelated files. Commit and push the verified phase branch under the project's backup instruction. Do not merge into main without an explicit review decision. Phases 01 through 09 advance to the next manifest phase. Phase 10 is terminal only after its external gate and live evidence pass.
 
