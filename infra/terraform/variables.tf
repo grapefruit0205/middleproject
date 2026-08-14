@@ -81,6 +81,12 @@ variable "artifact_force_destroy" {
   default     = false
 }
 
+variable "alb_access_log_force_destroy" {
+  description = "Allow Terraform to delete non-empty ALB access-log buckets during approved ephemeral teardown."
+  type        = bool
+  default     = false
+}
+
 variable "frontend_artifact_path" {
   description = "Local path to the frontend archive published by Terraform."
   type        = string

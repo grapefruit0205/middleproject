@@ -5,6 +5,7 @@ Describe 'Phase 10 observability and security contract' {
         $observability = Get-Content (Join-Path $terraformRoot 'observability.tf') -Raw
         $security = Get-Content (Join-Path $terraformRoot 'security.tf') -Raw
         $tier = Get-Content (Join-Path $terraformRoot 'tier.tf') -Raw
+        $variables = Get-Content (Join-Path $terraformRoot 'variables.tf') -Raw
         $webBootstrap = Get-Content (Join-Path $terraformRoot 'templates/web.sh.tftpl') -Raw
         $wasBootstrap = Get-Content (Join-Path $terraformRoot 'templates/was.sh.tftpl') -Raw
     }
@@ -64,6 +65,22 @@ Describe 'Phase 10 observability and security contract' {
         $observability | Should Match 'aws_s3_bucket_server_side_encryption_configuration" "alb_access_logs"'
         $observability | Should Match 'expiration\s*\{\s*days\s*=\s*30'
         $tier | Should Match 'access_logs\s*\{'
+    }
+
+    It 'keeps ALB log and artifact bucket teardown controls separate' {
+        $variables | Should Match 'variable "alb_access_log_force_destroy"'
+        $variables | Should Match 'variable "alb_access_log_force_destroy"\s*\{[\s\S]*?type\s*=\s*bool[\s\S]*?default\s*=\s*false'
+
+        $albBucketStart = $observability.IndexOf('resource "aws_s3_bucket" "alb_access_logs"')
+        $albOwnershipStart = $observability.IndexOf('resource "aws_s3_bucket_ownership_controls" "alb_access_logs"')
+        $albBucket = $observability.Substring($albBucketStart, $albOwnershipStart - $albBucketStart)
+        $albBucket | Should Match 'force_destroy\s*=\s*var\.alb_access_log_force_destroy'
+
+        $artifactBucketStart = $tier.IndexOf('resource "aws_s3_bucket" "artifacts"')
+        $artifactObjectStart = $tier.IndexOf('resource "aws_s3_object" "frontend_artifact"')
+        $artifactBucket = $tier.Substring($artifactBucketStart, $artifactObjectStart - $artifactBucketStart)
+        $artifactBucket | Should Match 'force_destroy\s*=\s*var\.artifact_force_destroy'
+        $artifactBucket | Should Not Match 'alb_access_log_force_destroy'
     }
 
     It 'scopes SSM session logging and WEB metrics to approved resources' {
