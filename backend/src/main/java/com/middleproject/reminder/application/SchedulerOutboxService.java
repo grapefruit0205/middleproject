@@ -1,6 +1,11 @@
 package com.middleproject.reminder.application;
 
 import com.middleproject.reminder.port.SchedulerPort;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -13,19 +18,51 @@ import java.util.UUID;
 public class SchedulerOutboxService {
     private final JdbcTemplate db;
     private final SchedulerPort scheduler;
+    private static final Logger log = LoggerFactory.getLogger(SchedulerOutboxService.class);
     private final TransactionTemplate tx;
-    public SchedulerOutboxService(JdbcTemplate db, SchedulerPort scheduler, TransactionTemplate tx) { this.db = db; this.scheduler = scheduler; this.tx = tx; }
+    private final ObservabilityMetrics metrics;
+
+    @Autowired
+    public SchedulerOutboxService(JdbcTemplate db, SchedulerPort scheduler, TransactionTemplate tx, ObservabilityMetrics metrics) {
+        this.db = db;
+        this.scheduler = scheduler;
+        this.tx = tx;
+        this.metrics = metrics;
+    }
+
+    public SchedulerOutboxService(JdbcTemplate db, SchedulerPort scheduler, TransactionTemplate tx) {
+        this(db, scheduler, tx, new ObservabilityMetrics(new SimpleMeterRegistry()));
+    }
 
     public int reconcile(int limit) {
         int processed = 0;
         for (Outbox row : claim(Math.max(1, Math.min(limit, 100)))) {
             try {
+                MDC.put("reminderId", row.reminderId().toString());
+                MDC.put("schedulerVersion", Long.toString(row.schedulerVersion()));
+                MDC.put("outboxId", row.id().toString());
                 boolean current = row.operation().equals("DELETE") ? true : db.queryForObject("select count(*) from reminders where id=? and version=? and status in ('CREATED','SCHEDULE_PENDING','RETRYING','SCHEDULED')", Integer.class, row.reminderId(), row.expectedVersion()) > 0;
-                if (!current) { succeed(row.id()); processed++; continue; }
+                if (!current) {
+                    succeed(row.id());
+                    metrics.schedulerReconciled(true);
+                    log.info("scheduler_outbox_stale");
+                    processed++;
+                    continue;
+                }
                 if (row.operation().equals("DELETE")) scheduler.cancel(row.reminderId(), row.schedulerVersion());
                 else scheduler.register(row.reminderId(), row.schedulerVersion(), row.dueAt(), row.payload());
                 if (row.operation().equals("UPSERT")) markScheduled(row); else succeed(row.id());
-            } catch (RuntimeException e) { failure(row.id(), e.getMessage()); }
+                metrics.schedulerReconciled(true);
+                log.info("scheduler_outbox_reconciled");
+            } catch (RuntimeException e) {
+                failure(row.id(), e.getMessage());
+                metrics.schedulerReconciled(false);
+                log.warn("scheduler_outbox_failed");
+            } finally {
+                MDC.remove("reminderId");
+                MDC.remove("schedulerVersion");
+                MDC.remove("outboxId");
+            }
             processed++;
         }
         return processed;

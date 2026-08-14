@@ -21,10 +21,20 @@ function Get-PhaseDefinition {
     }
 
     $phaseDefinition = $definition[0]
-    $phaseDefinition | Add-Member -NotePropertyName model -NotePropertyValue $manifest.model -Force
-    $phaseDefinition | Add-Member -NotePropertyName effort -NotePropertyValue $manifest.effort -Force
-    $phaseDefinition | Add-Member -NotePropertyName maxTurns -NotePropertyValue $manifest.maxTurns -Force
-    $phaseDefinition | Add-Member -NotePropertyName maxInvocationsPerPhase -NotePropertyValue $manifest.maxInvocationsPerPhase -Force
+    foreach ($propertyName in @('model', 'effort', 'maxTurns', 'maxInvocationsPerPhase')) {
+        if ($propertyName -notin $phaseDefinition.PSObject.Properties.Name) {
+            $phaseDefinition | Add-Member -NotePropertyName $propertyName -NotePropertyValue $manifest.$propertyName
+        }
+    }
+    if ('repairMaxTurns' -notin $phaseDefinition.PSObject.Properties.Name) {
+        $repairMaxTurns = if ('repairMaxTurns' -in $manifest.PSObject.Properties.Name) {
+            $manifest.repairMaxTurns
+        }
+        else {
+            $phaseDefinition.maxTurns
+        }
+        $phaseDefinition | Add-Member -NotePropertyName repairMaxTurns -NotePropertyValue $repairMaxTurns
+    }
     return $phaseDefinition
 }
 
@@ -152,6 +162,8 @@ function Move-OrchestrationState {
 
     $fromStatus = [string]$State.status
     $phaseAtTransition = [int]$State.phase
+    $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    $terminalPhase = [int](@($manifest.phases.phase | Measure-Object -Maximum).Maximum)
     $transition = "$fromStatus->$ToStatus"
     $allowedTransitions = @(
         'READY->IMPLEMENTING',
@@ -175,7 +187,7 @@ function Move-OrchestrationState {
         throw 'Explicit external approval is required before review can resume.'
     }
 
-    if ($transition -eq 'REVIEWING->PASS' -and $phaseAtTransition -lt 9 -and [string]::IsNullOrWhiteSpace($NextBaselineCommit)) {
+    if ($transition -eq 'REVIEWING->PASS' -and $phaseAtTransition -lt $terminalPhase -and [string]::IsNullOrWhiteSpace($NextBaselineCommit)) {
         throw 'NextBaselineCommit is required when a passing phase advances to the next phase.'
     }
 
@@ -200,7 +212,7 @@ function Move-OrchestrationState {
 
     switch ($transition) {
         'REVIEWING->PASS' {
-            if ($phaseAtTransition -eq 9) {
+            if ($phaseAtTransition -eq $terminalPhase) {
                 $State.status = 'COMPLETE'
                 break
             }
@@ -428,11 +440,15 @@ function New-CommandCodeRunPlan {
         [string]$RepositoryRoot,
 
         [ValidatePattern('^$|^[0-9a-fA-F]{40}$')]
-        [string]$BaselineCommit = ''
+        [string]$BaselineCommit = '',
+
+        [ValidateRange(1, [int]::MaxValue)]
+        [int]$AttemptNumber = 1
     )
 
     $phaseNumber = '{0:D2}' -f [int]$PhaseDefinition.phase
     $resolvedRepositoryRoot = (Resolve-Path -LiteralPath $RepositoryRoot -ErrorAction Stop).Path
+    $maxTurns = if ($AttemptNumber -gt 1) { [int]$PhaseDefinition.repairMaxTurns } else { [int]$PhaseDefinition.maxTurns }
     return [pscustomobject]@{
         phase          = [int]$PhaseDefinition.phase
         command        = $CmdcPath
@@ -444,8 +460,9 @@ function New-CommandCodeRunPlan {
             '--effort',
             [string]$PhaseDefinition.effort,
             '--auto-accept',
+            '--yolo',
             '--max-turns',
-            [string]$PhaseDefinition.maxTurns,
+            [string]$maxTurns,
             '--output-format',
             'json',
             '--name',
@@ -454,6 +471,8 @@ function New-CommandCodeRunPlan {
         baselineCommit = $BaselineCommit
         model           = [string]$PhaseDefinition.model
         effort          = [string]$PhaseDefinition.effort
+        maxTurns        = $maxTurns
+        attemptNumber   = $AttemptNumber
         workingDirectory = $resolvedRepositoryRoot
     }
 }

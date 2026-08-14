@@ -150,7 +150,12 @@ variable "tomcat_version" {
 
 variable "scheduler_group" {
   type    = string
-  default = "default"
+  default = "reminder-platform"
+
+  validation {
+    condition     = trimspace(var.scheduler_group) != "" && var.scheduler_group != "default"
+    error_message = "scheduler_group must be a project-scoped non-default EventBridge Scheduler group."
+  }
 }
 
 variable "scheduler_aws_enabled" {

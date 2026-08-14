@@ -38,17 +38,17 @@ function New-OrchestratorTestRepository {
 }
 
 Describe 'Phase orchestration manifest' {
-    It 'defines exactly Phase 01 through Phase 09 in order' {
+    It 'defines exactly Phase 01 through Phase 10 in order' {
         $exists = Test-Path -LiteralPath $manifestPath
         $exists | Should Be $true
 
         if ($exists) {
             $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-            @($manifest.phases).Count | Should Be 9
-            (@($manifest.phases.phase) -join ',') | Should Be '1,2,3,4,5,6,7,8,9'
+            @($manifest.phases).Count | Should Be 10
+            (@($manifest.phases.phase) -join ',') | Should Be '1,2,3,4,5,6,7,8,9,10'
         }
         else {
-            0 | Should Be 9
+            0 | Should Be 10
         }
     }
 
@@ -98,7 +98,7 @@ Describe 'Phase orchestration manifest' {
             $actual = (@($manifest.phases | Where-Object requiresExternalApproval | ForEach-Object phase) -join ',')
         }
 
-        $actual | Should Be '4,5'
+        $actual | Should Be '4,5,10'
     }
 }
 
@@ -156,8 +156,27 @@ Describe 'Phase lookup and runtime prompt composition' {
         (@($definition.allowedPaths) -join ',') | Should Be 'frontend/**,backend/**,.github/workflows/**,docs/phases/phase-01/result.md'
     }
 
+    It 'resolves the restarted Phase 10 Luna policy without changing historical defaults' {
+        $historical = Get-PhaseDefinition -Phase 1 -ManifestPath $manifestPath
+        $phaseTen = Get-PhaseDefinition -Phase 10 -ManifestPath $manifestPath
+
+        $historical.model | Should Be 'gpt-5.6-luna'
+        $historical.effort | Should Be 'max'
+        $historical.maxTurns | Should Be 100
+        $historical.maxInvocationsPerPhase | Should Be 3
+
+        $phaseTen.branch | Should Be 'codex/phase-10-observability-security'
+        $phaseTen.model | Should Be 'gpt-5.6-luna'
+        $phaseTen.effort | Should Be 'max'
+        $phaseTen.maxTurns | Should Be 50
+        $phaseTen.repairMaxTurns | Should Be 30
+        $phaseTen.maxInvocationsPerPhase | Should Be 2
+        $phaseTen.requiresExternalApproval | Should Be $true
+        (@($phaseTen.allowedPaths) -join ',') | Should Be 'backend/**,infra/terraform/**,docs/runbooks/**,docs/phases/phase-10/result.md'
+    }
+
     It 'rejects phases outside the application implementation range' {
-        foreach ($candidate in @(0, 10, 99)) {
+        foreach ($candidate in @(0, 11, 99)) {
             $thrown = $false
             try {
                 Get-PhaseDefinition -Phase $candidate -ManifestPath $manifestPath
@@ -248,14 +267,28 @@ Describe 'Durable phase orchestration state' {
         @($state.history | Where-Object decision -eq 'PASS').Count | Should Be 1
     }
 
-    It 'ends the application loop when Phase 09 passes' {
+    It 'advances Phase 09 to Phase 10 after independent review' {
         $phaseNine = Get-PhaseDefinition -Phase 9 -ManifestPath $manifestPath
         $state = New-OrchestrationState -PhaseDefinition $phaseNine -BaselineCommit $baseline
         $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'run' -ManifestPath $manifestPath
         $state = Move-OrchestrationState -State $state -ToStatus 'REVIEWING' -Reason 'implemented' -ManifestPath $manifestPath
+        $nextBaseline = 'fedcba9876543210fedcba9876543210fedcba98'
+        $state = Move-OrchestrationState -State $state -ToStatus 'PASS' -Reason 'review passed' -ManifestPath $manifestPath -NextBaselineCommit $nextBaseline
+
+        $state.phase | Should Be 10
+        $state.status | Should Be 'READY'
+        $state.branch | Should Be 'codex/phase-10-observability-security'
+        $state.baselineCommit | Should Be $nextBaseline
+    }
+
+    It 'ends the application loop when Phase 10 passes' {
+        $phaseTen = Get-PhaseDefinition -Phase 10 -ManifestPath $manifestPath
+        $state = New-OrchestrationState -PhaseDefinition $phaseTen -BaselineCommit $baseline
+        $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'run' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'REVIEWING' -Reason 'implemented' -ManifestPath $manifestPath
         $state = Move-OrchestrationState -State $state -ToStatus 'PASS' -Reason 'review passed' -ManifestPath $manifestPath
 
-        $state.phase | Should Be 9
+        $state.phase | Should Be 10
         $state.status | Should Be 'COMPLETE'
     }
 
@@ -277,6 +310,19 @@ Describe 'Durable phase orchestration state' {
         $state.attempt | Should Be 3
 
         (Test-Throws { Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 4' -ManifestPath $manifestPath }) | Should Be $true
+    }
+
+    It 'limits Phase 10 to an initial attempt and one repair' {
+        $phaseTen = Get-PhaseDefinition -Phase 10 -ManifestPath $manifestPath
+        $state = New-OrchestrationState -PhaseDefinition $phaseTen -BaselineCommit $baseline
+
+        $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 1' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'process failure' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 2' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'repair failure' -ManifestPath $manifestPath
+
+        $state.attempt | Should Be 2
+        (Test-Throws { Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 3' -ManifestPath $manifestPath }) | Should Be $true
     }
 
     It 'requires an explicit flag to leave external approval state' {
@@ -417,7 +463,17 @@ Describe 'Command Code process boundary' {
 
         $plan.command | Should Be $fakeCmdcPath
         $plan.workingDirectory | Should Be $repositoryRoot
-        (@($plan.arguments) -join '|') | Should Be '-p|implement phase one|--model|gpt-5.6-luna|--effort|max|--auto-accept|--max-turns|100|--output-format|json|--name|phase-01-implementation'
+        (@($plan.arguments) -join '|') | Should Be '-p|implement phase one|--model|gpt-5.6-luna|--effort|max|--auto-accept|--yolo|--max-turns|100|--output-format|json|--name|phase-01-implementation'
+    }
+
+    It 'uses the Phase 10 initial and repair turn budgets' {
+        $phaseTen = Get-PhaseDefinition -Phase 10 -ManifestPath $manifestPath
+
+        $initial = New-CommandCodeRunPlan -PhaseDefinition $phaseTen -RuntimePrompt 'initial' -CmdcPath $fakeCmdcPath -RepositoryRoot $repositoryRoot -AttemptNumber 1
+        $repair = New-CommandCodeRunPlan -PhaseDefinition $phaseTen -RuntimePrompt 'repair' -CmdcPath $fakeCmdcPath -RepositoryRoot $repositoryRoot -AttemptNumber 2
+
+        (@($initial.arguments) -join '|') | Should Be '-p|initial|--model|gpt-5.6-luna|--effort|max|--auto-accept|--yolo|--max-turns|50|--output-format|json|--name|phase-10-implementation'
+        (@($repair.arguments) -join '|') | Should Be '-p|repair|--model|gpt-5.6-luna|--effort|max|--auto-accept|--yolo|--max-turns|30|--output-format|json|--name|phase-10-implementation'
     }
 
     It 'captures stdout stderr exit code timestamps and baseline metadata' {
@@ -536,6 +592,31 @@ Describe 'Phase execution and review entry points' {
         }
     }
 
+    It 'dry-runs restarted Phase 10 with Luna max and no runtime mutation' {
+        $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("middleproject-phase10-dryrun-" + [guid]::NewGuid().ToString('N'))
+        $statePath = Join-Path $tempRoot 'state.json'
+        $runtimeDirectory = Join-Path $tempRoot 'runs'
+        try {
+            $before = git -C $repositoryRoot status --porcelain=v1
+            $result = & $invokePhasePath -Phase 10 -RepositoryRoot $repositoryRoot -CmdcPath $fakeCmdcPath -StatePath $statePath -RuntimeDirectory $runtimeDirectory -DryRun
+            $after = git -C $repositoryRoot status --porcelain=v1
+
+            $result.status | Should Be 'DRY_RUN'
+            $result.phase | Should Be 10
+            $result.model | Should Be 'gpt-5.6-luna'
+            $result.effort | Should Be 'max'
+            (@($result.arguments) -join '|') | Should Match ([regex]::Escape('--max-turns|50'))
+            ($before -join "`n") | Should Be ($after -join "`n")
+            (Test-Path -LiteralPath $statePath) | Should Be $false
+            (Test-Path -LiteralPath $runtimeDirectory) | Should Be $false
+        }
+        finally {
+            if (Test-Path -LiteralPath $tempRoot) {
+                Remove-Item -LiteralPath $tempRoot -Recurse -Force
+            }
+        }
+    }
+
     It 'moves a successful implementation attempt to independent review' {
         $testRepository = New-OrchestratorTestRepository
         $statePath = Join-Path $testRepository '.orchestration\state.json'
@@ -609,20 +690,23 @@ Describe 'Phase execution and review entry points' {
         }
     }
 
-    It 'blocks Phase 05 PASS until external approval has been recorded' {
+    It 'blocks PASS for every phase marked as requiring external approval' {
         $testRepository = New-OrchestratorTestRepository
         $statePath = Join-Path $testRepository '.orchestration\state.json'
         try {
-            $phaseFive = Get-PhaseDefinition -Phase 5 -ManifestPath $manifestPath
-            $state = New-OrchestrationState -PhaseDefinition $phaseFive -BaselineCommit '0123456789abcdef0123456789abcdef01234567'
-            $state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'run' -ManifestPath $manifestPath
-            $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason 'implemented' -ManifestPath $manifestPath
-            Write-OrchestrationState -State $state -StatePath $statePath
-            [System.IO.Directory]::CreateDirectory((Join-Path $testRepository 'docs\phases\phase-05')) | Out-Null
-            Set-Content -LiteralPath (Join-Path $testRepository 'docs\phases\phase-05\review.md') -Value "# Phase 05 Review`n`n- Reviewer: Codex`n- Verdict: PASS`n" -Encoding utf8NoBOM
-            $existingCommit = (git -C $testRepository rev-parse HEAD).Trim()
+            foreach ($phaseNumber in @(4, 5, 10)) {
+                $definition = Get-PhaseDefinition -Phase $phaseNumber -ManifestPath $manifestPath
+                $state = New-OrchestrationState -PhaseDefinition $definition -BaselineCommit '0123456789abcdef0123456789abcdef01234567'
+                $state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'run' -ManifestPath $manifestPath
+                $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason 'implemented' -ManifestPath $manifestPath
+                Write-OrchestrationState -State $state -StatePath $statePath
+                $number = '{0:D2}' -f $phaseNumber
+                [System.IO.Directory]::CreateDirectory((Join-Path $testRepository "docs\phases\phase-$number")) | Out-Null
+                Set-Content -LiteralPath (Join-Path $testRepository "docs\phases\phase-$number\review.md") -Value "# Phase $number Review`n`n- Reviewer: Codex`n- Verdict: PASS`n" -Encoding utf8NoBOM
+                $existingCommit = (git -C $testRepository rev-parse HEAD).Trim()
 
-            (Test-Throws { & $setReviewPath -RepositoryRoot $testRepository -StatePath $statePath -Decision PASS -Reason 'reviewed' -NextBaselineCommit $existingCommit }) | Should Be $true
+                (Test-Throws { & $setReviewPath -RepositoryRoot $testRepository -StatePath $statePath -Decision PASS -Reason 'reviewed' -NextBaselineCommit $existingCommit }) | Should Be $true
+            }
         }
         finally {
             if (Test-Path -LiteralPath $testRepository) {
@@ -631,7 +715,7 @@ Describe 'Phase execution and review entry points' {
         }
     }
 
-    It 'terminates after a reviewed Phase 09 PASS' {
+    It 'advances after a reviewed Phase 09 PASS' {
         $testRepository = New-OrchestratorTestRepository
         $statePath = Join-Path $testRepository '.orchestration\state.json'
         try {
@@ -643,9 +727,11 @@ Describe 'Phase execution and review entry points' {
             [System.IO.Directory]::CreateDirectory((Join-Path $testRepository 'docs\phases\phase-09')) | Out-Null
             Set-Content -LiteralPath (Join-Path $testRepository 'docs\phases\phase-09\review.md') -Value "# Phase 09 Review`n`n- Reviewer: Codex`n- Verdict: PASS`n" -Encoding utf8NoBOM
 
-            $result = & $setReviewPath -RepositoryRoot $testRepository -StatePath $statePath -Decision PASS -Reason 'reviewed'
-            $result.status | Should Be 'COMPLETE'
-            $result.phase | Should Be 9
+            $nextBaseline = (git -C $testRepository rev-parse HEAD).Trim()
+            $result = & $setReviewPath -RepositoryRoot $testRepository -StatePath $statePath -Decision PASS -Reason 'reviewed' -NextBaselineCommit $nextBaseline
+            $result.status | Should Be 'READY'
+            $result.phase | Should Be 10
+            $result.branch | Should Be 'codex/phase-10-observability-security'
         }
         finally {
             if (Test-Path -LiteralPath $testRepository) {

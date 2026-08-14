@@ -103,6 +103,22 @@
       "reviewPath": "docs/phases/phase-09/review.md",
       "allowedPaths": ["backend/**", "docs/phases/phase-09/result.md"],
       "requiresExternalApproval": false
+    },
+    {
+      "phase": 10,
+      "slug": "observability-security",
+      "branch": "codex/phase-10-observability-security",
+      "briefPath": "docs/phases/phase-10/brief.md",
+      "implementationPromptPath": "docs/phases/phase-10/implement.prompt.md",
+      "resultPath": "docs/phases/phase-10/result.md",
+      "reviewPath": "docs/phases/phase-10/review.md",
+      "allowedPaths": ["backend/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-10/result.md"],
+      "requiresExternalApproval": true,
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "maxTurns": 50,
+      "repairMaxTurns": 30,
+      "maxInvocationsPerPhase": 2
     }
   ]
 }
