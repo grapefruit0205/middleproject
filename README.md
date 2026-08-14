@@ -2,7 +2,7 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~08`은 구현과 독립 검증을 완료했습니다. 다음은 `Phase 09` MCP Adapter 단계입니다.
+현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. 다음은 별도 승인 후 진행할 `Phase 10` Observability and Security Hardening 단계입니다.
 
 > AWS 상태: Phase 05에서 승인된 검증 배포를 완료한 뒤 전부 철거했습니다. 현재 프로젝트 VPC, ALB, RDS, Auto Scaling Group은 배포되어 있지 않습니다.
 
@@ -42,7 +42,7 @@ EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 | 06 · Scheduler Integration | ✅ PASS | Scheduler Port, transactional Outbox, SQS/DLQ, 다중 WAS 동시성·재조정 구현 | `dfb5ff9` |
 | 07 · Notification Delivery | ✅ PASS | SES Email·Push Provider 경계, Attempt 영속화, 동시 중복 발송 방지, 최소 권한 SES 정책 구현 | `222d6d7` |
 | 08 · Reliability | ✅ PASS | Idempotency lease·fencing, 원자적 결과 재사용, 장애 복구 Matrix, DLQ Runbook 구현 | `81cfc51` |
-| 09 · MCP Adapter | ⏳ 예정 | REST와 동일한 Application Service를 사용하는 MCP Adapter, 인증·감사 | 예정 |
+| 09 · MCP Adapter | ✅ PASS | 동일 Application Service 기반 6개 제한 Tool, Principal 인증·소유권 인가, Schema·Lifecycle·Retry·Audit 구현 | `1ff7c23` |
 
 각 단계의 구현 증거와 Codex 독립 검토는 [`docs/phases`](docs/phases) 아래 `result.md`와 `review.md`에 기록합니다. Phase는 검토 결과가 `PASS`일 때만 다음 단계의 기준 커밋이 됩니다.
 
