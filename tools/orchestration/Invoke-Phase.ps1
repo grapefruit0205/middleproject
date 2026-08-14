@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidateRange(1, 9)]
+    [ValidateRange(1, 10)]
     [int]$Phase,
 
     [Parameter(Mandatory)]
@@ -68,7 +68,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $runtimePrompt = New-PhaseRuntimePrompt -PhaseDefinition $definition -RepositoryRoot $resolvedRepositoryRoot -BaselineCommit $baselineCommit
-$plan = New-CommandCodeRunPlan -PhaseDefinition $definition -RuntimePrompt $runtimePrompt -CmdcPath $CmdcPath -RepositoryRoot $resolvedRepositoryRoot -BaselineCommit $baselineCommit
+$attemptNumber = [int]$state.attempt + 1
+$plan = New-CommandCodeRunPlan -PhaseDefinition $definition -RuntimePrompt $runtimePrompt -CmdcPath $CmdcPath -RepositoryRoot $resolvedRepositoryRoot -BaselineCommit $baselineCommit -AttemptNumber $attemptNumber
 
 if ($DryRun) {
     $dryRunResult = Invoke-CommandCodeAttempt -Plan $plan -LogDirectory $RuntimeDirectory -DryRun
@@ -79,6 +80,8 @@ if ($DryRun) {
         baselineCommit = $baselineCommit
         model          = [string]$definition.model
         effort         = [string]$definition.effort
+        maxTurns       = [int]$plan.maxTurns
+        attemptNumber  = [int]$plan.attemptNumber
         autoAccept     = $true
         command        = $dryRunResult.command
         arguments      = @($dryRunResult.arguments)

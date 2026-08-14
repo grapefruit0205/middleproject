@@ -1,6 +1,6 @@
-# Phase 01-09 Command Code Orchestrator
+# Phase 01-10 Command Code Orchestrator
 
-Codex Desktop owns phase state and review decisions. Command Code implements one phase per process. The runner uses `gpt-5.6-luna`, `max` effort, `--auto-accept`, and a limit of three invocations per phase.
+Codex Desktop owns phase state and review decisions. Command Code implements one phase per process. Phases 01-09 retain `gpt-5.6-luna`, `max` effort, 100 turns, and three invocations. Phase 10 uses `gpt-5.6-terra`, `xhigh`, 50 turns for the initial attempt, 30 turns for one repair, and two invocations total. Every run uses `--auto-accept`.
 
 The runner does not push, merge, apply Terraform, mutate AWS, store credentials, edit architecture records, write Codex reviews, or create Git commits. It stops when another coding-agent writer is active.
 
@@ -28,7 +28,7 @@ git status --short --branch
 
 Close the existing interactive `cmdc` session with `Ctrl+C` before the first real attempt. If you cannot reach its terminal, inspect the exact process ID and command line before stopping that one process. Do not use a broad process kill.
 
-The repository must be on the branch declared for the requested phase. Phase 01 uses `codex/phase-01-local-foundation`.
+The repository must be on the branch declared for the requested phase. Phase 10 uses `codex/phase-10-observability-security`.
 
 ## Dry Run
 
@@ -36,8 +36,9 @@ This command validates the branch, baseline, prompt inputs, and paid invocation 
 
 ```powershell
 & .\tools\orchestration\Invoke-Phase.ps1 `
-  -Phase 1 `
+  -Phase 10 `
   -RepositoryRoot C:\middleproject `
+  -StatePath C:\middleproject\.orchestration\phase-10-state.json `
   -DryRun | Format-List
 ```
 
@@ -45,8 +46,10 @@ Confirm these values in the output:
 
 ```text
 status: DRY_RUN
-model: gpt-5.6-luna
-effort: max
+model: gpt-5.6-terra
+effort: xhigh
+maxTurns: 50
+attemptNumber: 1
 autoAccept: True
 workingDirectory: C:\middleproject
 ```
@@ -55,8 +58,9 @@ workingDirectory: C:\middleproject
 
 ```powershell
 & .\tools\orchestration\Invoke-Phase.ps1 `
-  -Phase 1 `
-  -RepositoryRoot C:\middleproject
+  -Phase 10 `
+  -RepositoryRoot C:\middleproject `
+  -StatePath C:\middleproject\.orchestration\phase-10-state.json
 ```
 
 The script starts one `cmdc` process and waits for it to exit. It compares the working tree before and after that process. It moves to `BLOCKED` if the process changes `HEAD`, switches branches, edits a disallowed path, or touches the Codex review.
@@ -64,7 +68,7 @@ The script starts one `cmdc` process and waits for it to exit. It compares the w
 Inspect state and logs after the command returns:
 
 ```powershell
-Get-Content .\.orchestration\state.json -Raw | ConvertFrom-Json | Format-List
+Get-Content .\.orchestration\phase-10-state.json -Raw | ConvertFrom-Json | Format-List
 Get-ChildItem .\.orchestration\runs | Sort-Object LastWriteTime -Descending
 ```
 
@@ -103,7 +107,7 @@ Write concrete findings to the active phase review, then run:
   -Reason 'Address the unresolved findings in review.md'
 ```
 
-Run `Invoke-Phase.ps1` for the same phase again. The runner supplies the review as read-only repair input. The phase shares one limit of three invocations across failed attempts and review repairs.
+Run `Invoke-Phase.ps1` for the same phase again. The runner supplies the review as read-only repair input. Phases 01-09 share a three-invocation limit. Phase 10 permits only the 50-turn initial attempt and one 30-turn repair.
 
 ### Pass and advance
 
@@ -122,15 +126,17 @@ $nextBaseline = (git rev-parse HEAD).Trim()
   -NextBaselineCommit $nextBaseline
 ```
 
-For Phases 01 through 08, create the next branch from that reviewed commit. Read the exact name from `phases.json`:
+For Phases 01 through 09, create the next branch from that reviewed commit. Read the exact name from `phases.json`:
 
 ```powershell
 git switch -c codex/phase-02-reminder-core-calendar $nextBaseline
 ```
 
-Phase 09 ends in `COMPLETE`; omit `-NextBaselineCommit` and do not create a Phase 10 branch.
+Phase 10 ends in `COMPLETE` only after its external approval gate and live evidence pass. Omit `-NextBaselineCommit` for the terminal Phase 10 decision.
 
 ## AWS Approval Gate
+
+Phases 04, 05, and 10 carry `requiresExternalApproval` in the manifest. The review entry point rejects PASS until the state records explicit approval.
 
 Phase 04 may write Terraform and run format, validation, plan, and static checks. Neither agent may run `terraform apply` or mutate AWS during Phase 04.
 
@@ -155,11 +161,11 @@ The user reviews the exact action, target AWS account and region, resource list,
   -ExternalApproval
 ```
 
-Codex Desktop or the user runs only the approved external command, captures evidence, and finishes the Phase 05 review. Command Code does not receive live AWS authority. Phases 06 and 07 use mocks or recorded fixtures unless the user grants a separate limited approval.
+Codex Desktop or the user runs only the approved external command, captures evidence, and finishes the review. Command Code does not receive live AWS authority. Phase 10 uses `.orchestration/phase-10-state.json` and stops at the same gate before deployment, log injection, Alarm state changes, instance replacement, or Secret access.
 
 ## Recovery
 
-Read `.orchestration/state.json` after a Desktop or PowerShell restart.
+Read the state path supplied to `Invoke-Phase.ps1` after a Desktop or PowerShell restart. Phase 10 uses `.orchestration/phase-10-state.json` so the completed Phase 01-09 state remains intact.
 
 - `READY`: rerun the phase named in state.
 - `REVIEWING`: inspect the saved logs and working tree; do not start another implementation attempt.
@@ -167,4 +173,4 @@ Read `.orchestration/state.json` after a Desktop or PowerShell restart.
 - `BLOCKED`: inspect the recorded reason and working tree. Do not delete or revert files automatically.
 - `COMPLETE`: stop the loop.
 
-If state names a different phase than the branch, stop and inspect Git history and state. Do not rewrite state by hand. Remote push and merge require a separate user request.
+If state names a different phase than the branch, stop and inspect Git history and state. Do not rewrite state by hand. The runner never pushes or merges. Codex pushes verified commits under the project's standing backup instruction; merging into `main` requires an explicit review decision.

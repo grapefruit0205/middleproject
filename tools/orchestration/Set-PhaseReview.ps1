@@ -32,6 +32,8 @@ Import-Module $modulePath -Force
 $resolvedRepositoryRoot = (Resolve-Path -LiteralPath $RepositoryRoot).Path
 $state = Read-OrchestrationState -StatePath $StatePath
 $definition = Get-PhaseDefinition -Phase ([int]$state.phase) -ManifestPath $manifestPath
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$terminalPhase = [int](@($manifest.phases.phase | Measure-Object -Maximum).Maximum)
 
 if ($Decision -eq 'RESUME_AFTER_APPROVAL') {
     if (-not $ExternalApproval) {
@@ -56,10 +58,10 @@ switch ($Decision) {
         if ($reviewContent -notmatch '(?im)^\s*-\s*Verdict:\s*PASS\s*$') {
             throw "PASS requires '- Verdict: PASS' in $($definition.reviewPath)."
         }
-        if ([int]$state.phase -eq 5 -and -not [bool]$state.externalApprovalGranted) {
-            throw 'Phase 05 PASS requires recorded external approval for the live AWS verification gate.'
+        if ([bool]$definition.requiresExternalApproval -and -not [bool]$state.externalApprovalGranted) {
+            throw "Phase $($state.phase) PASS requires recorded external approval for the live AWS verification gate."
         }
-        if ([int]$state.phase -lt 9) {
+        if ([int]$state.phase -lt $terminalPhase) {
             if ([string]::IsNullOrWhiteSpace($NextBaselineCommit)) {
                 throw 'NextBaselineCommit is required before advancing to the next phase.'
             }
