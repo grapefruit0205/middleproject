@@ -1,6 +1,6 @@
 # Phase 10 Observability and Security Hardening Design
 
-Status: Chat design approved; written-spec review pending
+Status: Approved for implementation
 
 Date: 2026-08-14
 
