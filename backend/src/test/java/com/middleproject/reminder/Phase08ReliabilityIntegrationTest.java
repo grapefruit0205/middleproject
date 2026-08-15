@@ -45,7 +45,8 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {ReminderPlatformApplication.class, SchedulerOutboxIntegrationTest.Configuration.class, Phase08ReliabilityIntegrationTest.Configuration.class, Phase08ReliabilityIntegrationTest.TransactionalFailureConfiguration.class}, properties = {
         "spring.datasource.url=jdbc:h2:mem:phase08-matrix;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
-        "spring.datasource.username=sa", "spring.datasource.password=", "spring.flyway.enabled=true"
+        "spring.datasource.username=sa", "spring.datasource.password=", "spring.flyway.enabled=true",
+        "trip.demo-owner-id=demo-owner"
 })
 class Phase08ReliabilityIntegrationTest {
     @Autowired JdbcTemplate db;

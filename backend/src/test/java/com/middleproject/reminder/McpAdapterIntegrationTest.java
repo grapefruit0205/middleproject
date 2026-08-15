@@ -30,7 +30,7 @@ import static org.mockito.Mockito.reset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:mcp;MODE=PostgreSQL;DB_CLOSE_DELAY=-1", "spring.datasource.username=sa", "spring.datasource.password=", "spring.flyway.enabled=true"})
+@SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:mcp;MODE=PostgreSQL;DB_CLOSE_DELAY=-1", "spring.datasource.username=sa", "spring.datasource.password=", "spring.flyway.enabled=true", "trip.demo-owner-id=demo-owner"})
 @AutoConfigureMockMvc
 class McpAdapterIntegrationTest {
     @Autowired MockMvc mvc;
@@ -61,13 +61,20 @@ class McpAdapterIntegrationTest {
         JsonNode tools = call("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}", "alice").path("result").path("tools");
         Set<String> names = new HashSet<>();
         tools.forEach(tool -> names.add(tool.path("name").asText()));
-        assertEquals(Set.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status"), names);
-        assertEquals(6, tools.size());
+        assertEquals(Set.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status",
+                "create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip"), names);
+        assertEquals(10, tools.size());
         for (JsonNode tool : tools) {
             JsonNode schema = tool.path("inputSchema");
             assertEquals("object", schema.path("type").asText());
             assertFalse(schema.path("additionalProperties").asBoolean());
-            assertEquals(schema.path("properties").size(), schema.path("required").size());
+            if (tool.path("name").asText().equals("create_trip_draft")) {
+                // returnAt is optional for a draft because the return time may not be known yet
+                assertEquals(schema.path("properties").size() - 1, schema.path("required").size());
+                assertTrue(schema.path("required").toString().contains("returnAt") == false);
+            } else {
+                assertEquals(schema.path("properties").size(), schema.path("required").size());
+            }
             schema.path("properties").fields().forEachRemaining(field -> {
                 JsonNode value = field.getValue();
                 if (field.getKey().equals("expectedVersion")) {

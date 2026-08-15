@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.middleproject.reminder.application.McpAuditService;
 import com.middleproject.reminder.application.McpReminderQueryService;
 import com.middleproject.reminder.application.ReminderService;
+import com.middleproject.reminder.application.TripService;
 import com.middleproject.reminder.domain.Reminder;
 import com.middleproject.reminder.domain.ReminderStatus;
 import org.slf4j.Logger;
@@ -18,28 +19,35 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/mcp")
 public class McpAdapterController {
-    private static final List<String> TOOL_NAMES = List.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status");
+    private static final List<String> TOOL_NAMES = List.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status",
+            "create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip");
     private static final Map<String, List<String>> TOOL_ARGS = Map.of(
             "create_reminder", List.of("eventId", "policyId", "idempotencyKey"),
             "list_reminders", List.of(), "get_reminder", List.of("reminderId"),
             "update_reminder", List.of("reminderId", "eventId", "policyId", "expectedVersion", "idempotencyKey"),
             "cancel_reminder", List.of("reminderId", "expectedVersion", "idempotencyKey"),
-            "get_delivery_status", List.of("reminderId"));
+            "get_delivery_status", List.of("reminderId"),
+            "create_trip_draft", List.of("departure", "destination", "departureAt", "returnAt", "idempotencyKey"),
+            "answer_trip_question", List.of("tripId", "question", "answer", "idempotencyKey"),
+            "confirm_trip", List.of("tripId", "confirmation", "idempotencyKey"),
+            "cancel_trip", List.of("tripId", "expectedVersion", "idempotencyKey"));
 
     private final ReminderService reminders;
     private final McpReminderQueryService queries;
     private final McpAuditService audit;
+    private final TripService trips;
     private static final Logger log = LoggerFactory.getLogger(McpAdapterController.class);
     private static final String PROTOCOL_VERSION = "2025-03-26";
     private final ObjectMapper mapper;
 
-    public McpAdapterController(ReminderService reminders, McpReminderQueryService queries, McpAuditService audit, ObjectMapper mapper) {
-        this.reminders = reminders; this.queries = queries; this.audit = audit; this.mapper = mapper;
+    public McpAdapterController(ReminderService reminders, McpReminderQueryService queries, McpAuditService audit, TripService trips, ObjectMapper mapper) {
+        this.reminders = reminders; this.queries = queries; this.audit = audit; this.trips = trips; this.mapper = mapper;
     }
 
     @PostMapping
@@ -119,7 +127,7 @@ public class McpAdapterController {
         ObjectNode r = mapper.createObjectNode(); r.put("protocolVersion", PROTOCOL_VERSION); r.putObject("capabilities").putObject("tools"); r.putObject("serverInfo").put("name", "middleproject-reminder").put("version", "1.0"); return r;
     }
     private JsonNode tools() { ArrayNode a = mapper.createArrayNode(); for (String name : TOOL_NAMES) { ObjectNode t = a.addObject(); t.put("name", name); t.set("inputSchema", schema(name)); } ObjectNode r = mapper.createObjectNode(); r.set("tools", a); return r; }
-    private ObjectNode schema(String name) { ObjectNode s = mapper.createObjectNode(); s.put("type", "object"); ObjectNode p = s.putObject("properties"); for (String arg : TOOL_ARGS.get(name)) { ObjectNode field = p.putObject(arg); if ("expectedVersion".equals(arg)) { field.put("type", "integer"); field.put("minimum", 0); } else { field.put("type", "string"); if (arg.endsWith("Id")) field.put("format", "uuid"); if ("idempotencyKey".equals(arg)) { field.put("minLength", 1); field.put("maxLength", 200); } } } ArrayNode required = s.putArray("required"); TOOL_ARGS.get(name).forEach(required::add); s.put("additionalProperties", false); return s; }
+    private ObjectNode schema(String name) { ObjectNode s = mapper.createObjectNode(); s.put("type", "object"); ObjectNode p = s.putObject("properties"); for (String arg : TOOL_ARGS.get(name)) { ObjectNode field = p.putObject(arg); if ("expectedVersion".equals(arg)) { field.put("type", "integer"); field.put("minimum", 0); } else { field.put("type", "string"); if (arg.endsWith("Id")) field.put("format", "uuid"); if ("idempotencyKey".equals(arg)) { field.put("minLength", 1); field.put("maxLength", 200); } if ("departureAt".equals(arg) || "returnAt".equals(arg)) field.put("format", "date-time"); } } ArrayNode required = s.putArray("required"); for (String arg : TOOL_ARGS.get(name)) { if ("create_trip_draft".equals(name) && "returnAt".equals(arg)) continue; required.add(arg); } s.put("additionalProperties", false); return s; }
     private ObjectNode toolResult(Object result) throws Exception { ObjectNode r = mapper.createObjectNode(); ArrayNode content = r.putArray("content"); content.addObject().put("type", "text").put("text", mapper.writeValueAsString(result)); r.put("isError", false); r.set("structuredContent", mapper.valueToTree(result)); return r; }
 
     private String identity(Principal principal) {
@@ -127,7 +135,19 @@ public class McpAdapterController {
             throw rpc(-32001, "Authenticated user identity is required");
         return principal.getName();
     }
-    private void validate(String name, JsonNode args) { if (!TOOL_ARGS.containsKey(name) || args == null || !args.isObject()) throw rpc(-32602, "Unknown tool or arguments"); Set<String> allowed = new HashSet<>(TOOL_ARGS.get(name)); args.fieldNames().forEachRemaining(k -> { if (!allowed.contains(k)) throw rpc(-32602, "Unknown argument"); }); for (String k : TOOL_ARGS.get(name)) { JsonNode v=args.get(k); if(v==null||v.isNull()) throw rpc(-32602,"Missing argument"); if("expectedVersion".equals(k)){if(!v.isIntegralNumber()||!v.canConvertToLong()||v.longValue()<0)throw rpc(-32602,"Invalid version");} else if(!v.isTextual() || ("idempotencyKey".equals(k) && (v.textValue().isBlank() || v.textValue().length()>200))) throw rpc(-32602,"Invalid argument"); if(k.endsWith("Id")) try{UUID.fromString(v.textValue());}catch(Exception e){throw rpc(-32602,"Invalid UUID");} } }
-    private Object call(String n, JsonNode a, String u) { if(n.equals("create_reminder"))return reminders.create(UUID.fromString(a.get("eventId").textValue()),UUID.fromString(a.get("policyId").textValue()),a.get("idempotencyKey").textValue(),u); if(n.equals("list_reminders"))return reminders.all(u); UUID id=UUID.fromString(a.get("reminderId").textValue()); Reminder owned=reminders.find(id,u); if(n.equals("get_reminder"))return owned; if(n.equals("update_reminder"))return reminders.update(id,UUID.fromString(a.get("eventId").textValue()),UUID.fromString(a.get("policyId").textValue()),a.get("expectedVersion").longValue(),a.get("idempotencyKey").textValue(),u); if(n.equals("cancel_reminder"))return reminders.transition(id,ReminderStatus.CANCELLED,a.get("expectedVersion").longValue(),a.get("idempotencyKey").textValue(),u); return queries.deliveryStatus(owned.id()); }
+    private void validate(String name, JsonNode args) { if (!TOOL_ARGS.containsKey(name) || args == null || !args.isObject()) throw rpc(-32602, "Unknown tool or arguments"); Set<String> allowed = new HashSet<>(TOOL_ARGS.get(name)); args.fieldNames().forEachRemaining(k -> { if (!allowed.contains(k)) throw rpc(-32602, "Unknown argument"); }); for (String k : TOOL_ARGS.get(name)) { JsonNode v=args.get(k); if(v==null||v.isNull()){ if ("create_trip_draft".equals(name) && "returnAt".equals(k)) continue; throw rpc(-32602,"Missing argument"); } if("expectedVersion".equals(k)){if(!v.isIntegralNumber()||!v.canConvertToLong()||v.longValue()<0)throw rpc(-32602,"Invalid version");} else if(!v.isTextual() || ("idempotencyKey".equals(k) && (v.textValue().isBlank() || v.textValue().length()>200))) throw rpc(-32602,"Invalid argument"); if(k.endsWith("Id")) try{UUID.fromString(v.textValue());}catch(Exception e){throw rpc(-32602,"Invalid UUID");} if(("departureAt".equals(k)||"returnAt".equals(k))) try{OffsetDateTime.parse(v.textValue());}catch(Exception e){throw rpc(-32602,"Invalid date-time");} } }
+    private Object call(String n, JsonNode a, String u) {
+        if(n.equals("create_trip_draft"))return trips.createDraft(a.get("departure").textValue(),a.get("destination").textValue(),OffsetDateTime.parse(a.get("departureAt").textValue()),a.get("returnAt")==null||a.get("returnAt").isNull()?null:OffsetDateTime.parse(a.get("returnAt").textValue()),a.get("idempotencyKey").textValue());
+        if(n.equals("answer_trip_question"))return trips.answerQuestion(UUID.fromString(a.get("tripId").textValue()),a.get("question").textValue(),a.get("answer").textValue(),a.get("idempotencyKey").textValue());
+        if(n.equals("confirm_trip"))return trips.confirm(UUID.fromString(a.get("tripId").textValue()),a.get("confirmation").textValue(),a.get("idempotencyKey").textValue());
+        if(n.equals("cancel_trip"))return trips.cancel(UUID.fromString(a.get("tripId").textValue()),a.get("expectedVersion").longValue(),a.get("idempotencyKey").textValue());
+        if(n.equals("create_reminder"))return reminders.create(UUID.fromString(a.get("eventId").textValue()),UUID.fromString(a.get("policyId").textValue()),a.get("idempotencyKey").textValue(),u);
+        if(n.equals("list_reminders"))return reminders.all(u);
+        UUID id=UUID.fromString(a.get("reminderId").textValue());
+        Reminder owned=reminders.find(id,u);
+        if(n.equals("get_reminder"))return owned;
+        if(n.equals("update_reminder"))return reminders.update(id,UUID.fromString(a.get("eventId").textValue()),UUID.fromString(a.get("policyId").textValue()),a.get("expectedVersion").longValue(),a.get("idempotencyKey").textValue(),u);
+        if(n.equals("cancel_reminder"))return reminders.transition(id,ReminderStatus.CANCELLED,a.get("expectedVersion").longValue(),a.get("idempotencyKey").textValue(),u);
+        return queries.deliveryStatus(owned.id()); }
     private McpException rpc(int code,String message){return new McpException(code,message);} private static class McpException extends RuntimeException{final int code;McpException(int c,String m){super(m);code=c;}}
 }

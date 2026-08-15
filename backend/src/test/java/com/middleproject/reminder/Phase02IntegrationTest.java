@@ -16,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "spring.datasource.url=jdbc:h2:mem:phase2;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
         "spring.datasource.username=sa",
         "spring.datasource.password=",
-        "spring.flyway.enabled=true"
+        "spring.flyway.enabled=true",
+        "trip.demo-owner-id=demo-owner"
 })
 class Phase02IntegrationTest {
     @Autowired JdbcTemplate jdbc;

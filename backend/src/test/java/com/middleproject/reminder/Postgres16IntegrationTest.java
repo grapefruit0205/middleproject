@@ -82,7 +82,7 @@ class Postgres16IntegrationTest {
 
     @Test
     void postgresMcpOwnershipIdempotencyAuditAndFlywayEvidence() throws Exception {
-        assertEquals(6, db.queryForObject("select count(*) from flyway_schema_history where success=true and version in ('1','2','3','4','5','6')", Integer.class));
+        assertEquals(7, db.queryForObject("select count(*) from flyway_schema_history where success=true and version in ('1','2','3','4','5','6','7')", Integer.class));
         var data = newReminderSeed("mcp");
         JsonNode ownerList = mcp("list_reminders", "{}", "alice", null);
         assertTrue(ownerList.path("result").path("structuredContent").size() >= 1);
@@ -118,6 +118,7 @@ class Postgres16IntegrationTest {
         registry.add("spring.datasource.username", () -> System.getenv("POSTGRES_TEST_USERNAME"));
         registry.add("spring.datasource.password", () -> System.getenv("POSTGRES_TEST_PASSWORD"));
         registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("trip.demo-owner-id", () -> "demo-owner");
     }
 
     @BeforeEach
@@ -320,10 +321,13 @@ class Postgres16IntegrationTest {
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");
-        db.update("delete from idempotency_record");
+        db.update("delete from trip_outbox");
         db.update("delete from reminders");
-        db.update("delete from events");
         db.update("delete from notification_policies");
+        db.update("delete from trip_events");
+        db.update("delete from trips");
+        db.update("delete from events");
+        db.update("delete from idempotency_record");
     }
 
     @TestConfiguration

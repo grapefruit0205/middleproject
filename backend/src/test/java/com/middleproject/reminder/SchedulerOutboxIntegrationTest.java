@@ -32,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = {ReminderPlatformApplication.class, SchedulerOutboxIntegrationTest.Configuration.class}, properties = {
         "spring.datasource.url=jdbc:h2:mem:scheduler-outbox;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
-        "spring.datasource.username=sa", "spring.datasource.password=", "spring.flyway.enabled=true"
+        "spring.datasource.username=sa", "spring.datasource.password=", "spring.flyway.enabled=true",
+        "trip.demo-owner-id=demo-owner"
 })
 class SchedulerOutboxIntegrationTest {
     @Autowired EventService events;
