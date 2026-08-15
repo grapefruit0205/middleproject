@@ -53,7 +53,7 @@ class McpAdapterIntegrationTest {
         db.update("delete from notification_policies");
     }
 
-    @Test void initializeAndToolsListExposeExactlySixClosedSchemas() throws Exception {
+    @Test void initializeAndToolsListExposeExactlySixteenClosedSchemas() throws Exception {
         JsonNode init = call("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1\"}}}", "alice");
         assertEquals("2.0", init.path("jsonrpc").asText());
         assertEquals("2025-03-26", init.path("result").path("protocolVersion").asText());
@@ -63,8 +63,9 @@ class McpAdapterIntegrationTest {
         tools.forEach(tool -> names.add(tool.path("name").asText()));
         assertEquals(Set.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status",
                 "create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip",
-                "next_private_car_question", "preview_private_car_route", "confirm_private_car_route"), names);
-        assertEquals(13, tools.size());
+                "next_private_car_question", "preview_private_car_route", "confirm_private_car_route",
+                "get_trip_travel_context", "record_trip_followup_consent", "get_trip_recommendations"), names);
+        assertEquals(16, tools.size());
         for (JsonNode tool : tools) {
             JsonNode schema = tool.path("inputSchema");
             assertEquals("object", schema.path("type").asText());
@@ -85,6 +86,19 @@ class McpAdapterIntegrationTest {
                     assertEquals("integer", value.path("type").asText());
                     assertEquals(0, value.path("minimum").asInt());
                     assertEquals(1440, value.path("maximum").asInt());
+                } else if (field.getKey().equals("accepted")) {
+                    assertEquals("boolean", value.path("type").asText());
+                } else if (field.getKey().equals("departureTiming")) {
+                    assertEquals("string", value.path("type").asText());
+                    assertEquals("SAME_DAY", value.path("enum").get(0).asText());
+                    assertEquals("PREVIOUS_DAY", value.path("enum").get(1).asText());
+                    assertEquals(2, value.path("enum").size());
+                } else if (field.getKey().equals("sort")) {
+                    assertEquals("string", value.path("type").asText());
+                    assertEquals("DISTANCE", value.path("enum").get(0).asText());
+                    assertEquals("PRICE", value.path("enum").get(1).asText());
+                    assertEquals("RATING", value.path("enum").get(2).asText());
+                    assertEquals(3, value.path("enum").size());
                 } else {
                     assertEquals("string", value.path("type").asText());
                     if (field.getKey().endsWith("Id")
