@@ -48,9 +48,9 @@ class TripMcpIntegrationTest {
         db.update("delete from events");
     }
 
-    private JsonNode call(String body, String user) throws Exception {
+    private JsonNode call(String body) throws Exception {
         MvcResult result = mvc.perform(post("/api/mcp").contentType(MediaType.APPLICATION_JSON)
-                        .content(body).principal(() -> user))
+                        .content(body))
                 .andExpect(status().isOk()).andReturn();
         return mapper.readTree(result.getResponse().getContentAsString());
     }
@@ -61,7 +61,7 @@ class TripMcpIntegrationTest {
 
     @Test
     void tripToolsAreExposedInToolsList() throws Exception {
-        JsonNode tools = call("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}", "alice").path("result").path("tools");
+        JsonNode tools = call("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}").path("result").path("tools");
         Set<String> names = new HashSet<>();
         tools.forEach(t -> names.add(t.path("name").asText()));
         for (String expected : new String[]{"create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip"}) {
@@ -75,14 +75,14 @@ class TripMcpIntegrationTest {
 
     @Test
     void createConfirmCancelFlowWorksThroughMcp() throws Exception {
-        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-draft-1\"}"), "alice");
+        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-draft-1\"}"));
         assertEquals("DRAFT", created.path("result").path("structuredContent").path("status").asText());
         String tripId = created.path("result").path("structuredContent").path("id").asText();
 
-        JsonNode answered = call(tool("answer_trip_question", "{\"tripId\":\"" + tripId + "\",\"question\":\"Q1\",\"answer\":\"A1\",\"idempotencyKey\":\"mcp-answer-1\"}"), "alice");
+        JsonNode answered = call(tool("answer_trip_question", "{\"tripId\":\"" + tripId + "\",\"question\":\"Q1\",\"answer\":\"A1\",\"idempotencyKey\":\"mcp-answer-1\"}"));
         assertEquals("A1", answered.path("result").path("structuredContent").path("draftContext").path("Q1").asText());
 
-        JsonNode confirmed = call(tool("confirm_trip", "{\"tripId\":\"" + tripId + "\",\"confirmation\":\"mcp-confirm-1\",\"idempotencyKey\":\"mcp-confirm-1\"}"), "alice");
+        JsonNode confirmed = call(tool("confirm_trip", "{\"tripId\":\"" + tripId + "\",\"confirmation\":\"mcp-confirm-1\",\"idempotencyKey\":\"mcp-confirm-1\"}"));
         assertEquals("CONFIRMED", confirmed.path("result").path("structuredContent").path("status").asText());
         assertEquals(1, db.queryForObject("select count(*) from trip_events where trip_id=? and type='DRAFT_CREATED'", Integer.class, UUID.fromString(tripId)));
         assertEquals(1, db.queryForObject("select count(*) from trip_events where trip_id=? and type='AWAITING_CONFIRMATION'", Integer.class, UUID.fromString(tripId)));
@@ -90,18 +90,18 @@ class TripMcpIntegrationTest {
         assertEquals(1, db.queryForObject("select count(*) from reminders where trip_id=?", Integer.class, UUID.fromString(tripId)));
 
         long version = confirmed.path("result").path("structuredContent").path("version").asLong();
-        JsonNode cancelled = call(tool("cancel_trip", "{\"tripId\":\"" + tripId + "\",\"expectedVersion\":" + version + ",\"idempotencyKey\":\"mcp-cancel-1\"}"), "alice");
+        JsonNode cancelled = call(tool("cancel_trip", "{\"tripId\":\"" + tripId + "\",\"expectedVersion\":" + version + ",\"idempotencyKey\":\"mcp-cancel-1\"}"));
         assertEquals("CANCELLED", cancelled.path("result").path("structuredContent").path("status").asText());
         assertEquals(1, db.queryForObject("select count(*) from trip_outbox where trip_id=? and operation='DELETE'", Integer.class, UUID.fromString(tripId)));
     }
 
     @Test
     void confirmRetryReturnsSameResultAndNoDuplicateRows() throws Exception {
-        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-retry-draft\"}"), "alice");
+        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-retry-draft\"}"));
         String tripId = created.path("result").path("structuredContent").path("id").asText();
         String body = tool("confirm_trip", "{\"tripId\":\"" + tripId + "\",\"confirmation\":\"mcp-retry-confirm\",\"idempotencyKey\":\"mcp-retry-confirm\"}");
-        JsonNode first = call(body, "alice");
-        JsonNode replay = call(body, "alice");
+        JsonNode first = call(body);
+        JsonNode replay = call(body);
         assertEquals(first.path("result").path("structuredContent").path("id").asText(), replay.path("result").path("structuredContent").path("id").asText());
         assertEquals(first.path("result").path("structuredContent").path("status").asText(), replay.path("result").path("structuredContent").path("status").asText());
         assertEquals(first.path("result").path("structuredContent").path("confirmationId").asText(), replay.path("result").path("structuredContent").path("confirmationId").asText());
@@ -116,12 +116,12 @@ class TripMcpIntegrationTest {
 
     @Test
     void failedConfirmationIsReportedAndLeavesNoPartialRows() throws Exception {
-        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-fail-draft\"}"), "alice");
+        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-fail-draft\"}"));
         String tripId = created.path("result").path("structuredContent").path("id").asText();
         // fresh draft is at version 0, so a confirmation would write scheduler_version 2
         db.update("insert into trip_outbox(id,trip_id,operation,expected_version,scheduler_version,due_at,payload,created_at) values(?,?,?,?,?,?,?,?)",
                 UUID.randomUUID(), UUID.fromString(tripId), "UPSERT", 1, 2, OffsetDateTime.now(), "{}", OffsetDateTime.now());
-        JsonNode bad = call(tool("confirm_trip", "{\"tripId\":\"" + tripId + "\",\"confirmation\":\"confirm\",\"idempotencyKey\":\"mcp-fail-confirm\"}"), "alice");
+        JsonNode bad = call(tool("confirm_trip", "{\"tripId\":\"" + tripId + "\",\"confirmation\":\"confirm\",\"idempotencyKey\":\"mcp-fail-confirm\"}"));
         assertTrue(bad.has("error"));
         assertEquals(1, db.queryForObject("select count(*) from trip_events where trip_id=? and type='DRAFT_CREATED'", Integer.class, UUID.fromString(tripId)));
         assertEquals(0, db.queryForObject("select count(*) from trip_events where trip_id=? and type='AWAITING_CONFIRMATION'", Integer.class, UUID.fromString(tripId)));
@@ -133,9 +133,9 @@ class TripMcpIntegrationTest {
 
     @Test
     void validationErrorsReturnJsonRpcErrorWithoutPersistingTrip() throws Exception {
-        JsonNode blankLocation = call(tool("create_trip_draft", "{\"departure\":\" \",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-blank-departure\"}"), "alice");
+        JsonNode blankLocation = call(tool("create_trip_draft", "{\"departure\":\" \",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-03T18:00:00+09:00\",\"idempotencyKey\":\"mcp-blank-departure\"}"));
         assertTrue(blankLocation.has("error"));
-        JsonNode reversedTimes = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-01T09:00:00+09:00\",\"idempotencyKey\":\"mcp-reversed-times\"}"), "alice");
+        JsonNode reversedTimes = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"returnAt\":\"2030-01-01T09:00:00+09:00\",\"idempotencyKey\":\"mcp-reversed-times\"}"));
         assertTrue(reversedTimes.has("error"));
         assertEquals(0, db.queryForObject("select count(*) from trips", Integer.class));
         assertEquals(0, db.queryForObject("select count(*) from trip_events", Integer.class));
@@ -143,7 +143,7 @@ class TripMcpIntegrationTest {
 
     @Test
     void draftCanBeCreatedWithoutReturnAt() throws Exception {
-        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"idempotencyKey\":\"mcp-no-return\"}"), "alice");
+        JsonNode created = call(tool("create_trip_draft", "{\"departure\":\"Seoul\",\"destination\":\"Tokyo\",\"departureAt\":\"2030-01-01T10:00:00+09:00\",\"idempotencyKey\":\"mcp-no-return\"}"));
         assertEquals("DRAFT", created.path("result").path("structuredContent").path("status").asText());
         assertTrue(created.path("result").path("structuredContent").path("returnAt").isNull());
         assertEquals(1, db.queryForObject("select count(*) from trips", Integer.class));

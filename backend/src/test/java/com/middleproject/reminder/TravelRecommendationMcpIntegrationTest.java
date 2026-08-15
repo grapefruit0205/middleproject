@@ -89,11 +89,7 @@ class TravelRecommendationMcpIntegrationTest {
     }
 
     private JsonNode call(String body) throws Exception {
-        return call(body, "alice");
-    }
-
-    private JsonNode call(String body, String user) throws Exception {
-        return call(body, user, null);
+        return call(body, null, null);
     }
 
     private JsonNode call(String body, String user, String mcpUser) throws Exception {
@@ -250,23 +246,31 @@ class TravelRecommendationMcpIntegrationTest {
         Trip trip = trip();
         JsonNode context = call(tool("get_trip_travel_context", "{\"tripId\":\"" + trip.id() + "\",\"departureTiming\":\"SAME_DAY\",\"sort\":\"DISTANCE\"}"));
         assertFalse(context.has("error"));
-        assertEquals(1, count("select count(*) from mcp_audit where tool_name='get_trip_travel_context' and user_id='alice' and outcome='SUCCEEDED'"));
+        assertEquals(1, count("select count(*) from mcp_audit where tool_name='get_trip_travel_context' and user_id='demo-owner' and outcome='SUCCEEDED'"));
 
         JsonNode failed = call(tool("record_trip_followup_consent", "{\"tripId\":\"" + trip.id() + "\",\"accepted\":true,\"idempotencyKey\":\"   \"}"));
         assertEquals(-32602, failed.path("error").path("code").asInt());
-        assertEquals(1, count("select count(*) from mcp_audit where tool_name='record_trip_followup_consent' and user_id='alice' and outcome='FAILED'"));
+        assertEquals(1, count("select count(*) from mcp_audit where tool_name='record_trip_followup_consent' and user_id='demo-owner' and outcome='FAILED'"));
 
         JsonNode unknown = call(tool("get_trip_recommendations", "{\"tripId\":\"" + UUID.randomUUID() + "\",\"sort\":\"DISTANCE\"}"));
         assertTrue(unknown.has("error"));
-        assertEquals(1, count("select count(*) from mcp_audit where tool_name='get_trip_recommendations' and user_id='alice' and outcome='FAILED'"));
+        assertEquals(1, count("select count(*) from mcp_audit where tool_name='get_trip_recommendations' and user_id='demo-owner' and outcome='FAILED'"));
     }
 
     @Test
-    void travelToolsAreAuditedWithPrincipalEvenWhenXUserIdDisagrees() throws Exception {
+    void travelToolsAreAuditedAsDemoOwnerEvenWhenPrincipalAndXUserIdDisagree() throws Exception {
         Trip trip = trip();
+        // Principal is ignored and X-User-Id is ignored: the audit identity is the fixed demo owner.
         JsonNode context = call(tool("get_trip_travel_context", "{\"tripId\":\"" + trip.id() + "\",\"departureTiming\":\"SAME_DAY\",\"sort\":\"DISTANCE\"}"), "alice", "mallory");
         assertFalse(context.has("error"));
-        assertEquals(1, count("select count(*) from mcp_audit where tool_name='get_trip_travel_context' and user_id='alice' and outcome='SUCCEEDED'"));
+        assertEquals(1, count("select count(*) from mcp_audit where tool_name='get_trip_travel_context' and user_id='demo-owner' and outcome='SUCCEEDED'"));
+        assertEquals(0, count("select count(*) from mcp_audit where user_id='alice'"));
+        assertEquals(0, count("select count(*) from mcp_audit where user_id='mallory'"));
+
+        // No Principal at all also resolves to the demo owner.
+        JsonNode noPrincipal = call(tool("get_trip_recommendations", "{\"tripId\":\"" + trip.id() + "\",\"sort\":\"DISTANCE\"}"), null, "mallory");
+        assertFalse(noPrincipal.has("error"));
+        assertEquals(1, count("select count(*) from mcp_audit where tool_name='get_trip_recommendations' and user_id='demo-owner' and outcome='SUCCEEDED'"));
         assertEquals(0, count("select count(*) from mcp_audit where user_id='mallory'"));
     }
 }

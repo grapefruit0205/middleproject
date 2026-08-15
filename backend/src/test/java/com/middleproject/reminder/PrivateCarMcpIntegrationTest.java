@@ -70,7 +70,7 @@ class PrivateCarMcpIntegrationTest {
 
     private JsonNode call(String body) throws Exception {
         MvcResult result = mvc.perform(post("/api/mcp").contentType(MediaType.APPLICATION_JSON)
-                        .content(body).principal(() -> "alice"))
+                        .content(body))
                 .andExpect(status().isOk()).andReturn();
         return mapper.readTree(result.getResponse().getContentAsString());
     }

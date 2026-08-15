@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Business Trip"
+  short_description: "Plan business trips with private reminders and travel help"
+  default_prompt: "Plan a business trip with the $plan-business-trip skill."
