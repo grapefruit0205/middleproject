@@ -25,10 +25,19 @@
 | 09 | MCP Adapter | 02, 08 |
 | 10 | Observability와 Security | 05, 08 |
 | 11 | HA Test, Demo, Portfolio | 03, 09, 10 |
+| 12 | Trip Domain & MCP Foundation | 08, 09, 10 |
+| 13 | Private Car Vertical Slice | 12 |
+| 14 | Travel Context & Recommendations | 12, 13 |
+| 15 | Private ChatGPT Plugin | 12, 13, 14 |
+| 16 | Android Companion | 12, 15 |
+| 17 | AWS 3-Tier E2E & Evidence | 13, 14, 15, 16, 기존 11 |
+| 18 | Real Intercity Transport Providers | 14, 17 |
 
 ## Handoff rule
 
 각 구현 프롬프트의 `<BASE_COMMIT>`을 실행 전 실제 SHA로 바꾼다. DeepSeek는 허용 경로 밖의 변경이 필요하면 코드를 수정하지 않고 이유를 보고한다.
+
+Phase 12~18은 `tools/orchestration/phases-12-plus.json`을 사용한다. CMDC 모델은 `deepseek/deepseek-v4-pro`, effort는 `max`, 최초·수정 시도는 각각 100턴이며 Phase당 최대 2회다. 상태는 `.orchestration/phase-12-18-state.json`에 분리한다.
 
 ## Shared review template
 

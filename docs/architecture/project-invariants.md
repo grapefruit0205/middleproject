@@ -1,14 +1,14 @@
 # Project Invariants
 
-Status: Accepted  
-Architecture version: 1.2  
-Approved: 2026-08-13
+Status: Accepted
+Architecture version: 1.2 + ADR-005
+Approved: 2026-08-15
 
 DeepSeek와 Codex는 모든 Phase에서 이 문서를 먼저 읽는다. 변경이 필요하면 구현을 멈추고 ADR을 제안한다.
 
 ## Infrastructure invariants
 
-1. 서비스 경로는 `User -> Public ALB -> Apache WEB -> Internal ALB -> Tomcat WAS -> RDS`를 유지한다.
+1. Android와 운영 Dashboard의 공개 경로는 `User -> Public ALB -> Apache WEB -> Internal ALB -> Tomcat WAS -> RDS`를 유지한다. 비공개 ChatGPT Plugin은 `Secure MCP Tunnel -> Apache WEB -> Internal ALB -> Tomcat WAS -> RDS`를 사용하며 Public ALB는 `/api/mcp`를 거부한다.
 2. 서울 리전 `ap-northeast-2`와 최소 2개 AZ를 사용한다.
 3. WEB, WAS, DB는 서로 다른 Subnet 계층과 Security Group을 사용한다.
 4. WEB/WAS 인스턴스는 Private Subnet에 두며 Public IP를 부여하지 않는다.
@@ -18,6 +18,7 @@ DeepSeek와 Codex는 모든 Phase에서 이 문서를 먼저 읽는다. 변경�
 8. Apache는 `/api/*`만 Internal ALB로 전달하고 Business Logic을 포함하지 않는다.
 9. Spring Boot 애플리케이션은 WAR로 빌드하여 외장 Tomcat에 배포한다.
 10. Terraform State, Secret, Credential은 Git에 저장하지 않는다.
+11. Phase 12-18의 단일 소유자 비공개 시연은 Cognito/OIDC를 사용하지 않는다. Android는 일회용 Pairing Code와 폐기 가능한 Device Token을 사용한다.
 
 ## Application invariants
 

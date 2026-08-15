@@ -176,3 +176,73 @@ Read the state path supplied to `Invoke-Phase.ps1` after a Desktop or PowerShell
 - `COMPLETE`: stop the loop.
 
 If state names a different phase than the branch, stop and inspect Git history and state. Do not rewrite state by hand. The runner never pushes or merges. Codex pushes verified commits under the project's standing backup instruction; merging into `main` requires an explicit review decision.
+
+## Phase 12-18 Trip Copilot extension
+
+Phase 12-18은 기존 실행 이력을 바꾸지 않도록 별도 manifest와 state를 사용합니다.
+
+| Setting | Value |
+| --- | --- |
+| Manifest | `tools/orchestration/phases-12-plus.json` |
+| State | `.orchestration/phase-12-18-state.json` |
+| CMDC model | `deepseek/deepseek-v4-pro` |
+| Effort | `max` |
+| Turn budget | 최초 100, 수정 100 |
+| Invocation limit | Phase당 2회 |
+| Codex review | Phase 12-16·18 Sol/xhigh, Phase 17 최종 게이트 Sol/max |
+
+실행 전 설치된 CMDC가 모델을 제공하는지 확인합니다.
+
+```powershell
+cmdc --version
+cmdc status
+cmdc --list-models | Select-String -SimpleMatch 'deepseek/deepseek-v4-pro'
+```
+
+Phase 12 시작 브랜치는 검증된 기준 commit에서 만듭니다.
+
+```powershell
+$verifiedBaseline = (git rev-parse HEAD).Trim()
+git switch -c codex/phase-12-trip-domain-mcp-foundation $verifiedBaseline
+```
+
+PowerShell에서 manifest와 state 경로를 고정하고 dry-run을 먼저 실행합니다.
+
+```powershell
+$phase12Manifest = (Resolve-Path '.\tools\orchestration\phases-12-plus.json').Path
+$phase12State = Join-Path (Resolve-Path '.').Path '.orchestration\phase-12-18-state.json'
+
+& .\tools\orchestration\Invoke-Phase.ps1 `
+  -Phase 12 `
+  -RepositoryRoot C:\middleproject `
+  -ManifestPath $phase12Manifest `
+  -StatePath $phase12State `
+  -DryRun | Format-List
+```
+
+dry-run에서 model, effort, maxTurns, branch, baseline, `--auto-accept`, `--yolo`를 확인한 뒤 한 번만 실행합니다.
+
+```powershell
+& .\tools\orchestration\Invoke-Phase.ps1 `
+  -Phase 12 `
+  -RepositoryRoot C:\middleproject `
+  -ManifestPath $phase12Manifest `
+  -StatePath $phase12State
+```
+
+Codex는 `result.md`, stdout/stderr, 전체 diff와 테스트를 검토하고 `review.md`를 작성합니다. 검토 결정을 기록할 때도 같은 manifest를 전달해야 합니다.
+
+```powershell
+& .\tools\orchestration\Set-PhaseReview.ps1 `
+  -RepositoryRoot C:\middleproject `
+  -StatePath $phase12State `
+  -ManifestPath $phase12Manifest `
+  -Decision REVISE `
+  -Reason 'Address the unresolved Codex findings'
+```
+
+PASS 후 Codex가 검증 파일을 커밋하고 그 SHA를 `-NextBaselineCommit`에 전달하면 state가 다음 Phase의 branch와 baseline으로 이동합니다. 실제 Git branch는 Codex가 manifest의 이름으로 별도 생성합니다.
+
+Phase 17은 `requiresExternalApproval`을 사용합니다. CMDC는 Terraform fmt, validate, 정적 검사, plan과 Runbook 준비까지만 수행합니다. Terraform apply, 장애 주입, RDS failover, Alarm 변경, destroy는 저장된 plan과 비용 경계를 검토한 뒤 Codex 또는 사용자가 실행합니다. Cognito/OIDC는 Phase 12-18 범위에 포함하지 않습니다.
+
+Phase 18은 선택 확장입니다. Phase 17 Core Infra PASS 뒤 실제 Provider API 사용 승인이 없으면 Fake contract test와 설정 경계까지만 수행합니다.

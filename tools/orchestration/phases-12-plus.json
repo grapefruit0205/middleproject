@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "model": "deepseek/deepseek-v4-pro",
+  "effort": "max",
+  "maxTurns": 100,
+  "repairMaxTurns": 100,
+  "maxInvocationsPerPhase": 2,
+  "phases": [
+    {
+      "phase": 12,
+      "slug": "trip-domain-mcp-foundation",
+      "branch": "codex/phase-12-trip-domain-mcp-foundation",
+      "briefPath": "docs/phases/phase-12/brief.md",
+      "implementationPromptPath": "docs/phases/phase-12/implement.prompt.md",
+      "resultPath": "docs/phases/phase-12/result.md",
+      "reviewPath": "docs/phases/phase-12/review.md",
+      "allowedPaths": ["backend/**", "docs/phases/phase-12/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 13,
+      "slug": "private-car-vertical-slice",
+      "branch": "codex/phase-13-private-car-vertical-slice",
+      "briefPath": "docs/phases/phase-13/brief.md",
+      "implementationPromptPath": "docs/phases/phase-13/implement.prompt.md",
+      "resultPath": "docs/phases/phase-13/result.md",
+      "reviewPath": "docs/phases/phase-13/review.md",
+      "allowedPaths": ["backend/**", "docs/phases/phase-13/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 14,
+      "slug": "travel-context-recommendations",
+      "branch": "codex/phase-14-travel-context-recommendations",
+      "briefPath": "docs/phases/phase-14/brief.md",
+      "implementationPromptPath": "docs/phases/phase-14/implement.prompt.md",
+      "resultPath": "docs/phases/phase-14/result.md",
+      "reviewPath": "docs/phases/phase-14/review.md",
+      "allowedPaths": ["backend/**", "docs/phases/phase-14/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 15,
+      "slug": "private-chatgpt-plugin",
+      "branch": "codex/phase-15-private-chatgpt-plugin",
+      "briefPath": "docs/phases/phase-15/brief.md",
+      "implementationPromptPath": "docs/phases/phase-15/implement.prompt.md",
+      "resultPath": "docs/phases/phase-15/result.md",
+      "reviewPath": "docs/phases/phase-15/review.md",
+      "allowedPaths": ["plugins/trip-copilot/**", ".agents/plugins/**", "backend/**", "docs/phases/phase-15/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 16,
+      "slug": "android-companion",
+      "branch": "codex/phase-16-android-companion",
+      "briefPath": "docs/phases/phase-16/brief.md",
+      "implementationPromptPath": "docs/phases/phase-16/implement.prompt.md",
+      "resultPath": "docs/phases/phase-16/result.md",
+      "reviewPath": "docs/phases/phase-16/review.md",
+      "allowedPaths": ["android/**", "backend/**", "docs/phases/phase-16/result.md"],
+      "requiresExternalApproval": false
+    },
+    {
+      "phase": 17,
+      "slug": "aws-three-tier-e2e",
+      "branch": "codex/phase-17-aws-three-tier-e2e",
+      "briefPath": "docs/phases/phase-17/brief.md",
+      "implementationPromptPath": "docs/phases/phase-17/implement.prompt.md",
+      "resultPath": "docs/phases/phase-17/result.md",
+      "reviewPath": "docs/phases/phase-17/review.md",
+      "allowedPaths": ["backend/**", "frontend/**", "android/**", "plugins/trip-copilot/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-17/result.md"],
+      "requiresExternalApproval": true
+    },
+    {
+      "phase": 18,
+      "slug": "real-intercity-transport-providers",
+      "branch": "codex/phase-18-real-transport-providers",
+      "briefPath": "docs/phases/phase-18/brief.md",
+      "implementationPromptPath": "docs/phases/phase-18/implement.prompt.md",
+      "resultPath": "docs/phases/phase-18/result.md",
+      "reviewPath": "docs/phases/phase-18/review.md",
+      "allowedPaths": ["backend/**", "docs/runbooks/**", "docs/phases/phase-18/result.md"],
+      "requiresExternalApproval": false,
+      "optional": true
+    }
+  ]
+}

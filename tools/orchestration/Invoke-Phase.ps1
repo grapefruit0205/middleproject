@@ -3,13 +3,15 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidateRange(1, 10)]
+    [ValidateRange(1, 99)]
     [int]$Phase,
 
     [Parameter(Mandatory)]
     [string]$RepositoryRoot,
 
     [string]$CmdcPath = 'cmdc',
+
+    [string]$ManifestPath,
 
     [string]$StatePath,
 
@@ -24,8 +26,12 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $modulePath = Join-Path $PSScriptRoot 'PhaseOrchestrator.psm1'
-$manifestPath = Join-Path $PSScriptRoot 'phases.json'
 Import-Module $modulePath -Force
+
+if ([string]::IsNullOrWhiteSpace($ManifestPath)) {
+    $ManifestPath = Join-Path $PSScriptRoot 'phases.json'
+}
+$resolvedManifestPath = (Resolve-Path -LiteralPath $ManifestPath).Path
 
 $resolvedRepositoryRoot = (Resolve-Path -LiteralPath $RepositoryRoot).Path
 if ([string]::IsNullOrWhiteSpace($StatePath)) {
@@ -35,7 +41,7 @@ if ([string]::IsNullOrWhiteSpace($RuntimeDirectory)) {
     $RuntimeDirectory = Join-Path $resolvedRepositoryRoot '.orchestration\runs'
 }
 
-$definition = Get-PhaseDefinition -Phase $Phase -ManifestPath $manifestPath
+$definition = Get-PhaseDefinition -Phase $Phase -ManifestPath $resolvedManifestPath
 $currentBranch = (git -C $resolvedRepositoryRoot branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($currentBranch)) {
     throw "Unable to determine the current Git branch in $resolvedRepositoryRoot"
@@ -98,7 +104,7 @@ $beforeBranch = (git -C $resolvedRepositoryRoot branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($beforeBranch)) {
     throw 'Unable to determine the branch before the Command Code attempt.'
 }
-$state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason "Command Code attempt $([int]$state.attempt + 1) started" -ManifestPath $manifestPath
+$state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason "Command Code attempt $([int]$state.attempt + 1) started" -ManifestPath $resolvedManifestPath
 Write-OrchestrationState -State $state -StatePath $StatePath
 
 try {
@@ -110,7 +116,7 @@ try {
     }
 }
 catch {
-    $state = Move-OrchestrationState -State $state -ToStatus READY -Reason "Command Code could not start: $($_.Exception.Message)" -ManifestPath $manifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus READY -Reason "Command Code could not start: $($_.Exception.Message)" -ManifestPath $resolvedManifestPath
     $state.attempt = [Math]::Max(0, [int]$state.attempt - 1)
     Write-OrchestrationState -State $state -StatePath $StatePath
     throw
@@ -130,17 +136,17 @@ $scope = Test-PhaseChangeScope -PhaseDefinition $definition -ChangedPaths $chang
 
 if ($afterHead -ne $beforeHead -or $afterBranch -ne $beforeBranch) {
     $reason = "Command Code changed Git HEAD or branch ($beforeBranch@$beforeHead -> $afterBranch@$afterHead)."
-    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $manifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $resolvedManifestPath
 }
 elseif (-not $scope.isAllowed) {
     $reason = 'Out-of-scope changes: ' + (@($scope.rejectedPaths) -join ', ')
-    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $manifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $resolvedManifestPath
 }
 elseif ([int]$attemptResult.exitCode -ne 0) {
-    $state = Move-OrchestrationState -State $state -ToStatus READY -Reason "Command Code exited with code $($attemptResult.exitCode)" -ManifestPath $manifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus READY -Reason "Command Code exited with code $($attemptResult.exitCode)" -ManifestPath $resolvedManifestPath
 }
 else {
-    $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason 'Command Code exited zero and phase paths stayed within scope.' -ManifestPath $manifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason 'Command Code exited zero and phase paths stayed within scope.' -ManifestPath $resolvedManifestPath
 }
 
 Write-OrchestrationState -State $state -StatePath $StatePath

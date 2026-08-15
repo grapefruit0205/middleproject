@@ -20,16 +20,24 @@ function Test-Throws {
 }
 
 function New-OrchestratorTestRepository {
+    param(
+        [ValidateSet(1, 10)]
+        [int]$Phase = 1,
+
+        [string]$Branch = 'codex/phase-01-local-foundation'
+    )
+
     $root = Join-Path ([System.IO.Path]::GetTempPath()) ("middleproject-repo-" + [guid]::NewGuid().ToString('N'))
+    $phaseNumber = '{0:D2}' -f $Phase
     [System.IO.Directory]::CreateDirectory((Join-Path $root 'docs\architecture')) | Out-Null
-    [System.IO.Directory]::CreateDirectory((Join-Path $root 'docs\phases\phase-01')) | Out-Null
+    [System.IO.Directory]::CreateDirectory((Join-Path $root "docs\phases\phase-$phaseNumber")) | Out-Null
 
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'docs\architecture\project-invariants.md') -Destination (Join-Path $root 'docs\architecture\project-invariants.md')
-    Copy-Item -LiteralPath (Join-Path $repositoryRoot 'docs\phases\phase-01\brief.md') -Destination (Join-Path $root 'docs\phases\phase-01\brief.md')
-    Copy-Item -LiteralPath (Join-Path $repositoryRoot 'docs\phases\phase-01\implement.prompt.md') -Destination (Join-Path $root 'docs\phases\phase-01\implement.prompt.md')
+    Copy-Item -LiteralPath (Join-Path $repositoryRoot "docs\phases\phase-$phaseNumber\brief.md") -Destination (Join-Path $root "docs\phases\phase-$phaseNumber\brief.md")
+    Copy-Item -LiteralPath (Join-Path $repositoryRoot "docs\phases\phase-$phaseNumber\implement.prompt.md") -Destination (Join-Path $root "docs\phases\phase-$phaseNumber\implement.prompt.md")
     Set-Content -LiteralPath (Join-Path $root '.gitignore') -Value ".orchestration/`n.commandcode/" -Encoding utf8NoBOM
 
-    git -C $root init -b codex/phase-01-local-foundation | Out-Null
+    git -C $root init -b $Branch | Out-Null
     git -C $root config user.email 'orchestrator-tests@example.invalid'
     git -C $root config user.name 'Orchestrator Tests'
     git -C $root add .
@@ -593,13 +601,14 @@ Describe 'Phase execution and review entry points' {
     }
 
     It 'dry-runs restarted Phase 10 with Luna max and no runtime mutation' {
+        $testRepository = New-OrchestratorTestRepository -Phase 10 -Branch 'codex/phase-10-observability-security'
         $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("middleproject-phase10-dryrun-" + [guid]::NewGuid().ToString('N'))
         $statePath = Join-Path $tempRoot 'state.json'
         $runtimeDirectory = Join-Path $tempRoot 'runs'
         try {
-            $before = git -C $repositoryRoot status --porcelain=v1
-            $result = & $invokePhasePath -Phase 10 -RepositoryRoot $repositoryRoot -CmdcPath $fakeCmdcPath -StatePath $statePath -RuntimeDirectory $runtimeDirectory -DryRun
-            $after = git -C $repositoryRoot status --porcelain=v1
+            $before = git -C $testRepository status --porcelain=v1
+            $result = & $invokePhasePath -Phase 10 -RepositoryRoot $testRepository -CmdcPath $fakeCmdcPath -StatePath $statePath -RuntimeDirectory $runtimeDirectory -DryRun
+            $after = git -C $testRepository status --porcelain=v1
 
             $result.status | Should Be 'DRY_RUN'
             $result.phase | Should Be 10
@@ -611,6 +620,9 @@ Describe 'Phase execution and review entry points' {
             (Test-Path -LiteralPath $runtimeDirectory) | Should Be $false
         }
         finally {
+            if (Test-Path -LiteralPath $testRepository) {
+                Remove-Item -LiteralPath $testRepository -Recurse -Force
+            }
             if (Test-Path -LiteralPath $tempRoot) {
                 Remove-Item -LiteralPath $tempRoot -Recurse -Force
             }
