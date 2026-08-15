@@ -26,7 +26,8 @@ resource "aws_cloudwatch_log_group" "ssm_session" {
 }
 
 resource "aws_s3_bucket" "alb_access_logs" {
-  bucket = "${local.name_slug}-${data.aws_caller_identity.current.account_id}-alb-logs"
+  bucket        = "${local.name_slug}-${data.aws_caller_identity.current.account_id}-alb-logs"
+  force_destroy = var.alb_access_log_force_destroy
 
   tags = { Name = "${var.name}-${var.environment}-alb-access-logs" }
 }
