@@ -1,6 +1,6 @@
-# Phase 11 Fifteen-Minute Demo Script — Pending Draft
+# Phase 11 Fifteen-Minute Demo Script — Baseline-Deployed Draft
 
-- Status: `PRE_APPLY_VERIFIED_AWAITING_TERRAFORM_APPLY`
+- Status: `DEPLOYED_BASELINE_VERIFIED_HA_EXPERIMENTS_PENDING`
 - Script state: `PENDING_REHEARSAL`
 - Evidence state: not completed
 
@@ -28,7 +28,7 @@ This is a proposed run-of-show, not proof that deployment or experiments occurre
 
 ## Current safe opening
 
-> Phase 11 is pre-Apply verified and awaiting separate Terraform Apply approval. The approved Plan contains 90 additions, no changes, and no destroys, and its integrity and build artifacts were verified locally. The application stack is absent, so HA behavior, RTO/RPO, observability ingestion, Alarm transitions, cost, rehearsal, and cleanup are not yet proven.
+> Phase 11 has a healthy two-AZ baseline: WEB and WAS each have two healthy targets, the private encrypted RDS instance is Multi-AZ and available, and the frontend and backend readiness endpoints return HTTP 200. Controlled failure experiments, RTO/RPO, Session Manager log delivery, final cost, rehearsal, and cleanup are not yet proven.
 
 ## Rehearsal acceptance checklist
 

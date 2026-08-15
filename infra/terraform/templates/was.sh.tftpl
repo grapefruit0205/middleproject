@@ -36,7 +36,7 @@ for attempt in 1 2 3 4 5; do
   fi
   sleep $((attempt * 5))
 done
-sed -i '/<Host name="localhost"/a\\        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="access." suffix=".log" pattern="%h %l %u %t &quot;%r&quot; %s %b trace=&quot;%%{X-Amzn-Trace-Id}i&quot; correlation=&quot;%%{X-Correlation-Id}i&quot;" />' /opt/tomcat/conf/server.xml
+sed -i '/<\/Host>/i\\        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="access." suffix=".log" pattern="%h %l %u %t &quot;%r&quot; %s %b trace=&quot;%%{X-Amzn-Trace-Id}i&quot; correlation=&quot;%%{X-Correlation-Id}i&quot;" />' /opt/tomcat/conf/server.xml
 IMDS_TOKEN="$(curl --fail --silent --show-error -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600')"
 INSTANCE_ID="$(curl --fail --silent --show-error -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id)"
 cat >/etc/systemd/system/tomcat.service <<EOF
@@ -62,7 +62,7 @@ Environment=DELIVERY_SQS_QUEUE_URL=${delivery_queue_url}
 Environment=NOTIFICATION_EMAIL_ENABLED=${notification_email_enabled}
 Environment=NOTIFICATION_EMAIL_FROM=${notification_email_from}
 Environment=NOTIFICATION_EMAIL_TO=${notification_email_to}
-ExecStart=/usr/bin/bash -c 'set -euo pipefail; export DB_PASSWORD="$(aws secretsmanager get-secret-value --secret-id "$DB_SECRET_ARN" --query SecretString --output text | jq -r .password)"; exec /opt/tomcat/bin/catalina.sh run'
+ExecStart=/usr/bin/bash -c 'set -euo pipefail; export DB_PASSWORD="\$(aws secretsmanager get-secret-value --secret-id "\$DB_SECRET_ARN" --query SecretString --output text | jq -r .password)"; exec /opt/tomcat/bin/catalina.sh run'
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target

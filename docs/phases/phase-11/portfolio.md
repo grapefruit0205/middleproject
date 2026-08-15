@@ -1,14 +1,14 @@
 # Phase 11 Portfolio Narrative — Pending Draft
 
-- Status: `PRE_APPLY_VERIFIED_AWAITING_TERRAFORM_APPLY`
+- Status: `DEPLOYED_BASELINE_VERIFIED_HA_EXPERIMENTS_PENDING`
 - Narrative state: `PENDING_LIVE_EVIDENCE`
 - Publication state: not ready as a completed HA case study
 
 ## Evidence-backed statement available now
 
-I prepared the reminder platform for a controlled, ephemeral two-AZ HA verification in `ap-northeast-2`. The real-certificate Terraform Plan was verified at `90 add, 0 change, 0 destroy` with SHA-256 `E77C058547CFC93858F6DED60F021E9E144022522EEFD44CC27278624E1D6519`. Frontend and backend artifact hashes matched their ignored records, the Terraform contract suite passed `7/7`, and Terraform format and validation passed. Read-only AWS inventory showed that the application stack was absent. The imported ACM certificate was issued and unused, with its ARN masked.
+I deployed the reminder platform as an ephemeral two-AZ baseline in `ap-northeast-2` from a reviewed `90 add, 0 change, 0 destroy` Terraform Plan. The live run exposed four packaging/bootstrap defects at the Windows-to-Linux boundary. I reproduced the template failures with focused behavior tests, applied two narrowly scoped corrective plans without destroys, and verified WEB/WAS target health, HTTPS frontend and readiness responses, private encrypted Multi-AZ RDS, Correlation ID propagation, CloudWatch ingestion, alarm recovery, and a no-drift Terraform plan.
 
-This statement demonstrates pre-Apply control and evidence discipline only. It does not demonstrate HA behavior or successful deployment.
+This statement demonstrates a healthy deployed baseline and evidence-driven repair. It does not yet demonstrate HA recovery, measured RTO/RPO, final cost, rehearsal, or cleanup.
 
 ## Pending final narrative script
 
@@ -22,7 +22,7 @@ The quoted narrative remains a draft until every placeholder maps to timestamped
 
 ## Claims not yet allowed
 
-- The platform survived a WEB or WAS instance failure.
+- The platform survived a deliberately injected WEB or WAS instance failure.
 - RDS failed over within any duration.
 - Scheduler or Provider failures recovered correctly in AWS.
 - RTO or RPO has been measured.
@@ -35,4 +35,4 @@ The quoted narrative remains a draft until every placeholder maps to timestamped
 
 ## Finalization gate
 
-Publish a completed Phase 11 portfolio narrative only after approved Apply and experiments, measured observations, cost evidence, teardown verification, a completed 15-minute rehearsal, and independent final review. Until then, the accurate status is pre-Apply verified and awaiting Terraform Apply.
+Publish a completed Phase 11 portfolio narrative only after the remaining experiments, measured observations, cost evidence, teardown verification, a completed 15-minute rehearsal, and independent final review. Until then, the accurate status is deployed baseline verified with HA experiments pending.

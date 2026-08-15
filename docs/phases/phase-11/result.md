@@ -1,16 +1,19 @@
-# Phase 11 Result: Pre-Apply Verification
+# Phase 11 Result: Deployed Baseline Verification
 
-- Status: `PRE_APPLY_VERIFIED_AWAITING_TERRAFORM_APPLY`
-- Base commit: `ef38b44176a282a7da8ce48a378ba56d2c6306b4`
-- Verification: `2026-08-14T15:21:09Z` / `2026-08-15 00:21:09 +09:00` (Asia/Seoul)
+- Status: `DEPLOYED_BASELINE_VERIFIED_HA_EXPERIMENTS_PENDING`
+- Apply base commit: `3a5c77d`
+- Apply started: `2026-08-15T02:04:58Z` / `2026-08-15 11:04:58 +09:00` (Asia/Seoul)
+- Baseline verified: `2026-08-15T02:58:12Z` / `2026-08-15 11:58:12 +09:00` (Asia/Seoul)
 - Region: `ap-northeast-2`
 - AWS account: `[MASKED]` (approved account matched)
 
 ## Outcome
 
-Phase 11 reached the pre-Apply gate and stopped. The approved real-certificate Plan was verified locally, but it was not applied and does not prove deployed behavior. This is not a Phase 11 PASS: Apply, experiments, evidence capture, rehearsal, cost observation, cleanup, and independent final review remain pending.
+The approved real-certificate Plan was applied and created the 90-resource HA baseline. The first boot exposed four deployment defects: a Windows-authored ZIP was not portable to Linux `unzip`, Apache heredoc expansion treated `$1` as an unset shell argument, the Tomcat bootstrap inserted a Valve inside a multiline XML opening tag, and it evaluated the Secrets Manager lookup too early. Narrow behavior tests reproduced the three template defects before the source was fixed.
 
-No `terraform apply`, `terraform destroy`, failure injection, EC2 stop/terminate/start, RDS reboot/failover, or Alarm mutation ran. Pre-Apply preparation imported and tagged one short-lived ACM certificate; it remains unused. No other AWS mutation ran.
+The frontend artifact was repacked with portable ZIP entry separators. Corrective plans changed only the frontend object and WEB/WAS launch/Auto Scaling resources (`0 add / 5 change / 0 destroy`, then `0 add / 2 change / 0 destroy`). Failed bootstrap instances were replaced through their owning Auto Scaling Groups with desired capacity preserved. The final baseline serves the frontend and backend over HTTPS and has no Terraform drift.
+
+This is not the final Phase 11 PASS. No deliberate WEB/WAS failure experiment, RDS reboot/failover, Scheduler/Provider failure experiment, 15-minute rehearsal, cost snapshot, Terraform destroy, or post-cleanup inventory ran.
 
 ## Pre-Apply verification
 
@@ -24,36 +27,42 @@ No `terraform apply`, `terraform destroy`, failure injection, EC2 stop/terminate
 | Fake/approved Plan actions | Identical resource addresses/actions; 0 action differences |
 | Frontend artifact SHA-256 | `2505216995B0BD63EC12D8DE8436764C916F0F50C307EA9E3702F61CFD897474`; matched the ignored recorded metadata |
 | Backend artifact SHA-256 | `473244081CEE08D2536CB8C6C0CF0AD3B75C8B359BA5F715A058A4D9528864F7`; matched the ignored recorded metadata |
-| Terraform contract Pester suite | `7/7` passed, `0` failed |
+| Deployed portable frontend SHA-256 | `0472119E25F0EF585E45E06BEAAC97F8B7ED29C8E6251B712710C7251EA1A710`; 12 entries, no backslash entry names, Linux extraction passed |
+| Terraform contract and Linux bootstrap Pester suite | `10/10` passed, `0` failed |
 | Terraform `fmt -check` | PASS |
 | Terraform `validate` | PASS |
 | Checkov 3.3.8 policy scan | `188` passed, `0` failed using the Phase 10 documented exclusions |
 
-The ignored Plan metadata reports RDS Multi-AZ enabled, WEB and WAS desired capacity 2 each, the `ha` NAT profile, RDS deletion protection disabled, `skip_final_snapshot` enabled, and independent artifact/access-log bucket teardown controls enabled. These are planned values, not observed AWS state.
+Post-apply Terraform planning returned exit code `0`: `No changes. Your infrastructure matches the configuration.`
 
-## Read-only AWS state
+## Observed AWS baseline
 
-Read-only inventory found no Phase 11 application stack: zero project/environment VPCs, active EC2 instances, NAT Gateways, Elastic IPs, load balancers, target groups, Auto Scaling Groups, RDS instances, Phase 11 log groups, CloudWatch Alarms, Scheduler groups, exact planned SQS queues, S3 buckets, or Secrets metadata entries.
+- WEB Auto Scaling Group: desired 2, InService 2, healthy 2; target group healthy 2.
+- WAS Auto Scaling Group: desired 2, InService 2, healthy 2; target group healthy 2.
+- RDS: `available`, Multi-AZ, encrypted, and not publicly accessible.
+- HTTPS checks: `/`, `/healthz`, and `/api/actuator/health/readiness` returned HTTP 200; readiness reported `UP` and the proxied response included `X-Correlation-Id`.
+- CloudWatch: Apache access/error, application, and Tomcat access log streams exist. All ten project alarms returned `OK` after the corrective rolling replacement completed.
+- SSM managed-instance connectivity was online. No Session Manager session was opened, so the SSM session log group still has no stream and is not session-delivery evidence.
 
-The imported ACM certificate is the only verified AWS prerequisite. Its ARN is masked. It is imported, `ISSUED`, unused (`0` usage references), and expires at `2026-08-16 17:19:19` Asia/Seoul. Its state and expiry must be rechecked at any later Apply approval gate.
+The short-lived imported certificate is `ISSUED` and expires at `2026-08-16 17:19:19` Asia/Seoul. It is suitable only for this bounded test; a trusted domain certificate is required for a normal browser/PWA deployment.
 
 ## Evidence gaps
 
-Because Apply and experiments did not run, none of the following is proven:
+Because the controlled HA experiments and cleanup did not run, none of the following is proven:
 
 - WEB or WAS single-instance availability or recovery
 - RDS Multi-AZ failover behavior
 - Scheduler or Provider failure, retry, terminal, or recovery behavior
 - Any observed RTO or RPO
-- Cross-layer log/metric ingestion, Correlation ID traversal, or SSM log delivery
-- Alarm state transitions
+- End-to-end SSM Session Manager log delivery
+- Deliberately induced alarm transitions for the planned failure cases
 - A live demo or completed 15-minute rehearsal
-- Runtime cost or Cost Explorer outcome
+- Final runtime cost or Cost Explorer outcome
 - Terraform teardown, AWS cleanup, or cleanup duration
 - Zero downtime or any availability guarantee
 
 The demo and portfolio documents are pending drafts, not completed evidence.
 
-## Gate
+## Next gate
 
-A future Apply requires separate explicit approval for the exact account, region, Plan hash and delta, certificate state, cost ceiling, execution window, impact, recovery, and teardown. The live workflow remains stopped before that gate.
+The stack is live and chargeable. Continue only with the separately bounded experiments in the runbook, or generate and review a destroy plan before teardown. Do not present the deployed baseline as completed HA evidence.
