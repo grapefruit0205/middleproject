@@ -27,6 +27,7 @@
 | Runtime health | WEB/WAS each 2/2 healthy; HTTPS frontend and backend readiness HTTP 200; RDS available/private/encrypted/Multi-AZ |
 | Observability baseline | Correlation ID present, application log streams present, all ten alarms OK after rollout |
 | Terraform drift | Detailed-exitcode 0; no changes |
+| ASG timing | WEB/WAS grace period and refresh warmup set to 300 seconds through a `0/2/0` in-place apply; target health remained 2/2 |
 | ACM prerequisite | Imported certificate issued and in use; expires 2026-08-16 17:19:19 Asia/Seoul |
 
 ## Review result

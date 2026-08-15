@@ -13,6 +13,8 @@ The approved real-certificate Plan was applied and created the 90-resource HA ba
 
 The frontend artifact was repacked with portable ZIP entry separators. Corrective plans changed only the frontend object and WEB/WAS launch/Auto Scaling resources (`0 add / 5 change / 0 destroy`, then `0 add / 2 change / 0 destroy`). Failed bootstrap instances were replaced through their owning Auto Scaling Groups with desired capacity preserved. The final baseline serves the frontend and backend over HTTPS and has no Terraform drift.
 
+The WEB and WAS health-check grace periods and rolling-refresh warmups were reduced from 600 to 300 seconds in a later `0 add / 2 change / 0 destroy` apply. Terraform updated only the two Auto Scaling Groups in place and started no instance refresh. Both tiers retained two healthy targets, all ten alarms stayed `OK`, and the post-apply plan reported no changes.
+
 This is not the final Phase 11 PASS. No deliberate WEB/WAS failure experiment, RDS reboot/failover, Scheduler/Provider failure experiment, 15-minute rehearsal, cost snapshot, Terraform destroy, or post-cleanup inventory ran.
 
 ## Pre-Apply verification
@@ -43,6 +45,7 @@ Post-apply Terraform planning returned exit code `0`: `No changes. Your infrastr
 - HTTPS checks: `/`, `/healthz`, and `/api/actuator/health/readiness` returned HTTP 200; readiness reported `UP` and the proxied response included `X-Correlation-Id`.
 - CloudWatch: Apache access/error, application, and Tomcat access log streams exist. All ten project alarms returned `OK` after the corrective rolling replacement completed.
 - SSM managed-instance connectivity was online. No Session Manager session was opened, so the SSM session log group still has no stream and is not session-delivery evidence.
+- WEB/WAS Auto Scaling: health-check grace period 300 seconds and rolling-refresh warmup 300 seconds; no instance replacement occurred during this tuning apply.
 
 The short-lived imported certificate is `ISSUED` and expires at `2026-08-16 17:19:19` Asia/Seoul. It is suitable only for this bounded test; a trusted domain certificate is required for a normal browser/PWA deployment.
 

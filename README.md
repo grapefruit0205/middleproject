@@ -6,6 +6,8 @@
 
 > AWS 상태: `ap-northeast-2`에 단기 검증용 Phase 11 HA 스택이 실행 중입니다. 비용이 계속 발생하므로 남은 실험을 진행하지 않을 때는 Runbook에 따라 Terraform destroy와 사후 inventory 검증이 필요합니다.
 
+현재 배포 화면은 연결 확인용 smoke test입니다. 화면의 `Backend ready`는 Public ALB → WEB → Internal ALB → WAS readiness 경로가 정상임을 뜻합니다. 일정 등록·조회·알림 설정용 프런트엔드 화면은 아직 구현하지 않았으며, 현재 기능 경계는 REST API와 MCP Adapter입니다.
+
 ## Architecture
 
 ```text
@@ -44,7 +46,7 @@ EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 | 08 · Reliability | ✅ PASS | Idempotency lease·fencing, 원자적 결과 재사용, 장애 복구 Matrix, DLQ Runbook 구현 | `81cfc51` |
 | 09 · MCP Adapter | ✅ PASS | 동일 Application Service 기반 6개 제한 Tool, Principal 인증·소유권 인가, Schema·Lifecycle·Retry·Audit 구현 | `1ff7c23` |
 | 10 · Observability & Security | 🟡 Live 기준선 확인 | Correlation ID, ECS JSON 로그, Micrometer, CloudWatch Agent·Logs·Metrics·Alarms, SSM/IAM/IMDSv2 보강; Phase 11 배포에서 로그 수집·Correlation ID·알람 정상 복귀 확인 | `3ea2443`; main 병합 `690b3bf` |
-| 11 · HA Test, Final Demo & Portfolio | 🟡 기준선 배포 완료 | Terraform `90 add / 0 change / 0 destroy` 적용 후 Linux bootstrap 결함을 테스트 우선으로 수정; WEB/WAS 각 2대, RDS Multi-AZ, HTTPS·readiness·Terraform no-drift 검증 완료. 장애 실험·리허설·비용 증거·Cleanup 미실행 | 기준 `3a5c77d` |
+| 11 · HA Test, Final Demo & Portfolio | 🟡 기준선 배포 완료 | Terraform `90 add / 0 change / 0 destroy` 적용 후 Linux bootstrap 결함을 테스트 우선으로 수정; WEB/WAS 각 2대, RDS Multi-AZ, ASG health grace·warmup 300초, HTTPS·readiness·Terraform no-drift 검증 완료. 장애 실험·리허설·비용 증거·Cleanup 미실행 | 기준 `3a5c77d` |
 
 각 단계의 구현 증거와 Codex 독립 검토는 [`docs/phases`](docs/phases) 아래 `result.md`와 `review.md`에 기록합니다. Phase는 검토 결과가 `PASS`일 때만 다음 단계의 기준 커밋이 됩니다.
 

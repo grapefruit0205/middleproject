@@ -285,7 +285,7 @@ resource "aws_autoscaling_group" "web" {
   vpc_zone_identifier       = [aws_subnet.this["web_a"].id, aws_subnet.this["web_c"].id]
   target_group_arns         = [aws_lb_target_group.web.arn]
   health_check_type         = "ELB"
-  health_check_grace_period = 600
+  health_check_grace_period = 300
   launch_template {
     id      = aws_launch_template.web.id
     version = aws_launch_template.web.latest_version
@@ -298,7 +298,7 @@ resource "aws_autoscaling_group" "web" {
   instance_refresh {
     strategy = "Rolling"
     preferences {
-      instance_warmup        = 600
+      instance_warmup        = 300
       min_healthy_percentage = 50
     }
   }
@@ -377,7 +377,7 @@ resource "aws_autoscaling_group" "was" {
   vpc_zone_identifier       = [aws_subnet.this["was_a"].id, aws_subnet.this["was_c"].id]
   target_group_arns         = [aws_lb_target_group.was.arn]
   health_check_type         = "ELB"
-  health_check_grace_period = 600
+  health_check_grace_period = 300
   launch_template {
     id      = aws_launch_template.was.id
     version = aws_launch_template.was.latest_version
@@ -390,7 +390,7 @@ resource "aws_autoscaling_group" "was" {
   instance_refresh {
     strategy = "Rolling"
     preferences {
-      instance_warmup        = 600
+      instance_warmup        = 300
       min_healthy_percentage = 50
     }
   }

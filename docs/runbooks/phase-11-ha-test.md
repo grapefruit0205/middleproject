@@ -13,6 +13,8 @@ $approvedPlanPath = Join-Path $tfDir 'phase-11-ha-approved.plan'
 
 When packaging frontend files on Windows, create a ZIP whose entry names use `/` separators and verify it with Linux-compatible extraction before planning. A Windows archive containing `\` entry names can pass the frontend build check but fail in Amazon Linux `unzip`. Record the final archive SHA-256 and keep the archive outside Git.
 
+Copy verified backend and frontend artifacts to stable ignored runtime paths before the first approved plan. Point tfvars at those pinned paths and do not rebuild them between plan and apply. A Gradle rebuild can change the WAR archive hash even when the source and file size stay unchanged, which would add an unintended S3 object update to a later Terraform plan.
+
 ## 1. Scope and hard gates
 
 This runbook is for the approved ephemeral `ha` environment only.

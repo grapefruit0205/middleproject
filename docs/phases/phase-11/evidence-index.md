@@ -30,6 +30,7 @@
 | `P11-BASELINE-003` | Data baseline | RDS available, Multi-AZ, encrypted, private | AWS read-only |
 | `P11-BASELINE-004` | Correlation and observability | Proxied readiness returned `X-Correlation-Id`; four application log classes had streams; all 10 alarms returned `OK` | AWS/curl read-only |
 | `P11-BASELINE-005` | Post-apply drift | Terraform detailed-exitcode `0`; no changes | Terraform read-only |
+| `P11-TUNE-001` | ASG timing reduction | Reviewed `0/2/0` plan changed only WEB/WAS ASGs from 600 to 300 seconds; no instance refresh; health remained 2/2 per tier | Terraform/AWS mutation and read-only verification |
 
 Baseline verification timestamp: `2026-08-15T02:58:12Z` / `2026-08-15 11:58:12 +09:00` Asia/Seoul.
 
