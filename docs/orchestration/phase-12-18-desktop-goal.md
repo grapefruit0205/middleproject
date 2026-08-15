@@ -7,7 +7,7 @@ Work in C:\middleproject and supervise Trip Copilot implementation from Phase 12
 
 Use tools/orchestration/phases-12-plus.json as the only Phase 12+ manifest and .orchestration/phase-12-18-state.json as the only Phase 12+ state. Do not use or rewrite the completed Phase 01-10 state.
 
-Command Code implements one attempt at a time through tools/orchestration/Invoke-Phase.ps1. The manifest requires deepseek/deepseek-v4-flash for Phase 12-18, effort max, 100 turns for the initial attempt, 100 turns for one repair, and at most two effective invocations per phase. An invocation counts only after the runner receives a process result. Zero, nonzero, max-turn, Git-guard, and path-scope results count. Startup refusal, a pre-execution exception, or an interrupted process with no result does not count. Before recovering an interrupted state, confirm that no CMDC writer remains active and that the interrupted process created no new working-tree changes. Before the first paid call, run cmdc --list-models and stop if the exact model id is absent.
+Command Code implements one attempt at a time through tools/orchestration/Invoke-Phase.ps1. The manifest requires deepseek/deepseek-v4-flash for Phase 12-18, effort max, 100 turns for every implementation or correction attempt, and at most ten effective invocations per phase. If an attempt is incomplete or Codex finds a defect, Codex records concrete evidence and starts a fresh focused attempt while budget remains. An invocation counts only after the runner receives a process result. Zero, nonzero, max-turn, Git-guard, and path-scope results count. Startup refusal, a pre-execution exception, or an interrupted process with no result does not count. Before recovering an interrupted state, confirm that no CMDC writer remains active and that the interrupted process created no new working-tree changes. Before the first paid call, run cmdc --list-models and stop if the exact model id is absent.
 
 Before each attempt:
 1. Read docs/orchestration/README.md, tools/orchestration/phases-12-plus.json, docs/architecture/project-invariants.md, ADR-005, and the active Phase documents.
@@ -19,7 +19,7 @@ Run one CMDC attempt. Then read state, stdout, stderr, result.md, and every work
 
 Write docs/phases/phase-NN/review.md with PASS, REVISE, BLOCKED, or AWAITING_APPROVAL. Command Code cannot edit review.md, create commits, push, merge, run terraform apply, or mutate AWS.
 
-For REVISE, record the exact file, line, expected behavior, and failing command. Call Set-PhaseReview.ps1 with the same -ManifestPath and -StatePath, then run the one allowed repair attempt.
+For REVISE, record the exact file, line, expected behavior, and failing command. Call Set-PhaseReview.ps1 with the same -ManifestPath and -StatePath, then run a fresh focused 100-turn correction attempt. Repeat the Codex review/correction loop only while the phase's ten-invocation budget remains.
 
 For PASS, stage only the manifest allowlist plus review.md. Exclude credentials, .commandcode, .orchestration, Terraform state/plan, and build output. Commit and push the verified Phase branch. Pass the commit SHA as -NextBaselineCommit, create the next manifest branch from that SHA, and continue. Do not merge into main without an explicit review decision.
 

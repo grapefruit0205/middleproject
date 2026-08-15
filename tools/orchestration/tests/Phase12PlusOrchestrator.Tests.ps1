@@ -45,7 +45,7 @@ Describe 'Phase 12-18 orchestration manifest' {
         }
         $definition.model | Should Be 'deepseek/deepseek-v4-flash'
         $definition.effort | Should Be 'max'
-        $definition.maxInvocationsPerPhase | Should Be 2
+        $definition.maxInvocationsPerPhase | Should Be 10
         $initial.maxTurns | Should Be 100
         $repair.maxTurns | Should Be 100
         (@($repair.arguments) -join '|') | Should Match ([regex]::Escape('--model|deepseek/deepseek-v4-flash|--effort|max'))
@@ -98,7 +98,7 @@ Describe 'Phase 12-18 custom manifest behavior' {
         $state.phase | Should Be 18
     }
 
-    It 'counts only completed Command Code results toward the two-invocation limit' {
+    It 'counts only completed Command Code results toward the configured invocation limit' {
         $definition = Get-PhaseDefinition -Phase 12 -ManifestPath $manifestPath
         $state = New-OrchestrationState -PhaseDefinition $definition -BaselineCommit '0123456789abcdef0123456789abcdef01234567'
 
@@ -111,17 +111,19 @@ Describe 'Phase 12-18 custom manifest behavior' {
         $state = Move-OrchestrationState -State $state -ToStatus READY -Reason 'cmdc returned exit 8' -ManifestPath $manifestPath -InvocationCompleted
         $state.attempt | Should Be 1
 
-        $state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'effective attempt 2' -ManifestPath $manifestPath
-        $state = Move-OrchestrationState -State $state -ToStatus READY -Reason 'cmdc returned exit 8' -ManifestPath $manifestPath -InvocationCompleted
-        $state.attempt | Should Be 2
-        $thirdAttemptRejected = $false
+        foreach ($attempt in 2..$definition.maxInvocationsPerPhase) {
+            $state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason "effective attempt $attempt" -ManifestPath $manifestPath
+            $state = Move-OrchestrationState -State $state -ToStatus READY -Reason 'cmdc returned exit 8' -ManifestPath $manifestPath -InvocationCompleted
+            $state.attempt | Should Be $attempt
+        }
+        $extraAttemptRejected = $false
         try {
-            Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'third effective attempt' -ManifestPath $manifestPath | Out-Null
+            Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'attempt beyond configured limit' -ManifestPath $manifestPath | Out-Null
         }
         catch {
-            $thirdAttemptRejected = $true
+            $extraAttemptRejected = $true
         }
-        $thirdAttemptRejected | Should Be $true
+        $extraAttemptRejected | Should Be $true
     }
 }
 

@@ -2,6 +2,7 @@ package com.middleproject.reminder.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.middleproject.reminder.domain.PrivateCarPlanningInput;
 import com.middleproject.reminder.domain.ReminderStatus;
 import com.middleproject.reminder.domain.Trip;
 import com.middleproject.reminder.domain.TripEvent;
@@ -65,6 +66,21 @@ public class TripService {
 
     @Transactional
     public Trip answerQuestion(UUID id, String questionId, String answer, String key) {
+        if (PrivateCarPlanningInput.LEAD_KEY.equals(questionId)) {
+            int lead;
+            try {
+                lead = Integer.parseInt(answer.trim());
+            } catch (RuntimeException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "reminder_lead_minutes must be an integer between " + PrivateCarPlanningInput.LEAD_MIN
+                                + " and " + PrivateCarPlanningInput.LEAD_MAX);
+            }
+            if (lead < PrivateCarPlanningInput.LEAD_MIN || lead > PrivateCarPlanningInput.LEAD_MAX) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "reminder_lead_minutes must be between " + PrivateCarPlanningInput.LEAD_MIN
+                                + " and " + PrivateCarPlanningInput.LEAD_MAX);
+            }
+        }
         String owner = demoOwner.ownerId();
         return idempotency.execute("trips:answer:" + id + ":" + owner, key, new Object[]{questionId, answer}, Trip.class, () -> {
             Trip current = trips.findByIdForOwner(id, owner).orElseThrow(() -> notFound());

@@ -4,7 +4,7 @@
   "effort": "max",
   "maxTurns": 100,
   "repairMaxTurns": 100,
-  "maxInvocationsPerPhase": 2,
+  "maxInvocationsPerPhase": 10,
   "phases": [
     {
       "phase": 12,

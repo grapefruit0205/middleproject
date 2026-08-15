@@ -62,8 +62,9 @@ class McpAdapterIntegrationTest {
         Set<String> names = new HashSet<>();
         tools.forEach(tool -> names.add(tool.path("name").asText()));
         assertEquals(Set.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status",
-                "create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip"), names);
-        assertEquals(10, tools.size());
+                "create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip",
+                "next_private_car_question", "preview_private_car_route", "confirm_private_car_route"), names);
+        assertEquals(13, tools.size());
         for (JsonNode tool : tools) {
             JsonNode schema = tool.path("inputSchema");
             assertEquals("object", schema.path("type").asText());
@@ -80,13 +81,33 @@ class McpAdapterIntegrationTest {
                 if (field.getKey().equals("expectedVersion")) {
                     assertEquals("integer", value.path("type").asText());
                     assertEquals(0, value.path("minimum").asInt());
+                } else if (field.getKey().equals("reminderLeadMinutes")) {
+                    assertEquals("integer", value.path("type").asText());
+                    assertEquals(0, value.path("minimum").asInt());
+                    assertEquals(1440, value.path("maximum").asInt());
                 } else {
                     assertEquals("string", value.path("type").asText());
-                    if (field.getKey().endsWith("Id")) assertEquals("uuid", value.path("format").asText());
+                    if (field.getKey().endsWith("Id")
+                            && !field.getKey().equals("proposalId")
+                            && !field.getKey().equals("confirmationId")) {
+                        assertEquals("uuid", value.path("format").asText());
+                    }
+                    // proposalId is a SHA-256 digest and confirmationId is an arbitrary
+                    // client-chosen string; neither is a UUID, so they must not claim one.
+                    if (field.getKey().equals("proposalId")) {
+                        assertEquals("[0-9a-f]{64}", value.path("pattern").asText());
+                        assertEquals(64, value.path("minLength").asInt());
+                        assertEquals(64, value.path("maxLength").asInt());
+                        assertFalse(value.has("format"), "proposalId must not be marked as a UUID");
+                    }
+                    if (field.getKey().equals("confirmationId")) {
+                        assertFalse(value.has("format"), "confirmationId must not be marked as a UUID");
+                    }
                     if (field.getKey().equals("idempotencyKey")) {
                         assertEquals(1, value.path("minLength").asInt());
                         assertEquals(200, value.path("maxLength").asInt());
                     }
+                    if (field.getKey().equals("previewFetchedAt")) assertEquals("date-time", value.path("format").asText());
                 }
             });
         }

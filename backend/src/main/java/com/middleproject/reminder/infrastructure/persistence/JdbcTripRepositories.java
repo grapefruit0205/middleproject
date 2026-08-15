@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,7 +27,8 @@ import java.util.UUID;
 class JdbcTripRepository implements TripRepository {
     private final JdbcTemplate db;
     private final ObjectMapper mapper;
-    JdbcTripRepository(JdbcTemplate db, ObjectMapper mapper) { this.db = db; this.mapper = mapper; }
+    private final Clock clock;
+    JdbcTripRepository(JdbcTemplate db, ObjectMapper mapper, Clock clock) { this.db = db; this.mapper = mapper; this.clock = clock; }
 
     private static final String COLUMNS = "id,owner_id,departure,destination,departure_at,return_at,status,confirmation_id,draft_context,version";
 
@@ -38,7 +40,7 @@ class JdbcTripRepository implements TripRepository {
 
     public Trip insert(UUID id, String ownerId, String departure, String destination,
                        OffsetDateTime departureAt, OffsetDateTime returnAt, TripStatus status) {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(clock);
         db.update("insert into trips(id,owner_id,departure,destination,departure_at,return_at,status,draft_context,created_at,updated_at,version) values(?,?,?,?,?,?,?,'{}',?,?,0)",
                 id, ownerId, departure, destination, departureAt, returnAt, status.name(), now, now);
         return findByIdForOwner(id, ownerId).orElseThrow();
@@ -46,12 +48,12 @@ class JdbcTripRepository implements TripRepository {
 
     public boolean addDraftAnswer(UUID id, String questionId, String answer, String draftContextJson, long version) {
         return db.update("update trips set draft_context=?,updated_at=?,version=version+1 where id=? and version=? and status='DRAFT'",
-                draftContextJson, OffsetDateTime.now(), id, version) > 0;
+                draftContextJson, OffsetDateTime.now(clock), id, version) > 0;
     }
 
     public boolean transition(UUID id, TripStatus oldStatus, TripStatus target, long version, String confirmationId) {
         return db.update("update trips set status=?,confirmation_id=?,updated_at=?,version=version+1 where id=? and version=? and status=?",
-                target.name(), confirmationId, OffsetDateTime.now(), id, version, oldStatus.name()) > 0;
+                target.name(), confirmationId, OffsetDateTime.now(clock), id, version, oldStatus.name()) > 0;
     }
 
     private Trip map(ResultSet r) throws SQLException {
@@ -81,18 +83,20 @@ class JdbcTripRepository implements TripRepository {
 @Repository
 class JdbcTripEventRepository implements TripEventRepository {
     private final JdbcTemplate db;
-    JdbcTripEventRepository(JdbcTemplate db) { this.db = db; }
+    private final Clock clock;
+    JdbcTripEventRepository(JdbcTemplate db, Clock clock) { this.db = db; this.clock = clock; }
     public List<TripEvent> findByTrip(UUID tripId) { return db.query("select id,trip_id,type,detail,occurred_at from trip_events where trip_id=? order by occurred_at", (r, n) -> new TripEvent((UUID) r.getObject("id"), (UUID) r.getObject("trip_id"), r.getString("type"), r.getString("detail"), r.getObject("occurred_at", OffsetDateTime.class)), tripId); }
-    public void insert(TripEvent event) { db.update("insert into trip_events(id,trip_id,type,detail,occurred_at,created_at) values(?,?,?,?,?,?)", event.id(), event.tripId(), event.type(), event.detail(), event.occurredAt(), OffsetDateTime.now()); }
+    public void insert(TripEvent event) { db.update("insert into trip_events(id,trip_id,type,detail,occurred_at,created_at) values(?,?,?,?,?,?)", event.id(), event.tripId(), event.type(), event.detail(), event.occurredAt(), OffsetDateTime.now(clock)); }
 }
 
 @Repository
 class JdbcTripOutboxRepository implements TripOutboxRepository {
     private final JdbcTemplate db;
-    JdbcTripOutboxRepository(JdbcTemplate db) { this.db = db; }
+    private final Clock clock;
+    JdbcTripOutboxRepository(JdbcTemplate db, Clock clock) { this.db = db; this.clock = clock; }
     public void insert(UUID id, UUID tripId, String operation, long expectedVersion, long schedulerVersion,
                        OffsetDateTime dueAt, String payload) {
         db.update("insert into trip_outbox(id,trip_id,operation,expected_version,scheduler_version,due_at,payload,created_at) values(?,?,?,?,?,?,?,?)",
-                id, tripId, operation, expectedVersion, schedulerVersion, dueAt, payload, OffsetDateTime.now());
+                id, tripId, operation, expectedVersion, schedulerVersion, dueAt, payload, OffsetDateTime.now(clock));
     }
 }
