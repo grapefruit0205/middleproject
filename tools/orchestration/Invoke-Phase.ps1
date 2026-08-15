@@ -117,7 +117,6 @@ try {
 }
 catch {
     $state = Move-OrchestrationState -State $state -ToStatus READY -Reason "Command Code could not start: $($_.Exception.Message)" -ManifestPath $resolvedManifestPath
-    $state.attempt = [Math]::Max(0, [int]$state.attempt - 1)
     Write-OrchestrationState -State $state -StatePath $StatePath
     throw
 }
@@ -136,17 +135,17 @@ $scope = Test-PhaseChangeScope -PhaseDefinition $definition -ChangedPaths $chang
 
 if ($afterHead -ne $beforeHead -or $afterBranch -ne $beforeBranch) {
     $reason = "Command Code changed Git HEAD or branch ($beforeBranch@$beforeHead -> $afterBranch@$afterHead)."
-    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $resolvedManifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $resolvedManifestPath -InvocationCompleted
 }
 elseif (-not $scope.isAllowed) {
     $reason = 'Out-of-scope changes: ' + (@($scope.rejectedPaths) -join ', ')
-    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $resolvedManifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $reason -ManifestPath $resolvedManifestPath -InvocationCompleted
 }
 elseif ([int]$attemptResult.exitCode -ne 0) {
-    $state = Move-OrchestrationState -State $state -ToStatus READY -Reason "Command Code exited with code $($attemptResult.exitCode)" -ManifestPath $resolvedManifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus READY -Reason "Command Code exited with code $($attemptResult.exitCode)" -ManifestPath $resolvedManifestPath -InvocationCompleted
 }
 else {
-    $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason 'Command Code exited zero and phase paths stayed within scope.' -ManifestPath $resolvedManifestPath
+    $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason 'Command Code exited zero and phase paths stayed within scope.' -ManifestPath $resolvedManifestPath -InvocationCompleted
 }
 
 Write-OrchestrationState -State $state -StatePath $StatePath

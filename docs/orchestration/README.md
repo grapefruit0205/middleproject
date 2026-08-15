@@ -188,8 +188,10 @@ Phase 12-18은 기존 실행 이력을 바꾸지 않도록 별도 manifest와 st
 | CMDC implementation model | Phase 12~18 `deepseek/deepseek-v4-flash` |
 | Effort | `max` |
 | Turn budget | 최초 100, 수정 100 |
-| Invocation limit | Phase당 2회 |
+| Invocation limit | Phase당 유효 호출 2회 |
 | Codex main review | Phase 12~18 `gpt-5.6-sol` / `high` |
+
+`attempt`는 CMDC 프로세스 결과를 runner가 회수한 호출만 센다. 정상 종료, non-zero 종료, `max_turns`, Git·허용 경로 위반은 유효 호출이다. 시작 거부, 실행 전 예외, 결과 없이 끊긴 프로세스는 횟수를 쓰지 않는다. 중단 상태를 복구하기 전에는 활성 CMDC 프로세스가 없고 새 작업 트리 변경이 없는지 Codex가 확인해야 한다.
 
 실행 전 설치된 CMDC가 모델을 제공하는지 확인합니다.
 

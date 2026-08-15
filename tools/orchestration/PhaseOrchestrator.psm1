@@ -154,6 +154,8 @@ function Move-OrchestrationState {
         [Parameter(Mandatory)]
         [string]$ManifestPath,
 
+        [switch]$InvocationCompleted,
+
         [switch]$ExternalApproval,
 
         [ValidatePattern('^[0-9a-fA-F]{40}$')]
@@ -191,10 +193,17 @@ function Move-OrchestrationState {
         throw 'NextBaselineCommit is required when a passing phase advances to the next phase.'
     }
 
+    if ($InvocationCompleted -and $fromStatus -ne 'IMPLEMENTING') {
+        throw 'InvocationCompleted is valid only when leaving IMPLEMENTING.'
+    }
+
     if ($transition -eq 'READY->IMPLEMENTING') {
         if ([int]$State.attempt -ge [int]$State.maxInvocationsPerPhase) {
             throw "Phase $($State.phase) already consumed all $($State.maxInvocationsPerPhase) Command Code invocations."
         }
+    }
+
+    if ($InvocationCompleted) {
         $State.attempt = [int]$State.attempt + 1
     }
 

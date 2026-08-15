@@ -97,6 +97,32 @@ Describe 'Phase 12-18 custom manifest behavior' {
         $state.status | Should Be 'COMPLETE'
         $state.phase | Should Be 18
     }
+
+    It 'counts only completed Command Code results toward the two-invocation limit' {
+        $definition = Get-PhaseDefinition -Phase 12 -ManifestPath $manifestPath
+        $state = New-OrchestrationState -PhaseDefinition $definition -BaselineCommit '0123456789abcdef0123456789abcdef01234567'
+
+        $state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'interrupted start' -ManifestPath $manifestPath
+        $state.attempt | Should Be 0
+        $state = Move-OrchestrationState -State $state -ToStatus READY -Reason 'process ended without a result' -ManifestPath $manifestPath
+        $state.attempt | Should Be 0
+
+        $state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'effective attempt 1' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus READY -Reason 'cmdc returned exit 8' -ManifestPath $manifestPath -InvocationCompleted
+        $state.attempt | Should Be 1
+
+        $state = Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'effective attempt 2' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus READY -Reason 'cmdc returned exit 8' -ManifestPath $manifestPath -InvocationCompleted
+        $state.attempt | Should Be 2
+        $thirdAttemptRejected = $false
+        try {
+            Move-OrchestrationState -State $state -ToStatus IMPLEMENTING -Reason 'third effective attempt' -ManifestPath $manifestPath | Out-Null
+        }
+        catch {
+            $thirdAttemptRejected = $true
+        }
+        $thirdAttemptRejected | Should Be $true
+    }
 }
 
 Describe 'Phase 12-18 runner entry points' {

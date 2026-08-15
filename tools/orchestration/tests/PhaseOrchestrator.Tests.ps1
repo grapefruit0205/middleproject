@@ -260,10 +260,11 @@ Describe 'Durable phase orchestration state' {
 
         $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'initial run' -ManifestPath $manifestPath
         $state.status | Should Be 'IMPLEMENTING'
-        $state.attempt | Should Be 1
+        $state.attempt | Should Be 0
 
-        $state = Move-OrchestrationState -State $state -ToStatus 'REVIEWING' -Reason 'cmdc exited zero' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'REVIEWING' -Reason 'cmdc exited zero' -ManifestPath $manifestPath -InvocationCompleted
         $state.status | Should Be 'REVIEWING'
+        $state.attempt | Should Be 1
 
         $nextBaseline = 'fedcba9876543210fedcba9876543210fedcba98'
         $state = Move-OrchestrationState -State $state -ToStatus 'PASS' -Reason 'independent verification passed' -ManifestPath $manifestPath -NextBaselineCommit $nextBaseline
@@ -304,17 +305,17 @@ Describe 'Durable phase orchestration state' {
         $state = New-OrchestrationState -PhaseDefinition $phaseOne -BaselineCommit $baseline
 
         $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 1' -ManifestPath $manifestPath
-        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'transient process failure' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'process returned a failure result' -ManifestPath $manifestPath -InvocationCompleted
         $state.attempt | Should Be 1
 
         $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 2' -ManifestPath $manifestPath
-        $state = Move-OrchestrationState -State $state -ToStatus 'REVIEWING' -Reason 'implemented' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'REVIEWING' -Reason 'implemented' -ManifestPath $manifestPath -InvocationCompleted
         $state = Move-OrchestrationState -State $state -ToStatus 'REVISE' -Reason 'tests failed' -ManifestPath $manifestPath
         $state.status | Should Be 'READY'
         $state.attempt | Should Be 2
 
         $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 3' -ManifestPath $manifestPath
-        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'another failure' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'another returned failure' -ManifestPath $manifestPath -InvocationCompleted
         $state.attempt | Should Be 3
 
         (Test-Throws { Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 4' -ManifestPath $manifestPath }) | Should Be $true
@@ -325,9 +326,9 @@ Describe 'Durable phase orchestration state' {
         $state = New-OrchestrationState -PhaseDefinition $phaseTen -BaselineCommit $baseline
 
         $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 1' -ManifestPath $manifestPath
-        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'process failure' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'process returned failure' -ManifestPath $manifestPath -InvocationCompleted
         $state = Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 2' -ManifestPath $manifestPath
-        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'repair failure' -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus 'READY' -Reason 'repair returned failure' -ManifestPath $manifestPath -InvocationCompleted
 
         $state.attempt | Should Be 2
         (Test-Throws { Move-OrchestrationState -State $state -ToStatus 'IMPLEMENTING' -Reason 'attempt 3' -ManifestPath $manifestPath }) | Should Be $true

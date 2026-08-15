@@ -24,6 +24,8 @@ Phase 12-18 계약을 커밋하고 기존 PowerShell runner가 별도 manifest�
 9. 전체 diff, JSON parse, PowerShell parse, Pester, `git diff --check`를 검증한다.
 10. 구현 커밋을 만들고 브랜치를 GitHub에 push한다.
 
+호출 횟수는 runner가 CMDC 프로세스 결과를 회수할 때 기록한다. 결과 없이 중단된 실행은 활성 writer와 새 작업 트리 변경이 없음을 확인한 경우에만 미차감 복구한다. 종료 코드와 `max_turns`를 받은 실행은 실패 여부와 관계없이 유효 호출이다.
+
 ## 테스트가 잡아야 할 오류
 
 - runner가 custom manifest를 무시하고 기존 `phases.json`을 읽음
@@ -32,7 +34,7 @@ Phase 12-18 계약을 커밋하고 기존 PowerShell runner가 별도 manifest�
 - Phase 17 외부 승인 표시가 빠짐
 - DeepSeek V4 Flash 모델 또는 100턴 제한이 CMDC 인자에 전달되지 않음
 - Phase 18 PASS 뒤 state가 `COMPLETE`로 바뀌지 않음
-- Phase 01-10 기본 실행이 바뀜
+- Phase 01-10 manifest의 모델, 턴 예산, 호출 상한이 바뀜
 
 ## 검증 명령
 

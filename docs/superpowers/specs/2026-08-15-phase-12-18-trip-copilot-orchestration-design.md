@@ -6,9 +6,9 @@
 
 ## 결정
 
-Phase 12-18은 `tools/orchestration/phases-12-plus.json`과 `.orchestration/phase-12-18-state.json`을 사용한다. 공통 PowerShell 모듈은 재사용하고 `Invoke-Phase.ps1`과 `Set-PhaseReview.ps1`이 명시적인 manifest 경로를 받도록 확장한다. 기존 `phases.json`의 내용과 Phase 01-10 기본 동작은 바꾸지 않는다.
+Phase 12-18은 `tools/orchestration/phases-12-plus.json`과 `.orchestration/phase-12-18-state.json`을 사용한다. 공통 PowerShell 모듈은 재사용하고 `Invoke-Phase.ps1`과 `Set-PhaseReview.ps1`이 명시적인 manifest 경로를 받도록 확장한다. 기존 `phases.json`의 모델, 턴 예산, Phase별 호출 상한은 바꾸지 않는다. 공통 상태 모듈은 모든 Phase에서 결과를 회수한 호출만 세도록 같은 의미를 적용한다.
 
-CMDC 1.24.0이 제공하는 전체 모델 식별자 `deepseek/deepseek-v4-flash`를 Phase 12~18 구현에 사용한다. 각 Phase는 `max` effort, 최초 100턴, 수정 100턴, 최대 2회 호출을 사용한다. 첫 실행 전 `cmdc --list-models` 결과에 해당 식별자가 없으면 유료 호출을 시작하지 않는다.
+CMDC 1.24.0이 제공하는 전체 모델 식별자 `deepseek/deepseek-v4-flash`를 Phase 12~18 구현에 사용한다. 각 Phase는 `max` effort, 최초 100턴, 수정 100턴, 최대 2회의 유효 호출을 사용한다. runner가 프로세스 결과를 회수한 시점에만 호출 횟수를 올린다. 정상 종료, non-zero 종료, `max_turns`, Git·경로 보호 위반은 유효 호출로 센다. 시작 거부, 실행 전 예외, 결과 없이 끊긴 프로세스는 횟수를 쓰지 않는다. Codex는 중단 복구 전에 활성 writer가 없고 해당 실행이 새 작업 트리 변경을 만들지 않았는지 확인한다. 첫 실행 전 `cmdc --list-models` 결과에 해당 식별자가 없으면 유료 호출을 시작하지 않는다.
 
 ## Phase 범위
 
@@ -58,6 +58,7 @@ Pester 테스트는 유료 모델을 호출하지 않고 다음 계약을 검증
 
 - Phase 12-18 manifest 순서와 문서 경로
 - Phase 12~18 DeepSeek V4 Flash 모델, effort, 턴, 호출 제한
+- 프로세스 결과를 회수한 호출만 횟수에 포함하는 상태 전이
 - Phase별 branch, allowlist, 외부 승인 표시
 - custom manifest를 사용한 dry-run 인자
 - custom manifest를 사용한 PASS 전이와 terminal Phase 판정
