@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "model": "deepseek/deepseek-v4-pro",
+  "model": "deepseek/deepseek-v4-flash",
   "effort": "max",
   "maxTurns": 100,
   "repairMaxTurns": 100,

@@ -37,7 +37,7 @@
 
 각 구현 프롬프트의 `<BASE_COMMIT>`을 실행 전 실제 SHA로 바꾼다. DeepSeek는 허용 경로 밖의 변경이 필요하면 코드를 수정하지 않고 이유를 보고한다.
 
-Phase 12~18은 `tools/orchestration/phases-12-plus.json`을 사용한다. CMDC 모델은 `deepseek/deepseek-v4-pro`, effort는 `max`, 최초·수정 시도는 각각 100턴이며 Phase당 최대 2회다. 상태는 `.orchestration/phase-12-18-state.json`에 분리한다.
+Phase 12~18은 `tools/orchestration/phases-12-plus.json`을 사용한다. CMDC 구현 모델은 모든 Phase에서 `deepseek/deepseek-v4-flash`를 사용한다. effort는 `max`, 최초·수정 시도는 각각 100턴이며 Phase당 최대 2회다. Codex 메인이 각 Phase를 `gpt-5.6-sol` / `high`로 독립 검증하며 상태는 `.orchestration/phase-12-18-state.json`에 분리한다.
 
 ## Shared review template
 

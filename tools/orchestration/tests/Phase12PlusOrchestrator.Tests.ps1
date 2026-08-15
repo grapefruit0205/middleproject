@@ -34,18 +34,21 @@ Describe 'Phase 12-18 orchestration manifest' {
         (@($manifest.phases.phase) -join ',') | Should Be '12,13,14,15,16,17,18'
     }
 
-    It 'uses the live DeepSeek V4 Pro identifier and two 100-turn attempts' {
+    It 'uses DeepSeek V4 Flash for Phase 12 through 18' {
         Import-Module $modulePath -Force
         $definition = Get-PhaseDefinition -Phase 12 -ManifestPath $manifestPath
         $initial = New-CommandCodeRunPlan -PhaseDefinition $definition -RuntimePrompt 'initial' -CmdcPath 'cmdc' -RepositoryRoot $repositoryRoot -AttemptNumber 1
         $repair = New-CommandCodeRunPlan -PhaseDefinition $definition -RuntimePrompt 'repair' -CmdcPath 'cmdc' -RepositoryRoot $repositoryRoot -AttemptNumber 2
 
-        $definition.model | Should Be 'deepseek/deepseek-v4-pro'
+        foreach ($phase in 12..18) {
+            (Get-PhaseDefinition -Phase $phase -ManifestPath $manifestPath).model | Should Be 'deepseek/deepseek-v4-flash'
+        }
+        $definition.model | Should Be 'deepseek/deepseek-v4-flash'
         $definition.effort | Should Be 'max'
         $definition.maxInvocationsPerPhase | Should Be 2
         $initial.maxTurns | Should Be 100
         $repair.maxTurns | Should Be 100
-        (@($repair.arguments) -join '|') | Should Match ([regex]::Escape('--model|deepseek/deepseek-v4-pro|--effort|max'))
+        (@($repair.arguments) -join '|') | Should Match ([regex]::Escape('--model|deepseek/deepseek-v4-flash|--effort|max'))
         (@($repair.arguments) -join '|') | Should Match ([regex]::Escape('--max-turns|100'))
     }
 
@@ -76,7 +79,7 @@ Describe 'Phase 12-18 custom manifest behavior' {
         $definition = Get-PhaseDefinition -Phase 12 -ManifestPath $manifestPath
         $prompt = New-PhaseRuntimePrompt -PhaseDefinition $definition -RepositoryRoot $repositoryRoot -BaselineCommit '0123456789abcdef0123456789abcdef01234567'
 
-        $definition.model | Should Be 'deepseek/deepseek-v4-pro'
+        $definition.model | Should Be 'deepseek/deepseek-v4-flash'
         $definition.maxTurns | Should Be 100
         $definition.repairMaxTurns | Should Be 100
         $prompt | Should Match 'Cognito(?:/|, )OIDC'
@@ -108,10 +111,10 @@ Describe 'Phase 12-18 runner entry points' {
                 -DryRun
 
             $result.status | Should Be 'DRY_RUN'
-            $result.model | Should Be 'deepseek/deepseek-v4-pro'
+            $result.model | Should Be 'deepseek/deepseek-v4-flash'
             $result.effort | Should Be 'max'
             $result.maxTurns | Should Be 100
-            (@($result.arguments) -join '|') | Should Match ([regex]::Escape('--model|deepseek/deepseek-v4-pro|--effort|max'))
+            (@($result.arguments) -join '|') | Should Match ([regex]::Escape('--model|deepseek/deepseek-v4-flash|--effort|max'))
             (@($result.arguments) -join '|') | Should Match ([regex]::Escape('--max-turns|100'))
         }
         finally {

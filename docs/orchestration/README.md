@@ -185,18 +185,18 @@ Phase 12-18은 기존 실행 이력을 바꾸지 않도록 별도 manifest와 st
 | --- | --- |
 | Manifest | `tools/orchestration/phases-12-plus.json` |
 | State | `.orchestration/phase-12-18-state.json` |
-| CMDC model | `deepseek/deepseek-v4-pro` |
+| CMDC implementation model | Phase 12~18 `deepseek/deepseek-v4-flash` |
 | Effort | `max` |
 | Turn budget | 최초 100, 수정 100 |
 | Invocation limit | Phase당 2회 |
-| Codex review | Phase 12-16·18 Sol/xhigh, Phase 17 최종 게이트 Sol/max |
+| Codex main review | Phase 12~18 `gpt-5.6-sol` / `high` |
 
 실행 전 설치된 CMDC가 모델을 제공하는지 확인합니다.
 
 ```powershell
 cmdc --version
 cmdc status
-cmdc --list-models | Select-String -SimpleMatch 'deepseek/deepseek-v4-pro'
+cmdc --list-models | Select-String -SimpleMatch 'deepseek/deepseek-v4-flash'
 ```
 
 Phase 12 시작 브랜치는 검증된 기준 commit에서 만듭니다.
@@ -221,6 +221,8 @@ $phase12State = Join-Path (Resolve-Path '.').Path '.orchestration\phase-12-18-st
 ```
 
 dry-run에서 model, effort, maxTurns, branch, baseline, `--auto-accept`, `--yolo`를 확인한 뒤 한 번만 실행합니다.
+
+Codex 메인 검증은 전 Phase에서 `gpt-5.6-sol` / `high`로 시작합니다. 예상하지 않은 Terraform change/destroy, IAM·KMS·Security Group 위험, 설계 계약 충돌, 외부 Provider의 인증·재시도·멱등성 불확실성이 발견된 경우에만 해당 Phase를 `Sol/xhigh`로 다시 검증합니다. 서브 에이전트는 증거 수집을 보조할 수 있지만 최종 PASS를 판정하지 않습니다.
 
 ```powershell
 & .\tools\orchestration\Invoke-Phase.ps1 `

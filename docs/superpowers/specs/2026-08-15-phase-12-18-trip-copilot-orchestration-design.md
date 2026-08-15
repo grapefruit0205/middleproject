@@ -8,7 +8,7 @@
 
 Phase 12-18은 `tools/orchestration/phases-12-plus.json`과 `.orchestration/phase-12-18-state.json`을 사용한다. 공통 PowerShell 모듈은 재사용하고 `Invoke-Phase.ps1`과 `Set-PhaseReview.ps1`이 명시적인 manifest 경로를 받도록 확장한다. 기존 `phases.json`의 내용과 Phase 01-10 기본 동작은 바꾸지 않는다.
 
-CMDC 1.24.0이 제공하는 전체 모델 식별자 `deepseek/deepseek-v4-pro`를 사용한다. 각 Phase는 `max` effort, 최초 100턴, 수정 100턴, 최대 2회 호출을 사용한다. 실행 전 `cmdc --list-models` 결과에 해당 식별자가 없으면 유료 호출을 시작하지 않는다.
+CMDC 1.24.0이 제공하는 전체 모델 식별자 `deepseek/deepseek-v4-flash`를 Phase 12~18 구현에 사용한다. 각 Phase는 `max` effort, 최초 100턴, 수정 100턴, 최대 2회 호출을 사용한다. 첫 실행 전 `cmdc --list-models` 결과에 해당 식별자가 없으면 유료 호출을 시작하지 않는다.
 
 ## Phase 범위
 
@@ -23,6 +23,8 @@ CMDC 1.24.0이 제공하는 전체 모델 식별자 `deepseek/deepseek-v4-pro`�
 | 18 | Real Intercity Transport Providers | `backend/**`, Provider Runbook | 없음 |
 
 각 Phase 디렉터리는 Codex가 소유하는 `brief.md`와 CMDC가 읽는 `implement.prompt.md`를 커밋한다. 구현자는 허용 경로 안의 `result.md`만 작성한다. Codex는 `review.md`를 작성하며 CMDC는 이 파일을 수정할 수 없다.
+
+최종 검토와 PASS 판정은 전체 대화와 Phase 이력을 가진 Codex 메인 작업이 담당한다. 서브 에이전트는 테스트 로그나 Terraform 정적 분석처럼 범위가 좁은 증거 수집만 보조하며 독자적으로 PASS를 선언하지 않는다. Phase 12~18 검토는 `gpt-5.6-sol` / `high`로 시작한다. 예상하지 않은 Terraform change/destroy, IAM·KMS·Security Group 위험, 설계 계약 충돌, 외부 Provider의 인증·재시도·멱등성 불확실성이 남는 경우에만 해당 Phase를 `Sol/xhigh`로 재검증하며 `max`를 기본값으로 사용하지 않는다.
 
 ## 접근 통제 계약
 
@@ -55,7 +57,7 @@ Phase 17의 Terraform apply, 장애 주입, RDS failover, Alarm 변경, destroy�
 Pester 테스트는 유료 모델을 호출하지 않고 다음 계약을 검증한다.
 
 - Phase 12-18 manifest 순서와 문서 경로
-- DeepSeek V4 Pro 모델, effort, 턴, 호출 제한
+- Phase 12~18 DeepSeek V4 Flash 모델, effort, 턴, 호출 제한
 - Phase별 branch, allowlist, 외부 승인 표시
 - custom manifest를 사용한 dry-run 인자
 - custom manifest를 사용한 PASS 전이와 terminal Phase 판정
@@ -66,7 +68,7 @@ Pester 테스트는 유료 모델을 호출하지 않고 다음 계약을 검증
 
 - Phase 12-18의 brief와 구현 프롬프트가 저장소에 존재한다.
 - `Invoke-Phase.ps1`과 `Set-PhaseReview.ps1`이 같은 custom manifest를 사용한다.
-- Phase 12 dry-run이 `deepseek/deepseek-v4-pro`, `max`, 100턴을 출력한다.
+- Phase 12 dry-run이 `deepseek/deepseek-v4-flash`, `max`, 100턴을 출력한다.
 - Pester 전체 테스트와 `git diff --check`가 통과한다.
 - README가 Phase 12 시작 명령, Codex 검토, Phase 17 승인 경계를 설명한다.
 - 변경을 작업 브랜치에 커밋하고 GitHub에 push한다.

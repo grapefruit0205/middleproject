@@ -2,7 +2,7 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. `Phase 12~18` 출장 코파일럿은 구현 계약과 DeepSeek V4 Pro/Codex 오케스트레이션을 준비했으며 애플리케이션 구현은 아직 시작하지 않았습니다.
+현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. `Phase 12~18` 출장 코파일럿은 구현 계약과 DeepSeek V4 Flash/Codex 메인 검증 오케스트레이션을 준비했으며 애플리케이션 구현은 아직 시작하지 않았습니다.
 
 > AWS 상태: 2026-08-15 KST에 비용 방지를 위해 단기 검증용 Phase 11 HA 스택을 철거했습니다. 승인된 destroy plan은 `0 add / 0 change / 90 destroy`였고 적용 후 Terraform state와 프로젝트 범위 AWS inventory가 비어 있음을 확인했습니다. 이전 Public ALB 주소는 더 이상 사용할 수 없습니다.
 

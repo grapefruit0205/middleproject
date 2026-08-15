@@ -2,7 +2,7 @@
 
 ## 목표
 
-Phase 12-18 계약을 커밋하고 기존 PowerShell runner가 별도 manifest와 state를 사용해 DeepSeek V4 Pro 구현 시도를 실행하도록 확장한다.
+Phase 12-18 계약을 커밋하고 기존 PowerShell runner가 별도 manifest와 state를 사용해 DeepSeek V4 Flash 구현 시도를 실행하도록 확장한다.
 
 ## 안전 경계
 
@@ -30,7 +30,7 @@ Phase 12-18 계약을 커밋하고 기존 PowerShell runner가 별도 manifest�
 - Phase 12를 매개변수 검증에서 거부함
 - review runner가 실행 runner와 다른 manifest를 사용함
 - Phase 17 외부 승인 표시가 빠짐
-- DeepSeek V4 Pro 모델 또는 100턴 제한이 CMDC 인자에 전달되지 않음
+- DeepSeek V4 Flash 모델 또는 100턴 제한이 CMDC 인자에 전달되지 않음
 - Phase 18 PASS 뒤 state가 `COMPLETE`로 바뀌지 않음
 - Phase 01-10 기본 실행이 바뀜
 
