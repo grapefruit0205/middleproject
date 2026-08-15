@@ -8,6 +8,8 @@ param(
     [Parameter(Mandatory)]
     [string]$StatePath,
 
+    [string]$ManifestPath,
+
     [Parameter(Mandatory)]
     [ValidateSet('PASS', 'REVISE', 'BLOCKED', 'AWAITING_APPROVAL', 'RESUME_AFTER_APPROVAL')]
     [string]$Decision,
@@ -26,20 +28,24 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $modulePath = Join-Path $PSScriptRoot 'PhaseOrchestrator.psm1'
-$manifestPath = Join-Path $PSScriptRoot 'phases.json'
 Import-Module $modulePath -Force
+
+if ([string]::IsNullOrWhiteSpace($ManifestPath)) {
+    $ManifestPath = Join-Path $PSScriptRoot 'phases.json'
+}
+$resolvedManifestPath = (Resolve-Path -LiteralPath $ManifestPath).Path
 
 $resolvedRepositoryRoot = (Resolve-Path -LiteralPath $RepositoryRoot).Path
 $state = Read-OrchestrationState -StatePath $StatePath
-$definition = Get-PhaseDefinition -Phase ([int]$state.phase) -ManifestPath $manifestPath
-$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$definition = Get-PhaseDefinition -Phase ([int]$state.phase) -ManifestPath $resolvedManifestPath
+$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw | ConvertFrom-Json
 $terminalPhase = [int](@($manifest.phases.phase | Measure-Object -Maximum).Maximum)
 
 if ($Decision -eq 'RESUME_AFTER_APPROVAL') {
     if (-not $ExternalApproval) {
         throw 'RESUME_AFTER_APPROVAL requires the ExternalApproval switch.'
     }
-    $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason $Reason -ManifestPath $manifestPath -ExternalApproval
+    $state = Move-OrchestrationState -State $state -ToStatus REVIEWING -Reason $Reason -ManifestPath $resolvedManifestPath -ExternalApproval
     Write-OrchestrationState -State $state -StatePath $StatePath
     return $state
 }
@@ -69,20 +75,20 @@ switch ($Decision) {
             if ($LASTEXITCODE -ne 0) {
                 throw "Next baseline commit does not exist: $NextBaselineCommit"
             }
-            $state = Move-OrchestrationState -State $state -ToStatus PASS -Reason $Reason -ManifestPath $manifestPath -NextBaselineCommit $NextBaselineCommit
+            $state = Move-OrchestrationState -State $state -ToStatus PASS -Reason $Reason -ManifestPath $resolvedManifestPath -NextBaselineCommit $NextBaselineCommit
         }
         else {
-            $state = Move-OrchestrationState -State $state -ToStatus PASS -Reason $Reason -ManifestPath $manifestPath
+            $state = Move-OrchestrationState -State $state -ToStatus PASS -Reason $Reason -ManifestPath $resolvedManifestPath
         }
     }
     'REVISE' {
-        $state = Move-OrchestrationState -State $state -ToStatus REVISE -Reason $Reason -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus REVISE -Reason $Reason -ManifestPath $resolvedManifestPath
     }
     'BLOCKED' {
-        $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $Reason -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus BLOCKED -Reason $Reason -ManifestPath $resolvedManifestPath
     }
     'AWAITING_APPROVAL' {
-        $state = Move-OrchestrationState -State $state -ToStatus AWAITING_APPROVAL -Reason $Reason -ManifestPath $manifestPath
+        $state = Move-OrchestrationState -State $state -ToStatus AWAITING_APPROVAL -Reason $Reason -ManifestPath $resolvedManifestPath
     }
 }
 

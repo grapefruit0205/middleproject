@@ -2,7 +2,7 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다.
+현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. `Phase 12~18` 출장 코파일럿은 구현 계약과 DeepSeek V4 Pro/Codex 오케스트레이션을 준비했으며 애플리케이션 구현은 아직 시작하지 않았습니다.
 
 > AWS 상태: 2026-08-15 KST에 비용 방지를 위해 단기 검증용 Phase 11 HA 스택을 철거했습니다. 승인된 destroy plan은 `0 add / 0 change / 90 destroy`였고 적용 후 Terraform state와 프로젝트 범위 AWS inventory가 비어 있음을 확인했습니다. 이전 Public ALB 주소는 더 이상 사용할 수 없습니다.
 
@@ -11,15 +11,22 @@
 ## Architecture
 
 ```text
-User
+Android / Ops Dashboard
   -> Public ALB
   -> Apache WEB Tier
   -> Internal ALB
   -> External Tomcat WAS Tier
   -> RDS PostgreSQL Multi-AZ
 
+ChatGPT Private Plugin
+  -> Secure MCP Tunnel
+  -> Apache WEB Tier
+  -> Internal ALB -> WAS -> RDS
+
 EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 ```
+
+Public ALB는 `/api/mcp`를 거부합니다. Phase 12~18의 비공개 단일 사용자 시연은 Cognito/OIDC 대신 Secure MCP Tunnel과 Android 일회용 기기 페어링을 사용합니다. 공개 배포 또는 다중 사용자 지원에는 OAuth 2.1 IdP가 필요합니다.
 
 - Frontend: React/PWA, Apache HTTP Server 2.4
 - Backend: Java 21, Spring Boot 3.5, Gradle Kotlin DSL, Gradle Wrapper
@@ -47,6 +54,13 @@ EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 | 09 · MCP Adapter | ✅ PASS | 동일 Application Service 기반 6개 제한 Tool, Principal 인증·소유권 인가, Schema·Lifecycle·Retry·Audit 구현 | `1ff7c23` |
 | 10 · Observability & Security | 🟡 Live 기준선 확인 | Correlation ID, ECS JSON 로그, Micrometer, CloudWatch Agent·Logs·Metrics·Alarms, SSM/IAM/IMDSv2 보강; Phase 11 배포에서 로그 수집·Correlation ID·알람 정상 복귀 확인 | `3ea2443`; main 병합 `690b3bf` |
 | 11 · HA Test, Final Demo & Portfolio | 🟡 기준선 검증·철거 완료 | Terraform `90 add / 0 change / 0 destroy` 적용 후 Linux bootstrap 결함을 테스트 우선으로 수정; WEB/WAS 각 2대, RDS Multi-AZ, ASG health grace·warmup 300초, HTTPS·readiness·Terraform no-drift 검증 완료. 장애 실험·리허설은 미실행했으며, 2026-08-15 KST에 `90 destroy` 후 잔존 inventory `0`을 확인 | 기준 `3a5c77d`; main 병합 `f5b5e13` |
+| 12 · Trip Domain & MCP Foundation | 📋 계약 준비 | Trip 상태, 확정 트랜잭션, Demo Owner Context, REST/MCP 공통 Application Service | 구현 전 |
+| 13 · Private Car Vertical Slice | 📋 계약 준비 | 자차 경로, 권장 출발 시각, Fake Route Provider | 구현 전 |
+| 14 · Travel Context & Recommendations | 📋 계약 준비 | 날씨, 준비물, 숙박·맛집·명소 추천과 부분 성공 | 구현 전 |
+| 15 · Private ChatGPT Plugin | 📋 계약 준비 | Secure MCP Tunnel 전용 비공개 Plugin과 Prompt evaluation | 구현 전 |
+| 16 · Android Companion | 📋 계약 준비 | Kotlin/Compose, 기기 페어링, FCM, AlarmManager, ACK | 구현 전 |
+| 17 · AWS 3-Tier E2E & Evidence | 📋 계약 준비 | Tunnel/Public 경로, RDS·Queue·알림·장애·철거 증거 | 구현 전 |
+| 18 · Real Intercity Providers | 📋 선택 확장 | 공식 철도·버스·항공 Provider Adapter | 구현 전 |
 
 각 단계의 구현 증거와 Codex 독립 검토는 [`docs/phases`](docs/phases) 아래 `result.md`와 `review.md`에 기록합니다. Phase는 검토 결과가 `PASS`일 때만 다음 단계의 기준 커밋이 됩니다.
 
@@ -165,6 +179,6 @@ terraform -chdir=infra/terraform validate
 - [`docs/architecture`](docs/architecture): 승인된 Architecture와 불변 조건
 - [`docs/adr`](docs/adr): Architecture Decision Records
 - [`docs/phases`](docs/phases): Phase별 계약, 구현 결과, 독립 검토
-- [`tools/orchestration`](tools/orchestration): Phase 01~10 구현·검증 오케스트레이터
+- [`tools/orchestration`](tools/orchestration): Phase 01~10과 Phase 12~18 구현·검증 오케스트레이터
 
 Git 저장소가 기술적 Source of Truth이며, Notion의 `Reliable Multi-Channel Reminder Platform · Project Hub`는 탐색과 프로젝트 운영을 위한 허브로 사용합니다.
