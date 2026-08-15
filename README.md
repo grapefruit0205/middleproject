@@ -2,7 +2,7 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. 출장 코파일럿은 `Phase 12` Trip Domain/MCP 기반, `Phase 13` 자차 이동, `Phase 14` 여행 맥락·추천까지 구현과 Codex 독립 검증을 완료했으며 `Phase 15` 비공개 ChatGPT Plugin 구현을 준비 중입니다.
+현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. 출장 코파일럿은 `Phase 12` Trip Domain/MCP 기반, `Phase 13` 자차 이동, `Phase 14` 여행 맥락·추천, `Phase 15` 비공개 ChatGPT Plugin 패키징까지 구현과 Codex 독립 검증을 완료했습니다.
 
 > AWS 상태: 2026-08-15 KST에 비용 방지를 위해 단기 검증용 Phase 11 HA 스택을 철거했습니다. 승인된 destroy plan은 `0 add / 0 change / 90 destroy`였고 적용 후 Terraform state와 프로젝트 범위 AWS inventory가 비어 있음을 확인했습니다. 이전 Public ALB 주소는 더 이상 사용할 수 없습니다.
 
@@ -57,7 +57,7 @@ Public ALB는 `/api/mcp`를 거부합니다. Phase 12~18의 비공개 단일 사
 | 12 · Trip Domain & MCP Foundation | ✅ PASS | Trip 상태·질문 흐름, 확정 트랜잭션, Demo Owner Context, REST/MCP 공통 Application Service | `1b32fae` |
 | 13 · Private Car Vertical Slice | ✅ PASS | 자차 경로 preview·확정, 권장 출발 시각·알림, 결정적 Fake Provider, REST/MCP 공통 서비스 | `bed83f5` |
 | 14 · Travel Context & Recommendations | ✅ PASS | 날씨·준비물, 장거리 전일 숙박, 동의 기반 맛집·명소, 부분 성공·출처·동시성 안전성 | `4c1f608` |
-| 15 · Private ChatGPT Plugin | 📋 계약 준비 | Secure MCP Tunnel 전용 비공개 Plugin과 Prompt evaluation | 구현 전 |
+| 15 · Private ChatGPT Plugin | ✅ PASS | 개인 Marketplace용 Plugin·Skill, 고정 Demo Owner noauth MCP, Tool 설명·annotation, 확인 우선 쓰기 흐름, 결정론적 Prompt evaluation | `d57a314` |
 | 16 · Android Companion | 📋 계약 준비 | Kotlin/Compose, 기기 페어링, FCM, AlarmManager, ACK | 구현 전 |
 | 17 · AWS 3-Tier E2E & Evidence | 📋 계약 준비 | Tunnel/Public 경로, RDS·Queue·알림·장애·철거 증거 | 구현 전 |
 | 18 · Real Intercity Providers | 📋 선택 확장 | 공식 철도·버스·항공 Provider Adapter | 구현 전 |
@@ -180,5 +180,6 @@ terraform -chdir=infra/terraform validate
 - [`docs/adr`](docs/adr): Architecture Decision Records
 - [`docs/phases`](docs/phases): Phase별 계약, 구현 결과, 독립 검토
 - [`tools/orchestration`](tools/orchestration): Phase 01~10과 Phase 12~18 구현·검증 오케스트레이터
+- [`plugins/trip-copilot`](plugins/trip-copilot): 로컬 MCP 연결과 출장 계획 Skill을 포함한 비공개 Plugin 패키지
 
 Git 저장소가 기술적 Source of Truth이며, Notion의 `Reliable Multi-Channel Reminder Platform · Project Hub`는 탐색과 프로젝트 운영을 위한 허브로 사용합니다.
