@@ -11,6 +11,7 @@ import com.middleproject.reminder.application.PrivateCarPlanningService;
 import com.middleproject.reminder.application.ReminderService;
 import com.middleproject.reminder.application.TravelRecommendationService;
 import com.middleproject.reminder.application.TripService;
+import com.middleproject.reminder.device.DevicePairingService;
 import com.middleproject.reminder.domain.DepartureTiming;
 import com.middleproject.reminder.domain.PrivateCarPlanningInput;
 import com.middleproject.reminder.domain.RecommendationSort;
@@ -33,7 +34,8 @@ public class McpAdapterController {
     private static final List<String> TOOL_NAMES = List.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status",
             "create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip",
             "next_private_car_question", "preview_private_car_route", "confirm_private_car_route",
-            "get_trip_travel_context", "record_trip_followup_consent", "get_trip_recommendations");
+            "get_trip_travel_context", "record_trip_followup_consent", "get_trip_recommendations",
+            "create_device_pairing_code");
     private static final List<String> DEPARTURE_TIMINGS = List.of("SAME_DAY", "PREVIOUS_DAY");
     private static final List<String> RECOMMENDATION_SORTS = List.of("DISTANCE", "PRICE", "RATING");
     private static final Map<String, List<String>> TOOL_ARGS = Map.ofEntries(
@@ -52,7 +54,8 @@ public class McpAdapterController {
             Map.entry("confirm_private_car_route", List.of("tripId", "proposalId", "previewFetchedAt", "reminderLeadMinutes", "confirmationId", "idempotencyKey")),
             Map.entry("get_trip_travel_context", List.of("tripId", "departureTiming", "sort")),
             Map.entry("record_trip_followup_consent", List.of("tripId", "accepted", "idempotencyKey")),
-            Map.entry("get_trip_recommendations", List.of("tripId", "sort")));
+            Map.entry("get_trip_recommendations", List.of("tripId", "sort")),
+            Map.entry("create_device_pairing_code", List.of()));
 
     private static final Map<String, String> TOOL_TITLES = Map.ofEntries(
             Map.entry("create_reminder", "Create reminder for an existing event and policy"),
@@ -70,7 +73,8 @@ public class McpAdapterController {
             Map.entry("confirm_private_car_route", "Confirm a previously previewed private-car route"),
             Map.entry("get_trip_travel_context", "Get weather, packing, and accommodation context for a trip"),
             Map.entry("record_trip_followup_consent", "Record follow-up recommendation consent for a trip"),
-            Map.entry("get_trip_recommendations", "Get sorted follow-up recommendations for a trip"));
+            Map.entry("get_trip_recommendations", "Get sorted follow-up recommendations for a trip"),
+            Map.entry("create_device_pairing_code", "Create a one-time device pairing code"));
 
     /** MCP-standard top-level tool descriptions (model-readable, distinct from annotations.title). */
     private static final Map<String, String> TOOL_DESCRIPTIONS = Map.ofEntries(
@@ -89,7 +93,8 @@ public class McpAdapterController {
             Map.entry("confirm_private_car_route", "Confirms a previously previewed private-car route, scheduling its reminder. Protected by an idempotencyKey and the preview proposalId."),
             Map.entry("get_trip_travel_context", "Gets weather, packing, and accommodation context for a trip from travel providers, inserting a PROPOSED follow-up consent row when the trip has none. Repeat-safe: an existing ACCEPTED/DECLINED consent is never overwritten."),
             Map.entry("record_trip_followup_consent", "Records the user's ACCEPTED or DECLINED decision on follow-up recommendations for a trip. Protected by an idempotencyKey."),
-            Map.entry("get_trip_recommendations", "Returns follow-up recommendations for a trip, gated on ACCEPTED consent and sorted by DISTANCE, PRICE, or RATING. Read-only."));
+            Map.entry("get_trip_recommendations", "Returns follow-up recommendations for a trip, gated on ACCEPTED consent and sorted by DISTANCE, PRICE, or RATING. Read-only."),
+            Map.entry("create_device_pairing_code", "Issues one 5-minute one-time pairing code for the fixed demo owner so an Android companion can exchange it for a device token. The code is returned only once and only its salted hash is stored, so a second call while the code is active fails safely with a conflict. It is a mutating, non-destructive, non-idempotent operation: at most one active code exists at any time."));
 
     /** True when the tool only reads state and never mutates anything. */
     private static final Set<String> READ_ONLY_TOOLS = Set.of("list_reminders", "get_reminder", "get_delivery_status",
@@ -115,14 +120,15 @@ public class McpAdapterController {
     private final TripService trips;
     private final PrivateCarPlanningService privateCar;
     private final TravelRecommendationService travel;
+    private final DevicePairingService devicePairing;
     private final DemoOwnerContext demoOwner;
     private static final Logger log = LoggerFactory.getLogger(McpAdapterController.class);
     private static final String PROTOCOL_VERSION = "2025-03-26";
     static final String PROPOSAL_ID_PATTERN = "[0-9a-f]{64}";
     private final ObjectMapper mapper;
 
-    public McpAdapterController(ReminderService reminders, McpReminderQueryService queries, McpAuditService audit, TripService trips, PrivateCarPlanningService privateCar, TravelRecommendationService travel, DemoOwnerContext demoOwner, ObjectMapper mapper) {
-        this.reminders = reminders; this.queries = queries; this.audit = audit; this.trips = trips; this.privateCar = privateCar; this.travel = travel; this.demoOwner = demoOwner; this.mapper = mapper;
+    public McpAdapterController(ReminderService reminders, McpReminderQueryService queries, McpAuditService audit, TripService trips, PrivateCarPlanningService privateCar, TravelRecommendationService travel, DemoOwnerContext demoOwner, ObjectMapper mapper, DevicePairingService devicePairing) {
+        this.reminders = reminders; this.queries = queries; this.audit = audit; this.trips = trips; this.privateCar = privateCar; this.travel = travel; this.demoOwner = demoOwner; this.mapper = mapper; this.devicePairing = devicePairing;
     }
 
     @PostMapping
@@ -233,6 +239,7 @@ public class McpAdapterController {
         if(n.equals("get_trip_travel_context"))return travel.context(UUID.fromString(a.get("tripId").textValue()),DepartureTiming.valueOf(a.get("departureTiming").textValue()),RecommendationSort.valueOf(a.get("sort").textValue()));
         if(n.equals("record_trip_followup_consent"))return travel.recordConsent(UUID.fromString(a.get("tripId").textValue()),a.get("accepted").asBoolean(),a.get("idempotencyKey").textValue());
         if(n.equals("get_trip_recommendations"))return travel.recommend(UUID.fromString(a.get("tripId").textValue()),RecommendationSort.valueOf(a.get("sort").textValue()));
+        if(n.equals("create_device_pairing_code"))return devicePairing.issueCode();
         if(n.equals("create_reminder"))return reminders.create(UUID.fromString(a.get("eventId").textValue()),UUID.fromString(a.get("policyId").textValue()),a.get("idempotencyKey").textValue(),owner());
         if(n.equals("list_reminders"))return reminders.all(owner());
         UUID id=UUID.fromString(a.get("reminderId").textValue());

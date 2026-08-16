@@ -1,0 +1,17 @@
+# Generated Gradle state and build output
+.gradle/
+.kotlin/
+build/
+*/build/
+
+# Machine-local SDK/IDE configuration
+local.properties
+.idea/
+*.iml
+.vscode/
+
+# Signing material and Firebase config are never committed
+*.jks
+*.keystore
+*.key
+app/google-services.json

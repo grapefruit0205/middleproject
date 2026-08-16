@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Cleartext traffic is denied for main/release builds. The debug source set
+         replaces this file with a domain-scoped allowance for the emulator host
+         (10.0.2.2), localhost, and 127.0.0.1 only. -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

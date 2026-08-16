@@ -44,6 +44,9 @@ class McpAdapterIntegrationTest {
 
     @BeforeEach void clean() {
         reset(queries);
+        db.update("delete from device_fcm_registration");
+        db.update("delete from devices");
+        db.update("delete from device_pairing_codes");
         db.update("delete from mcp_audit");
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
@@ -54,7 +57,7 @@ class McpAdapterIntegrationTest {
         db.update("delete from notification_policies");
     }
 
-    @Test void initializeAndToolsListExposeExactlySixteenClosedSchemas() throws Exception {
+    @Test void initializeAndToolsListExposeExactlySeventeenClosedSchemas() throws Exception {
         JsonNode init = call("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"test\",\"version\":\"1\"}}}");
         assertEquals("2.0", init.path("jsonrpc").asText());
         assertEquals("2025-03-26", init.path("result").path("protocolVersion").asText());
@@ -65,8 +68,9 @@ class McpAdapterIntegrationTest {
         assertEquals(Set.of("create_reminder", "list_reminders", "get_reminder", "update_reminder", "cancel_reminder", "get_delivery_status",
                 "create_trip_draft", "answer_trip_question", "confirm_trip", "cancel_trip",
                 "next_private_car_question", "preview_private_car_route", "confirm_private_car_route",
-                "get_trip_travel_context", "record_trip_followup_consent", "get_trip_recommendations"), names);
-        assertEquals(16, tools.size());
+                "get_trip_travel_context", "record_trip_followup_consent", "get_trip_recommendations",
+                "create_device_pairing_code"), names);
+        assertEquals(17, tools.size());
         for (JsonNode tool : tools) {
             JsonNode schema = tool.path("inputSchema");
             assertEquals("object", schema.path("type").asText());
@@ -132,7 +136,7 @@ class McpAdapterIntegrationTest {
         JsonNode tools = call("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}").path("result").path("tools");
         Set<String> names = new HashSet<>();
         tools.forEach(tool -> names.add(tool.path("name").asText()));
-        assertEquals(16, tools.size());
+        assertEquals(17, tools.size());
 
         // MCP-standard annotation fields with the required boolean types.
         for (JsonNode tool : tools) {
@@ -151,6 +155,29 @@ class McpAdapterIntegrationTest {
                 assertTrue(annotations.path(field).isBoolean(), tool.path("name").asText() + " " + field + " must be boolean");
             }
         }
+    }
+
+    @Test void createDevicePairingCodeIssuesOnceAndNeverPersistsTheRawCode() throws Exception {
+        JsonNode first = call(tool("create_device_pairing_code", "{}"));
+        assertFalse(first.path("result").path("isError").asBoolean());
+        String code = first.path("result").path("structuredContent").path("code").asText();
+        assertTrue(code.matches("[A-Z0-9]{5}-[A-Z0-9]{5}"), "the tool must return a human-enterable pairing code");
+        String text = first.path("result").path("content").get(0).path("text").asText();
+        assertTrue(text.contains(code), "the model-readable text must carry the raw code so the plugin can show it");
+
+        // The raw code never lands in any database column, idempotency record, or audit payload.
+        assertEquals(0, db.queryForObject("select count(*) from device_pairing_codes where code_hash like ? or salt like ?",
+                Integer.class, "%" + code + "%", "%" + code + "%"));
+        assertEquals(0, db.queryForObject("select count(*) from idempotency_record where request_hash like ? or response_body like ?",
+                Integer.class, "%" + code + "%", "%" + code + "%"));
+        // mcp_audit has no payload column, so the code cannot leak into the audit trail by construction.
+        assertEquals(1, db.queryForObject("select count(*) from mcp_audit where tool_name='create_device_pairing_code' and outcome='SUCCEEDED'", Integer.class));
+        assertEquals(64, db.queryForObject("select length(code_hash) from device_pairing_codes where status='ACTIVE'", Integer.class));
+
+        // A second call while the code is active fails safely with a conflict, and the first code still works.
+        JsonNode second = call(tool("create_device_pairing_code", "{}"));
+        assertEquals(-32002, second.path("error").path("code").asInt(), "repeat issue must be a safe conflict");
+        assertEquals(1, db.queryForObject("select count(*) from device_pairing_codes where status='ACTIVE'", Integer.class));
     }
 
     @Test void annotationClassificationIsTruthful() throws Exception {
