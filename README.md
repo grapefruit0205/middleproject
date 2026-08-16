@@ -2,7 +2,7 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. 출장 코파일럿은 `Phase 12` Trip Domain/MCP 기반, `Phase 13` 자차 이동, `Phase 14` 여행 맥락·추천, `Phase 15` 비공개 ChatGPT Plugin 패키징까지 구현과 Codex 독립 검증을 완료했습니다.
+현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. 출장 코파일럿은 `Phase 12` Trip Domain/MCP 기반, `Phase 13` 자차 이동, `Phase 14` 여행 맥락·추천, `Phase 15` 비공개 ChatGPT Plugin 패키징, `Phase 16` Android Companion까지 구현과 Codex 독립 검증을 완료했습니다.
 
 > AWS 상태: 2026-08-15 KST에 비용 방지를 위해 단기 검증용 Phase 11 HA 스택을 철거했습니다. 승인된 destroy plan은 `0 add / 0 change / 90 destroy`였고 적용 후 Terraform state와 프로젝트 범위 AWS inventory가 비어 있음을 확인했습니다. 이전 Public ALB 주소는 더 이상 사용할 수 없습니다.
 
@@ -58,7 +58,7 @@ Public ALB는 `/api/mcp`를 거부합니다. Phase 12~18의 비공개 단일 사
 | 13 · Private Car Vertical Slice | ✅ PASS | 자차 경로 preview·확정, 권장 출발 시각·알림, 결정적 Fake Provider, REST/MCP 공통 서비스 | `bed83f5` |
 | 14 · Travel Context & Recommendations | ✅ PASS | 날씨·준비물, 장거리 전일 숙박, 동의 기반 맛집·명소, 부분 성공·출처·동시성 안전성 | `4c1f608` |
 | 15 · Private ChatGPT Plugin | ✅ PASS | 개인 Marketplace용 Plugin·Skill, 고정 Demo Owner noauth MCP, Tool 설명·annotation, 확인 우선 쓰기 흐름, 결정론적 Prompt evaluation | `d57a314` |
-| 16 · Android Companion | 📋 계약 준비 | Kotlin/Compose, 기기 페어링, FCM, AlarmManager, ACK | 구현 전 |
+| 16 · Android Companion | ✅ PASS | Kotlin/Compose, 5분 일회용 페어링, Keystore 토큰, Trip·Reminder·Delivery, FCM 수명주기, 정확/대체 알람·재등록·ACK | `5bb2895` |
 | 17 · AWS 3-Tier E2E & Evidence | 📋 계약 준비 | Tunnel/Public 경로, RDS·Queue·알림·장애·철거 증거 | 구현 전 |
 | 18 · Real Intercity Providers | 📋 선택 확장 | 공식 철도·버스·항공 Provider Adapter | 구현 전 |
 
