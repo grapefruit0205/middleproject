@@ -23,6 +23,8 @@ dependencies {
     implementation("software.amazon.awssdk:scheduler")
     implementation("software.amazon.awssdk:sqs")
     implementation("software.amazon.awssdk:sesv2")
+    implementation("software.amazon.awssdk:secretsmanager")
+    implementation("com.google.firebase:firebase-admin:9.10.0")
     implementation("com.networknt:json-schema-validator:1.5.6")
     testRuntimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")

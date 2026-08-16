@@ -20,6 +20,11 @@ notification:
     to: ${NOTIFICATION_EMAIL_TO:}
   push:
     enabled: ${NOTIFICATION_PUSH_ENABLED:false}
+    project-id: ${NOTIFICATION_PUSH_PROJECT_ID:}
+    service-account-secret-arn: ${NOTIFICATION_PUSH_SERVICE_ACCOUNT_SECRET_ARN:}
+
+trip:
+  demo-owner-id: ${TRIP_DEMO_OWNER_ID:}
 
 scheduler:
   aws:

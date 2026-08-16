@@ -4,6 +4,13 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+val tripCopilotBaseUrl = providers.gradleProperty("tripCopilotBaseUrl")
+    .orElse("http://10.0.2.2:8080")
+
+if (file("google-services.json").isFile) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.middleproject.tripcopilot"
     compileSdk = 36
@@ -14,6 +21,10 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        val escapedBaseUrl = tripCopilotBaseUrl.get()
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+        buildConfigField("String", "BACKEND_BASE_URL", "\"$escapedBaseUrl\"")
     }
 
     buildTypes {
@@ -41,6 +52,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

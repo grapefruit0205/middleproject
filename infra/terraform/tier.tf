@@ -112,8 +112,15 @@ resource "aws_iam_role_policy" "web" {
   name = "${var.name}-${var.environment}-web-access"
   role = aws_iam_role.web.id
   policy = jsonencode({
-    Version   = "2012-10-17"
-    Statement = [{ Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.frontend_artifact_key}" }]
+    Version = "2012-10-17"
+    Statement = concat(
+      [{ Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.frontend_artifact_key}" }],
+      var.tunnel_client_enabled ? [{
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = var.tunnel_runtime_api_key_secret_arn
+      }] : []
+    )
   })
 }
 
@@ -128,7 +135,14 @@ resource "aws_iam_role_policy" "was" {
       { Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes"], Resource = aws_sqs_queue.reminder.arn },
       { Effect = "Allow", Action = ["scheduler:CreateSchedule", "scheduler:UpdateSchedule", "scheduler:DeleteSchedule"], Resource = "arn:aws:scheduler:${var.aws_region}:*:schedule/${var.scheduler_group}/reminder-*" },
       { Effect = "Allow", Action = ["iam:PassRole"], Resource = aws_iam_role.scheduler.arn, Condition = { StringEquals = { "iam:PassedToService" = "scheduler.amazonaws.com" } } }
-    ], var.notification_email_enabled ? [{ Effect = "Allow", Action = ["ses:SendEmail"], Resource = var.notification_email_identity_arn }] : [])
+      ],
+      var.notification_email_enabled ? [{ Effect = "Allow", Action = ["ses:SendEmail"], Resource = var.notification_email_identity_arn }] : [],
+      var.notification_push_enabled ? [{
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = var.notification_push_service_account_secret_arn
+      }] : []
+    )
   })
 }
 
@@ -254,12 +268,20 @@ resource "aws_launch_template" "web" {
     }
   }
   user_data = base64encode(templatefile("${path.module}/templates/web.sh.tftpl", {
-    bucket                  = aws_s3_bucket.artifacts.id
-    artifact_key            = var.frontend_artifact_key
-    internal_alb_dns        = aws_lb.internal.dns_name
-    apache_access_log_group = aws_cloudwatch_log_group.apache_access.name
-    apache_error_log_group  = aws_cloudwatch_log_group.apache_error.name
-    environment             = var.environment
+    bucket                            = aws_s3_bucket.artifacts.id
+    artifact_key                      = var.frontend_artifact_key
+    internal_alb_dns                  = aws_lb.internal.dns_name
+    apache_access_log_group           = aws_cloudwatch_log_group.apache_access.name
+    apache_error_log_group            = aws_cloudwatch_log_group.apache_error.name
+    environment                       = var.environment
+    aws_region                        = var.aws_region
+    tunnel_client_enabled             = var.tunnel_client_enabled
+    tunnel_id                         = var.tunnel_id
+    tunnel_runtime_api_key_secret_arn = var.tunnel_runtime_api_key_secret_arn
+    tunnel_client_download_url        = var.tunnel_client_download_url
+    tunnel_client_sha256              = lower(var.tunnel_client_sha256)
+    tunnel_client_installer           = file("${path.module}/templates/install-tunnel-client.sh")
+    tunnel_loopback_port              = var.tunnel_loopback_port
   }))
   metadata_options { http_tokens = "required" }
   tag_specifications {
@@ -332,26 +354,30 @@ resource "aws_launch_template" "was" {
     }
   }
   user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", {
-    bucket                     = aws_s3_bucket.artifacts.id
-    artifact_key               = var.backend_artifact_key
-    tomcat_version             = var.tomcat_version
-    db_secret_arn              = aws_db_instance.this.master_user_secret[0].secret_arn
-    db_host                    = aws_db_instance.this.address
-    db_name                    = var.db_name
-    db_username                = var.db_username
-    scheduler_aws_enabled      = var.scheduler_aws_enabled
-    scheduler_group            = var.scheduler_group
-    scheduler_role_arn         = aws_iam_role.scheduler.arn
-    scheduler_queue_arn        = aws_sqs_queue.reminder.arn
-    scheduler_timezone         = var.scheduler_timezone
-    delivery_sqs_enabled       = var.delivery_sqs_enabled
-    delivery_queue_url         = aws_sqs_queue.reminder.url
-    notification_email_enabled = var.notification_email_enabled
-    notification_email_from    = var.notification_email_from
-    notification_email_to      = var.notification_email_to
-    tomcat_access_log_group    = aws_cloudwatch_log_group.tomcat_access.name
-    application_log_group      = aws_cloudwatch_log_group.application.name
-    environment                = var.environment
+    bucket                                       = aws_s3_bucket.artifacts.id
+    artifact_key                                 = var.backend_artifact_key
+    tomcat_version                               = var.tomcat_version
+    db_secret_arn                                = aws_db_instance.this.master_user_secret[0].secret_arn
+    db_host                                      = aws_db_instance.this.address
+    db_name                                      = var.db_name
+    db_username                                  = var.db_username
+    scheduler_aws_enabled                        = var.scheduler_aws_enabled
+    scheduler_group                              = var.scheduler_group
+    scheduler_role_arn                           = aws_iam_role.scheduler.arn
+    scheduler_queue_arn                          = aws_sqs_queue.reminder.arn
+    scheduler_timezone                           = var.scheduler_timezone
+    delivery_sqs_enabled                         = var.delivery_sqs_enabled
+    delivery_queue_url                           = aws_sqs_queue.reminder.url
+    notification_email_enabled                   = var.notification_email_enabled
+    notification_email_from                      = var.notification_email_from
+    notification_email_to                        = var.notification_email_to
+    trip_demo_owner_id                           = var.trip_demo_owner_id
+    notification_push_enabled                    = var.notification_push_enabled
+    notification_push_project_id                 = var.notification_push_project_id
+    notification_push_service_account_secret_arn = var.notification_push_service_account_secret_arn
+    tomcat_access_log_group                      = aws_cloudwatch_log_group.tomcat_access.name
+    application_log_group                        = aws_cloudwatch_log_group.application.name
+    environment                                  = var.environment
   }))
   metadata_options { http_tokens = "required" }
   tag_specifications {

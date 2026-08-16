@@ -107,4 +107,29 @@ class NotificationDeliveryServiceTest {
                 .send(new NotificationSender.SendRequest(reminderId, "a@example.test", "s", "b", UUID.randomUUID())));
         verifyNoInteractions(sender);
     }
+
+    @Test void scheduledPushRoutesByServerResolvedTripOwnerInsteadOfEmailRecipient() throws Exception {
+        NotificationSender push = mock(NotificationSender.class);
+        when(push.channel()).thenReturn(NotificationSender.Channel.PUSH);
+        when(push.send(any())).thenReturn(new NotificationSender.SendResult("fcm-message"));
+        NotificationDeliveryService pushService = new NotificationDeliveryService(db, java.util.List.of(push));
+        String payload = "{\"reminderId\":\"" + reminderId
+                + "\",\"schedulerVersion\":1,\"idempotencyKey\":\"" + reminderId + ":1\"}";
+        when(db.queryForObject(contains("join notification_policies"), any(RowMapper.class), any(), any(), any()))
+                .thenAnswer(invocation -> {
+                    RowMapper<?> mapper = invocation.getArgument(1);
+                    ResultSet rs = mock(ResultSet.class);
+                    when(rs.getString("status")).thenReturn("DISPATCHED");
+                    when(rs.getString("title")).thenReturn("출장 회의");
+                    when(rs.getString("channel")).thenReturn("PUSH");
+                    when(rs.getString("owner_id")).thenReturn("demo-owner");
+                    return mapper.mapRow(rs, 1);
+                });
+        when(db.update(startsWith("update reminders set status=?"), any(), any(), any(), any())).thenReturn(1);
+
+        var result = pushService.deliver(payload);
+
+        assertEquals("SUCCEEDED", result.status());
+        verify(push).send(argThat(request -> "demo-owner".equals(request.recipient())));
+    }
 }

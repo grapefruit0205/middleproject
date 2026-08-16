@@ -36,6 +36,9 @@ public interface DeviceRepository {
 
     Optional<String> findFcmRegistrationTokenHash(UUID deviceId);
 
+    /** Latest FCM registration belonging to an active, unexpired device for one owner. */
+    Optional<String> findLatestActiveFcmRegistrationToken(String ownerId, Instant now);
+
     /** Removes the device row and its cascaded registration. */
     void deleteDevice(UUID deviceId);
 

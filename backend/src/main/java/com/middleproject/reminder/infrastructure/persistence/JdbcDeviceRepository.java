@@ -78,6 +78,16 @@ class JdbcDeviceRepository implements DeviceRepository {
     }
 
     @Override
+    public Optional<String> findLatestActiveFcmRegistrationToken(String ownerId, Instant now) {
+        return db.query("select f.registration_token from device_fcm_registration f " +
+                        "join devices d on d.id=f.device_id " +
+                        "where d.owner_id=? and d.status='ACTIVE' and d.expires_at>? " +
+                        "order by f.registered_at desc limit 1",
+                rs -> rs.next() ? Optional.of(rs.getString(1)) : Optional.empty(),
+                ownerId, toOffset(now));
+    }
+
+    @Override
     public void deleteDevice(UUID deviceId) {
         db.update("delete from devices where id=?", deviceId);
     }

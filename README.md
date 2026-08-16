@@ -2,9 +2,9 @@
 
 자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
 
-현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. 출장 코파일럿은 `Phase 12` Trip Domain/MCP 기반, `Phase 13` 자차 이동, `Phase 14` 여행 맥락·추천, `Phase 15` 비공개 ChatGPT Plugin 패키징, `Phase 16` Android Companion까지 구현과 Codex 독립 검증을 완료했습니다.
+현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했습니다. 출장 코파일럿은 `Phase 12` Trip Domain/MCP 기반, `Phase 13` 자차 이동, `Phase 14` 여행 맥락·추천, `Phase 15` 비공개 ChatGPT Plugin 패키징, `Phase 16` Android Companion까지 PASS했습니다. `Phase 17`은 신뢰된 HTTPS 도메인, AWS 3-Tier 재배포, OpenAI Secure MCP Tunnel과 ChatGPT 비공개 MCP 연결, Firebase 서버 설정까지 검증했으며 Android 실기기의 FCM·로컬 알람·ACK E2E만 남아 있습니다.
 
-> AWS 상태: 2026-08-15 KST에 비용 방지를 위해 단기 검증용 Phase 11 HA 스택을 철거했습니다. 승인된 destroy plan은 `0 add / 0 change / 90 destroy`였고 적용 후 Terraform state와 프로젝트 범위 AWS inventory가 비어 있음을 확인했습니다. 이전 Public ALB 주소는 더 이상 사용할 수 없습니다.
+> AWS 상태: 2026-08-16 KST에 Phase 17 스택을 `ap-northeast-2`에 다시 배포했습니다. `https://trip.tripjunseok.site`가 Public ALB에 연결되어 있고 WEB/WAS 각 2대, Multi-AZ RDS, ALB, NAT Gateway 등 과금 리소스가 실행 중입니다. Terraform 사후 plan은 no-drift이며, 테스트가 끝나면 Runbook에 따라 철거해야 합니다.
 
 현재 배포 화면은 연결 확인용 smoke test입니다. 화면의 `Backend ready`는 Public ALB → WEB → Internal ALB → WAS readiness 경로가 정상임을 뜻합니다. 일정 등록·조회·알림 설정용 프런트엔드 화면은 아직 구현하지 않았으며, 현재 기능 경계는 REST API와 MCP Adapter입니다.
 
@@ -59,23 +59,24 @@ Public ALB는 `/api/mcp`를 거부합니다. Phase 12~18의 비공개 단일 사
 | 14 · Travel Context & Recommendations | ✅ PASS | 날씨·준비물, 장거리 전일 숙박, 동의 기반 맛집·명소, 부분 성공·출처·동시성 안전성 | `4c1f608` |
 | 15 · Private ChatGPT Plugin | ✅ PASS | 개인 Marketplace용 Plugin·Skill, 고정 Demo Owner noauth MCP, Tool 설명·annotation, 확인 우선 쓰기 흐름, 결정론적 Prompt evaluation | `d57a314` |
 | 16 · Android Companion | ✅ PASS | Kotlin/Compose, 5분 일회용 페어링, Keystore 토큰, Trip·Reminder·Delivery, FCM 수명주기, 정확/대체 알람·재등록·ACK | `5bb2895` |
-| 17 · AWS 3-Tier E2E & Evidence | 📋 계약 준비 | Tunnel/Public 경로, RDS·Queue·알림·장애·철거 증거 | 구현 전 |
+| 17 · AWS 3-Tier E2E & Evidence | 🟡 Android 실기기 검증 대기 | `trip.tripjunseok.site` HTTPS, 3-Tier HA, Public MCP 차단, Secure MCP Tunnel 양쪽 AZ active, 17 tools, ChatGPT 비공개 MCP 연결, Firebase 서버 설정, no-drift 완료. FCM·로컬 알람·ACK 실기기 E2E 잔여 | 이번 커밋 |
 | 18 · Real Intercity Providers | 📋 선택 확장 | 공식 철도·버스·항공 Provider Adapter | 구현 전 |
 
 각 단계의 구현 증거와 Codex 독립 검토는 [`docs/phases`](docs/phases) 아래 `result.md`와 `review.md`에 기록합니다. Phase는 검토 결과가 `PASS`일 때만 다음 단계의 기준 커밋이 됩니다.
 
-## AWS teardown status and later redeployment
+## AWS live deployment and teardown
 
-현재 저장소에는 실행 중인 Phase 11 환경이 없습니다. 2026-08-15 KST 철거 후 다음 항목을 프로젝트 이름·태그 기준으로 다시 조회해 모두 `0`임을 확인했습니다.
+2026-08-16 KST 현재 Phase 17 환경이 AWS 계정 끝자리 `1416`, 서울 리전에 실행 중입니다.
 
-- EC2/EBS, Auto Scaling Group, Launch Template
-- Public/Internal ALB와 Target Group
-- NAT Gateway, Elastic IP, VPC
-- RDS instance, automated backup, RDS/EBS snapshot
-- S3 artifact/access-log bucket, SQS/DLQ, Scheduler group
-- CloudWatch log group/alarm, IAM role/profile, SSM document
+- Public URL: `https://trip.tripjunseok.site`
+- WEB/WAS: 각 2대, 두 가용 영역의 Target 모두 healthy
+- Secure MCP Tunnel: WEB 양쪽에서 active, `tools/list` 17개
+- ChatGPT: 비공개 MCP 커넥터 생성·연결 완료(사용자 확인)
+- Firebase push 설정: 활성화, 프로젝트 `trip-copilot-1ff7c`
+- Terraform: 사후 detailed-exitcode `0`, no-drift
+- Public `/api/mcp`: `403`, loopback MCP만 Tunnel에 허용
 
-Cost Explorer는 반영이 늦으므로 철거 완료 판정에는 사용하지 않습니다. 삭제 전까지 발생한 사용료는 나중에 청구 내역에 나타날 수 있지만, 위 inventory에는 현재 프로젝트의 지속 과금 리소스가 남아 있지 않습니다.
+EC2/EBS, Multi-AZ RDS, Public/Internal ALB, NAT Gateway, CloudWatch, S3 등에서 비용이 발생합니다. Android E2E 또는 시연이 끝나면 아래 철거 절차와 [`Phase 17 E2E Runbook`](docs/runbooks/phase-17-trip-copilot-e2e.md)을 사용해 destroy plan을 검토하고 제거합니다. Cost Explorer는 지연되므로 철거 완료는 live inventory로 판정합니다.
 
 ### Redeploy prerequisites
 

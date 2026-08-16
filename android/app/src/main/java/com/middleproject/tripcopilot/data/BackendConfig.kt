@@ -1,6 +1,7 @@
 package com.middleproject.tripcopilot.data
 
 import android.content.Context
+import com.middleproject.tripcopilot.BuildConfig
 
 /**
  * Configurable backend base URL for emulator/local verification. No live cloud
@@ -11,11 +12,11 @@ object BackendConfig {
 
     private const val OVERRIDE_PREFS = "trip_copilot_backend"
     private const val KEY_BASE_URL = "base_url"
-    private const val DEFAULT_EMULATOR_URL = "http://10.0.2.2:8080"
+    private val defaultBackendUrl = BuildConfig.BACKEND_BASE_URL
 
     fun baseUrl(context: Context): String {
         val prefs = context.applicationContext.getSharedPreferences(OVERRIDE_PREFS, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_BASE_URL, null) ?: DEFAULT_EMULATOR_URL
+        return prefs.getString(KEY_BASE_URL, null) ?: defaultBackendUrl
     }
 
     fun setBaseUrl(context: Context, url: String) {

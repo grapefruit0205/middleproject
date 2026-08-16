@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.middleproject.reminder.domain.ReminderStatus;
 import com.middleproject.reminder.port.NotificationSender;
 import com.middleproject.reminder.port.NotificationTimeoutException;
+import com.middleproject.reminder.port.NotificationProviderException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ public class NotificationDeliveryService {
         try {
             context = db.queryForObject(
                     "select r.status, p.channel from reminders r join notification_policies p on p.id=r.policy_id where r.id=? for update",
-                    (rs, n) -> new Context(rs.getString("status"), null, rs.getString("channel")), reminderId);
+                    (rs, n) -> new Context(rs.getString("status"), null, rs.getString("channel"), null), reminderId);
         } catch (EmptyResultDataAccessException e) {
             return new AttemptResult(null, "STALE", null);
         }
@@ -88,11 +89,13 @@ public class NotificationDeliveryService {
         Context context;
         try {
             context = db.queryForObject(
-                    "select r.status, e.title, p.channel from reminder_delivery_receipt d "
+                    "select r.status, e.title, p.channel, t.owner_id from reminder_delivery_receipt d "
                             + "join reminders r on r.id=d.reminder_id join events e on e.id=r.event_id "
                             + "join notification_policies p on p.id=r.policy_id "
+                            + "left join trips t on t.id=coalesce(r.trip_id,p.trip_id) "
                             + "where d.idempotency_key=? and d.reminder_id=? and d.scheduler_version=? for update",
-                    (rs, n) -> new Context(rs.getString("status"), rs.getString("title"), rs.getString("channel")),
+                    (rs, n) -> new Context(rs.getString("status"), rs.getString("title"), rs.getString("channel"),
+                            rs.getString("owner_id")),
                     payload.idempotencyKey, payload.reminderId, payload.schedulerVersion);
         } catch (EmptyResultDataAccessException e) {
             return new AttemptResult(null, "STALE", null);
@@ -113,7 +116,8 @@ public class NotificationDeliveryService {
             return deliver(payload.reminderId, rawChannel, defaultRecipient,
                     "Reminder: " + context.title(), context.title(), currentStatus, payload.idempotencyKey);
         }
-        return deliver(payload.reminderId, channel, defaultRecipient,
+        String recipient = channel == NotificationSender.Channel.PUSH ? context.ownerId() : defaultRecipient;
+        return deliver(payload.reminderId, channel, recipient,
                 "Reminder: " + context.title(), context.title(), currentStatus, payload.idempotencyKey);
     }
     private AttemptResult deliver(UUID reminderId, NotificationSender.Channel channel, String recipient, String subject,
@@ -213,6 +217,9 @@ public class NotificationDeliveryService {
     }
     static String classify(Throwable failure) {
         if (failure instanceof NotificationTimeoutException) return "RETRYABLE_TIMEOUT";
+        if (failure instanceof NotificationProviderException provider) {
+            return provider.retryable() ? "RETRYABLE_PROVIDER" : "PROVIDER_FAILURE";
+        }
         for (Throwable t = failure; t != null; t = t.getCause()) {
             if (t instanceof TimeoutException || t instanceof SocketTimeoutException) return "RETRYABLE_TIMEOUT";
         }
@@ -234,7 +241,7 @@ public class NotificationDeliveryService {
         }
     }
 
-    private record Context(String status, String title, String channel) { }
+    private record Context(String status, String title, String channel, String ownerId) { }
 
     private static class Delivery {
         public UUID reminderId;
