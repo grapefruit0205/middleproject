@@ -76,11 +76,15 @@
       "phase": 18,
       "slug": "real-intercity-transport-providers",
       "branch": "codex/phase-18-real-transport-providers",
+      "model": "google/gemini-3.7-flash",
+      "effort": "high",
+      "maxTurns": 100,
+      "repairMaxTurns": 100,
       "briefPath": "docs/phases/phase-18/brief.md",
       "implementationPromptPath": "docs/phases/phase-18/implement.prompt.md",
       "resultPath": "docs/phases/phase-18/result.md",
       "reviewPath": "docs/phases/phase-18/review.md",
-      "allowedPaths": ["backend/**", "docs/runbooks/**", "docs/phases/phase-18/result.md"],
+      "allowedPaths": ["backend/**", "android/**", "plugins/trip-copilot/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-18/result.md"],
       "requiresExternalApproval": false,
       "optional": true
     }

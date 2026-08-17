@@ -248,6 +248,34 @@ variable "notification_push_service_account_secret_arn" {
   }
 }
 
+variable "public_transport_enabled" {
+  description = "Enable read-only public transport lookups on the private WAS tier."
+  type        = bool
+  default     = false
+}
+
+variable "public_transport_secrets_arn" {
+  description = "Seoul Secrets Manager ARN containing the Phase 18 public-data API keys."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = !var.public_transport_enabled || can(regex("^arn:aws:secretsmanager:ap-northeast-2:[0-9]{12}:secret:[A-Za-z0-9/_+=.@-]+$", var.public_transport_secrets_arn))
+    error_message = "Enabled public transport requires an ap-northeast-2 Secrets Manager ARN."
+  }
+}
+
+variable "public_transport_seoul_realtime_enabled" {
+  description = "Explicitly allow Seoul's legacy plaintext-HTTP real-time subway provider. Keep false unless the risk is accepted."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.public_transport_seoul_realtime_enabled || var.public_transport_enabled
+    error_message = "Seoul real-time subway lookups require public_transport_enabled=true."
+  }
+}
+
 variable "tunnel_client_enabled" {
   description = "Install and run OpenAI tunnel-client on the private WEB tier."
   type        = bool

@@ -14,6 +14,17 @@
       ]
     },
     {
+      "id": "destination-without-departure-asks-origin",
+      "category": "gather",
+      "summary": "A destination and arrival deadline without an origin must trigger an origin question before draft creation.",
+      "checks": [
+        "skill-text: destination or arrival deadline but no departure location",
+        "skill-text: 어디에서 출발하시나요?",
+        "skill-text: before calling `create_trip_draft`",
+        "mcp-source: Do not call this tool until the user has provided a departure location"
+      ]
+    },
+    {
       "id": "private-car-path",
       "category": "gather",
       "summary": "Private car must be supported as transport with its own question flow.",
@@ -121,7 +132,7 @@
     {
       "id": "backend-catalog-contract",
       "category": "catalog",
-      "summary": "All sixteen tools are exposed with a nonblank top-level description and the closed-schema/idempotency/structuredContent contract.",
+      "summary": "All thirty-five tools are exposed with a nonblank top-level description and the closed-schema/idempotency/structuredContent contract.",
       "checks": [
         "catalog: create_reminder",
         "catalog: list_reminders",
@@ -139,8 +150,87 @@
         "catalog: get_trip_travel_context",
         "catalog: record_trip_followup_consent",
         "catalog: get_trip_recommendations",
+        "catalog: create_device_pairing_code",
+        "catalog: search_subway_stations",
+        "catalog: get_realtime_subway_arrivals",
+        "catalog: get_subway_station_schedule",
+        "catalog: find_nearby_bus_stops",
+        "catalog: find_bus_stops_by_landmark",
+        "catalog: get_bus_arrivals",
+        "catalog: search_bus_routes",
+        "catalog: get_express_bus_arrivals",
+        "catalog: get_intercity_bus_schedule",
+        "catalog: save_subway_favorite",
+        "catalog: save_bus_favorite",
+        "catalog: list_transit_favorites",
+        "catalog: resolve_place",
+        "catalog: find_nearby_subway_stations",
+        "catalog: preview_public_transit_route",
+        "catalog: save_origin_favorite",
+        "catalog: list_origin_favorites",
+        "catalog: delete_origin_favorite",
         "mcp-source: additionalProperties\",\\s*false",
         "mcp-source: put\\(\"type\",\\s*\"text\"\\)"
+      ]
+    },
+    {
+      "id": "public-transport-and-official-handoff",
+      "category": "transport",
+      "summary": "Public transport uses official read-only tools, distinguishes realtime from scheduled data, and hands unsupported booking to official pages.",
+      "checks": [
+        "skill-text: Resolve public transport deliberately",
+        "skill-text: never imply background location tracking",
+        "skill-text: call `find_bus_stops_by_landmark`",
+        "skill-text: immediately call `get_bus_arrivals`",
+        "skill-text: Never ask the user for `cityCode` or `nodeId`",
+        "mcp-source: never ask the user for cityCode or nodeId",
+        "skill-text: KTX, SRT, air travel, seat availability, payment, and ticket purchase are not provided",
+        "skill-text: never evidence that a seat, fare, or booking was confirmed",
+        "skill-text: scheduled data as real-time",
+        "catalog-annotation: search_subway_stations readOnlyHint=true",
+        "catalog-annotation: get_realtime_subway_arrivals openWorldHint=true",
+        "catalog-annotation: find_nearby_bus_stops readOnlyHint=true",
+        "catalog-annotation: find_bus_stops_by_landmark readOnlyHint=true",
+        "catalog-annotation: get_bus_arrivals openWorldHint=true",
+        "catalog-annotation: get_express_bus_arrivals readOnlyHint=true",
+        "catalog-annotation: get_intercity_bus_schedule idempotentHint=true"
+      ]
+    },
+    {
+      "id": "vague-realtime-arrival-asks-origin",
+      "category": "transport",
+      "summary": "A vague subway or bus arrival question must ask for the departure station or location before a live lookup.",
+      "checks": [
+        "skill-text: If the user asks only \"지하철 언제 와?\"",
+        "skill-text: 어느 역에서 출발하시나요?",
+        "skill-text: then call `get_realtime_subway_arrivals`",
+        "skill-text: If the user asks only \"버스 언제 와?\"",
+        "skill-text: 현재 위치나 가까운 건물·역을 알려주세요",
+        "skill-text: `selectionRequired=false`",
+        "mcp-source: If the user asks a vague question such as subway when does it arrive",
+        "mcp-source: If the user asks a vague question such as bus when does it arrive"
+      ]
+    },
+    {
+      "id": "trip-place-routing-and-origin-favorites",
+      "category": "transport",
+      "summary": "Trip routes resolve places deliberately, return a Kakao Map handoff, and save only explicitly confirmed origins.",
+      "checks": [
+        "skill-text: Resolve trip places before routing",
+        "skill-text: call `resolve_place`",
+        "skill-text: call `preview_public_transit_route` once",
+        "skill-text: official Kakao Map handoff URL",
+        "skill-text: Do not invent coordinates",
+        "skill-text: save_origin_favorite",
+        "skill-text: `delete_origin_favorite` is destructive",
+        "catalog-annotation: resolve_place readOnlyHint=true",
+        "catalog-annotation: find_nearby_subway_stations readOnlyHint=true",
+        "catalog-annotation: preview_public_transit_route openWorldHint=true",
+        "catalog-annotation: save_origin_favorite idempotentHint=true",
+        "catalog-annotation: delete_origin_favorite destructiveHint=true",
+        "mcp-source: transitRoutePreview\\.preview",
+        "mcp-source: originFavorites\\.save",
+        "mcp-source: originFavorites\\.delete"
       ]
     },
     {

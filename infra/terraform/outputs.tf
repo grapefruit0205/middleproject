@@ -115,3 +115,11 @@ output "push_delivery" {
   }
   description = "Non-sensitive Firebase push-delivery handoff data."
 }
+
+output "public_transport" {
+  value = {
+    enabled                     = var.public_transport_enabled
+    seoul_realtime_http_enabled = var.public_transport_seoul_realtime_enabled
+  }
+  description = "Non-sensitive Phase 18 public-transport feature flags."
+}

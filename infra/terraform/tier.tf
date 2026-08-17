@@ -141,6 +141,11 @@ resource "aws_iam_role_policy" "was" {
         Effect   = "Allow"
         Action   = ["secretsmanager:GetSecretValue"]
         Resource = var.notification_push_service_account_secret_arn
+      }] : [],
+      var.public_transport_enabled ? [{
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = var.public_transport_secrets_arn
       }] : []
     )
   })
@@ -356,6 +361,7 @@ resource "aws_launch_template" "was" {
   user_data = base64encode(templatefile("${path.module}/templates/was.sh.tftpl", {
     bucket                                       = aws_s3_bucket.artifacts.id
     artifact_key                                 = var.backend_artifact_key
+    backend_artifact_hash                        = filemd5(var.backend_artifact_path)
     tomcat_version                               = var.tomcat_version
     db_secret_arn                                = aws_db_instance.this.master_user_secret[0].secret_arn
     db_host                                      = aws_db_instance.this.address
@@ -375,6 +381,9 @@ resource "aws_launch_template" "was" {
     notification_push_enabled                    = var.notification_push_enabled
     notification_push_project_id                 = var.notification_push_project_id
     notification_push_service_account_secret_arn = var.notification_push_service_account_secret_arn
+    public_transport_enabled                     = var.public_transport_enabled
+    public_transport_secrets_arn                 = var.public_transport_secrets_arn
+    public_transport_seoul_realtime_enabled      = var.public_transport_seoul_realtime_enabled
     tomcat_access_log_group                      = aws_cloudwatch_log_group.tomcat_access.name
     application_log_group                        = aws_cloudwatch_log_group.application.name
     environment                                  = var.environment

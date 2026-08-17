@@ -1,4 +1,5 @@
 #!/bin/bash
+# Backend artifact hash: ${backend_artifact_hash}
 set -euo pipefail
 for attempt in 1 2 3 4 5; do
   if dnf install -y java-21-amazon-corretto unzip jq awscli amazon-cloudwatch-agent; then
@@ -66,6 +67,9 @@ Environment=TRIP_DEMO_OWNER_ID=${trip_demo_owner_id}
 Environment=NOTIFICATION_PUSH_ENABLED=${notification_push_enabled}
 Environment=NOTIFICATION_PUSH_PROJECT_ID=${notification_push_project_id}
 Environment=NOTIFICATION_PUSH_SERVICE_ACCOUNT_SECRET_ARN=${notification_push_service_account_secret_arn}
+Environment=APP_TRANSPORT_ENABLED=${public_transport_enabled}
+Environment=APP_TRANSPORT_SECRETS_SECRET_ID=${public_transport_secrets_arn}
+Environment=APP_TRANSPORT_SEOUL_REALTIME_ENABLED=${public_transport_seoul_realtime_enabled}
 ExecStart=/usr/bin/bash -c 'set -euo pipefail; export DB_PASSWORD="\$(aws secretsmanager get-secret-value --secret-id "\$DB_SECRET_ARN" --query SecretString --output text | jq -r .password)"; exec /opt/tomcat/bin/catalina.sh run'
 Restart=on-failure
 [Install]

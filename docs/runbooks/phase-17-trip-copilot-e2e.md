@@ -79,7 +79,7 @@ Verify all of the following:
 1. Public `/healthz`, dashboard, and `/api/actuator/health/readiness` return 200.
 2. Public `/api/mcp` returns 403.
 3. Both WEB and WAS target groups have two healthy targets.
-4. ChatGPT developer mode can initialize the private MCP app through the configured Tunnel and list all 17 tools.
+4. ChatGPT developer mode can initialize the private MCP app through the configured Tunnel and list all 25 tools after Phase 18 (17 tools on the Phase 17 baseline).
 5. `create_device_pairing_code` returns one five-minute code; an Android device exchanges it once, lists trips, and an unauthenticated device receives 401.
 6. Firebase registration reaches the backend, a test reminder produces FCM data, the local Android alarm appears, and ACK is reflected in delivery state.
 7. The same UUID correlation ID appears in WEB access, WAS access, and JSON application logs.

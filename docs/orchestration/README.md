@@ -185,7 +185,7 @@ Phase 12-18은 기존 실행 이력을 바꾸지 않도록 별도 manifest와 st
 | --- | --- |
 | Manifest | `tools/orchestration/phases-12-plus.json` |
 | State | `.orchestration/phase-12-18-state.json` |
-| CMDC implementation model | Phase 12~18 `deepseek/deepseek-v4-flash` |
+| CMDC implementation model | Phase 12~17 `deepseek/deepseek-v4-flash`; Phase 18 `google/gemini-3.7-flash` |
 | Effort | `max` |
 | Turn budget | 구현·수정 호출마다 100턴 |
 | Invocation limit | Phase당 유효 호출 최대 10회 |
@@ -224,7 +224,12 @@ $phase12State = Join-Path (Resolve-Path '.').Path '.orchestration\phase-12-18-st
 
 dry-run에서 model, effort, maxTurns, branch, baseline, `--auto-accept`, `--yolo`를 확인한 뒤 한 번만 실행합니다.
 
-Codex 메인 검증은 전 Phase에서 `gpt-5.6-sol` / `high`로 시작합니다. 예상하지 않은 Terraform change/destroy, IAM·KMS·Security Group 위험, 설계 계약 충돌, 외부 Provider의 인증·재시도·멱등성 불확실성이 발견된 경우에만 해당 Phase를 `Sol/xhigh`로 다시 검증합니다. 서브 에이전트는 증거 수집을 보조할 수 있지만 최종 PASS를 판정하지 않습니다.
+Phase 18 Codex 메인 검증은 `gpt-5.6-terra` / `high`로 시작합니다. 예상하지 않은 Terraform change/destroy, IAM·KMS·Security Group 위험, 설계 계약 충돌, 외부 Provider의 인증·재시도·멱등성 불확실성이 발견된 경우에만 해당 검토를 `Sol/high`로 다시 검증합니다. 서브 에이전트는 증거 수집을 보조할 수 있지만 최종 PASS를 판정하지 않습니다.
+
+CMDC 무진행 판정은 stdout만 보지 않습니다. 첫 편집 또는 테스트/빌드 실행은 60초 안에
+시작해야 하며, 이후 새 stdout·작업 트리/파일 시각 변경·활성 테스트/빌드 프로세스가 모두
+60초 동안 없을 때만 중단하고 더 작은 증거 기반 작업으로 재시작합니다. 조용히 실행 중인
+테스트나 빌드는 무진행으로 계산하지 않습니다.
 
 ```powershell
 & .\tools\orchestration\Invoke-Phase.ps1 `
@@ -249,4 +254,8 @@ PASS 후 Codex가 검증 파일을 커밋하고 그 SHA를 `-NextBaselineCommit`
 
 Phase 17은 `requiresExternalApproval`을 사용합니다. CMDC는 Terraform fmt, validate, 정적 검사, plan과 Runbook 준비까지만 수행합니다. Terraform apply, 장애 주입, RDS failover, Alarm 변경, destroy는 저장된 plan과 비용 경계를 검토한 뒤 Codex 또는 사용자가 실행합니다. Cognito/OIDC는 Phase 12-18 범위에 포함하지 않습니다.
 
-Phase 18은 선택 확장입니다. Phase 17 Core Infra PASS 뒤 실제 Provider API 사용 승인이 없으면 Fake contract test와 설정 경계까지만 수행합니다.
+Phase 18은 선택 확장입니다. Phase 17 Core Infra PASS 뒤 승인된 서울/TAGO 계약만 구현합니다.
+Phase 18은 Gemini 3.7 Flash/high/100턴 구현과 Codex 독립 검증을 사용하며 backend, Android,
+private plugin, Terraform, runbook을 함께 다룰 수 있습니다. CMDC는 Terraform apply나 AWS
+mutation을 실행하지 않습니다. 실제 secret 값은 어떤 프롬프트, 로그, state, Git에도 넣지
+않고 Codex가 plan을 검토한 뒤에만 기존 배포를 갱신합니다.

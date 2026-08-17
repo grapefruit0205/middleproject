@@ -107,6 +107,39 @@ class DeviceRepository(
         scheduler.cancel(reminderId)
     }
 
+    suspend fun realtimeSubwayArrivals(stationName: String) = withContext(ioDispatcher) {
+        api.realtimeSubwayArrivals(stationName.trim())
+    }
+
+    suspend fun nearbyBusStops(latitude: Double, longitude: Double) = withContext(ioDispatcher) {
+        api.nearbyBusStops(latitude, longitude)
+    }
+
+    suspend fun busStopsByLandmark(landmark: String) = withContext(ioDispatcher) {
+        api.busStopsByLandmark(landmark.trim())
+    }
+
+    suspend fun busArrivals(cityCode: Int, nodeId: String) = withContext(ioDispatcher) {
+        api.busArrivals(cityCode, nodeId.trim())
+    }
+
+    suspend fun expressBusArrivals(depTerminalCode: String, arrTerminalCode: String) = withContext(ioDispatcher) {
+        api.expressBusArrivals(depTerminalCode.trim(), arrTerminalCode.trim())
+    }
+
+    suspend fun intercityBusSchedule(depTerminalId: String, arrTerminalId: String, date: String) =
+        withContext(ioDispatcher) {
+            api.intercityBusSchedule(depTerminalId.trim(), arrTerminalId.trim(), date.trim())
+        }
+
+    suspend fun transportHandoffs(): Map<String, String> = withContext(ioDispatcher) {
+        api.transportHandoffs()
+    }
+
+    suspend fun transitFavorites(): List<DeviceApiClient.TransitFavorite> = withContext(ioDispatcher) {
+        api.transitFavorites()
+    }
+
     /**
      * Attempts the server disconnect through [DeviceDisconnectCoordinator], which also
      * best-effort deregisters the FCM token and always removes the local credential,

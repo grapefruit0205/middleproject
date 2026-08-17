@@ -90,6 +90,24 @@ class DeviceApiClientTest {
     }
 
     @Test
+    fun `trip read treats Android JSON null timestamp representation as absent`() {
+        tokenStore.save(activeCredential())
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(
+                    """[{"id":"trip-1","departure":"Suwon","destination":"Busan","departureAt":"null","returnAt":null,"status":"DRAFT","version":1}]"""
+                )
+        )
+
+        val trip = client().trips().single()
+
+        assertEquals(null, trip.departureAtEpochMillis)
+        assertEquals(null, trip.returnAtEpochMillis)
+    }
+
+    @Test
     fun `expired credential makes no network request`() {
         tokenStore.save(DeviceCredential("expired-token", expiresAtEpochMillis = 1_000L))
         server.enqueue(MockResponse().setResponseCode(200).setBody("[]"))
@@ -116,6 +134,20 @@ class DeviceApiClientTest {
         }
 
         assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun `transit favorites are owner scoped server records for widget lookup`() {
+        tokenStore.save(activeCredential())
+        server.enqueue(MockResponse().setResponseCode(200).setBody(
+            """[{"id":"f1","alias":"회사 앞","mode":"BUS","stationName":null,"cityCode":11,"nodeId":"STOP-1","stopName":"강남역11번출구","routeNo":"341","updatedAt":"2026-08-17T10:00:00+09:00"}]""",
+        ))
+
+        val favorite = client().transitFavorites().single()
+
+        assertEquals("회사 앞", favorite.alias)
+        assertEquals("STOP-1", favorite.nodeId)
+        assertEquals("/api/device/transport/favorites", server.takeRequest().path)
     }
 
     @Test
@@ -174,5 +206,58 @@ class DeviceApiClientTest {
         assertEquals("POST", request.method)
         assertEquals("/api/device/disconnect", request.path)
         assertEquals(null, request.headers["Idempotency-Key"])
+    }
+
+    @Test
+    fun `transport read sends bearer encodes query and parses typed envelope`() {
+        tokenStore.save(activeCredential())
+        server.enqueue(
+            MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody(
+                """{"success":true,"empty":false,"retryable":false,"failureKind":null,"value":[{"stationName":"강남","subwayLine":"2호선"}],"errorMessage":null}"""
+            )
+        )
+
+        val result = client().realtimeSubwayArrivals("강남 역", 5)
+
+        val request = server.takeRequest()
+        assertEquals("Bearer credential-token", request.headers["Authorization"])
+        assertEquals("강남 역", request.requestUrl?.queryParameter("stationName"))
+        assertEquals("5", request.requestUrl?.queryParameter("limit"))
+        assertTrue(result.success)
+        assertEquals("강남", result.items.single().fields["stationName"])
+        assertEquals("2호선", result.items.single().fields["subwayLine"])
+    }
+
+    @Test
+    fun `transport failure remains typed and never becomes a fake empty success`() {
+        tokenStore.save(activeCredential())
+        server.enqueue(
+            MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody(
+                """{"success":false,"empty":false,"retryable":true,"failureKind":"TIMEOUT","value":null,"errorMessage":"Provider request timed out"}"""
+            )
+        )
+
+        val result = client().nearbyBusStops(37.5665, 126.9780)
+
+        assertFalse(result.success)
+        assertFalse(result.empty)
+        assertTrue(result.retryable)
+        assertEquals("TIMEOUT", result.failureKind)
+        assertTrue(result.items.isEmpty())
+    }
+
+    @Test
+    fun `official handoffs parse as https links`() {
+        tokenStore.save(activeCredential())
+        server.enqueue(
+            MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody(
+                """{"korail":"https://www.letskorail.com/","srt":"https://etk.srail.kr/","tmoneyIntercityBus":"https://txbus.t-money.co.kr/"}"""
+            )
+        )
+
+        val links = client().transportHandoffs()
+
+        assertEquals("https://www.letskorail.com/", links["korail"])
+        assertTrue(links.values.all { it.startsWith("https://") })
     }
 }

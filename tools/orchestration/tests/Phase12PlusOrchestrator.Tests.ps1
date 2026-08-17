@@ -34,13 +34,15 @@ Describe 'Phase 12-18 orchestration manifest' {
         (@($manifest.phases.phase) -join ',') | Should Be '12,13,14,15,16,17,18'
     }
 
-    It 'uses DeepSeek V4 Flash for Phase 12 through 18' {
+    It 'preserves DeepSeek for completed phases and selects Gemini 3.7 Flash for Phase 18' {
         Import-Module $modulePath -Force
         $definition = Get-PhaseDefinition -Phase 12 -ManifestPath $manifestPath
         $initial = New-CommandCodeRunPlan -PhaseDefinition $definition -RuntimePrompt 'initial' -CmdcPath 'cmdc' -RepositoryRoot $repositoryRoot -AttemptNumber 1
         $repair = New-CommandCodeRunPlan -PhaseDefinition $definition -RuntimePrompt 'repair' -CmdcPath 'cmdc' -RepositoryRoot $repositoryRoot -AttemptNumber 2
+        $phase18 = Get-PhaseDefinition -Phase 18 -ManifestPath $manifestPath
+        $phase18Plan = New-CommandCodeRunPlan -PhaseDefinition $phase18 -RuntimePrompt 'phase18' -CmdcPath 'cmdc' -RepositoryRoot $repositoryRoot -AttemptNumber 1
 
-        foreach ($phase in 12..18) {
+        foreach ($phase in 12..17) {
             (Get-PhaseDefinition -Phase $phase -ManifestPath $manifestPath).model | Should Be 'deepseek/deepseek-v4-flash'
         }
         $definition.model | Should Be 'deepseek/deepseek-v4-flash'
@@ -50,6 +52,11 @@ Describe 'Phase 12-18 orchestration manifest' {
         $repair.maxTurns | Should Be 100
         (@($repair.arguments) -join '|') | Should Match ([regex]::Escape('--model|deepseek/deepseek-v4-flash|--effort|max'))
         (@($repair.arguments) -join '|') | Should Match ([regex]::Escape('--max-turns|100'))
+        $phase18.model | Should Be 'google/gemini-3.7-flash'
+        $phase18.effort | Should Be 'high'
+        $phase18.maxTurns | Should Be 100
+        (@($phase18Plan.arguments) -join '|') | Should Match ([regex]::Escape('--model|google/gemini-3.7-flash|--effort|high'))
+        (@($phase18Plan.arguments) -join '|') | Should Match ([regex]::Escape('--max-turns|100'))
     }
 
     It 'references committed contracts and marks only Phase 17 for external approval' {
@@ -96,6 +103,32 @@ Describe 'Phase 12-18 custom manifest behavior' {
 
         $state.status | Should Be 'COMPLETE'
         $state.phase | Should Be 18
+    }
+
+    It 'allows the Phase 18 backend, Android, plugin, Terraform, runbook, and result scope' {
+        $definition = Get-PhaseDefinition -Phase 18 -ManifestPath $manifestPath
+        (@($definition.allowedPaths) -join ',') | Should Be 'backend/**,android/**,plugins/trip-copilot/**,infra/terraform/**,docs/runbooks/**,docs/phases/phase-18/result.md'
+    }
+
+    It 'pins the eight approved public-transport operations without credential values' {
+        $contractPath = Join-Path $repositoryRoot 'docs\phases\phase-18\provider-contracts.md'
+        (Test-Path -LiteralPath $contractPath) | Should Be $true
+        $contract = Get-Content -LiteralPath $contractPath -Raw
+        foreach ($operation in @(
+            'realtimeStationArrival',
+            'GetKwrdFndSubwaySttnList',
+            'GetSubwaySttnAcctoSchdulList',
+            'getCrdntPrxmtSttnList',
+            'getSttnAcctoArvlPrearngeInfoList',
+            'getRouteNoList',
+            'GetExpBusArrPrdtInfo',
+            'GetStrtpntAlocFndSuberbsBusInfo'
+        )) {
+            $contract | Should Match ([regex]::Escape($operation))
+        }
+        $contract | Should Match 'seoulOpenDataKey'
+        $contract | Should Match 'dataGoKrServiceKey'
+        $contract | Should Not Match 'IT5YcV'
     }
 
     It 'counts only completed Command Code results toward the configured invocation limit' {

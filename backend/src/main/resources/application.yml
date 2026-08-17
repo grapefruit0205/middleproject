@@ -26,6 +26,12 @@ notification:
 trip:
   demo-owner-id: ${TRIP_DEMO_OWNER_ID:}
 
+app:
+  transport:
+    enabled: ${APP_TRANSPORT_ENABLED:false}
+    secrets-secret-id: ${APP_TRANSPORT_SECRETS_SECRET_ID:reminder-platform/phase18/public-data-api-keys}
+    seoul-realtime-enabled: ${APP_TRANSPORT_SEOUL_REALTIME_ENABLED:false}
+
 scheduler:
   aws:
     enabled: ${SCHEDULER_AWS_ENABLED:false}
