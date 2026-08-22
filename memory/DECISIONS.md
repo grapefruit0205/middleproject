@@ -11,3 +11,7 @@ This project uses `memory/` as its durable brain: decisions in this ledger, unre
 ## D-002 · Use a three-tier architecture — 2026-08-22 (user, repository architecture analysis)
 
 The target architecture will use a three-tier structure. The concrete WEB, WAS, data, availability, and deployment choices remain open until the repository-grounded options are compared.
+
+## D-003 · Build MyWiki in ordered, atomic Git steps — 2026-08-23 (user, implementation workflow)
+
+Start MyWiki from the first ordered step in the supplied master prompt. Complete and verify one atomic step at a time, record it in the repository, and create a Git commit for each completed record. This decision does not choose whether MyWiki replaces the current reminder product, lives beside it, or moves to a separate repository.

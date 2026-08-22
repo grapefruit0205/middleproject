@@ -50,6 +50,7 @@ capability shipped makes you claim less than you have earned. Sweep it on the sa
 - Separate RDS admin/migration/runtime database principals. WAS currently consumes the RDS managed-master secret. Checked: 2026-08-22 (`tier.tf`, `was.sh.tftpl`).
 - Feature-complete reminder frontend. The React app is a readiness smoke page only. Checked: 2026-08-22 (`frontend/src/App.tsx`, `README.md`).
 - WAF, VPC interface endpoints, Kubernetes, Kafka, and microservices. These remain later scope, not present capability. Checked: 2026-08-22 (`architecture-v1.2.md`).
+- MyWiki knowledge capture, canonical maintenance, semantic retrieval, versioning, provenance, conflict handling, ChatGPT plugin, and MyWiki web UI. Only product/design evaluation records exist; no MyWiki runtime code is implemented. Checked: 2026-08-23 (`docs/product/mywiki/step-01-idea-and-differentiation.md`, repository source tree).
 
 ## Permanently excluded
 
