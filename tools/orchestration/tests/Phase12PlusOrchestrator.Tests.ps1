@@ -105,9 +105,9 @@ Describe 'Phase 12-18 custom manifest behavior' {
         $state.phase | Should Be 18
     }
 
-    It 'allows the Phase 18 backend, Android, plugin, Terraform, runbook, and result scope' {
+    It 'allows the Phase 18 backend, Android, Terraform, runbook, and result scope' {
         $definition = Get-PhaseDefinition -Phase 18 -ManifestPath $manifestPath
-        (@($definition.allowedPaths) -join ',') | Should Be 'backend/**,android/**,plugins/trip-copilot/**,infra/terraform/**,docs/runbooks/**,docs/phases/phase-18/result.md'
+        (@($definition.allowedPaths) -join ',') | Should Be 'backend/**,android/**,infra/terraform/**,docs/runbooks/**,docs/phases/phase-18/result.md'
     }
 
     It 'pins the eight approved public-transport operations without credential values' {

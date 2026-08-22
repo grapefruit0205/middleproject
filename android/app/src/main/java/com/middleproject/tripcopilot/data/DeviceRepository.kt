@@ -52,6 +52,7 @@ class DeviceRepository(
     suspend fun refresh(): SyncResult = withContext(ioDispatcher) {
         val trips = api.trips()
         val reminders = api.reminders()
+        val dayPlans = api.dayPlans()
         val now = nowMillis()
         val delivery = reminders.associate { reminder ->
             reminder.id to deliveryFor(reminder.id)
@@ -79,7 +80,7 @@ class DeviceRepository(
 
         fcmRegistration.registerIfNeeded()
 
-        SyncResult(trips, reminders, delivery, degradedAlarm)
+        SyncResult(trips, reminders, dayPlans, delivery, degradedAlarm)
     }
 
     suspend fun registerFcmToken(token: String) = withContext(ioDispatcher) {
@@ -106,6 +107,11 @@ class DeviceRepository(
         api.ackReminder(reminderId, expectedVersion)
         scheduler.cancel(reminderId)
     }
+
+    suspend fun cancelDayPlanItem(planId: String, sequence: Int, expectedPlanVersion: Long) =
+        withContext(ioDispatcher) {
+            api.cancelDayPlanItem(planId, sequence, expectedPlanVersion)
+        }
 
     suspend fun realtimeSubwayArrivals(stationName: String) = withContext(ioDispatcher) {
         api.realtimeSubwayArrivals(stationName.trim())
@@ -180,6 +186,7 @@ class DeviceRepository(
 data class SyncResult(
     val trips: List<DeviceApiClient.TripView>,
     val reminders: List<DeviceApiClient.ReminderView>,
+    val dayPlans: List<DeviceApiClient.DayPlanView>,
     val delivery: Map<String, List<DeviceApiClient.DeliveryView>>,
     val degradedAlarm: Boolean,
 )

@@ -260,4 +260,30 @@ class DeviceApiClientTest {
         assertEquals("https://www.letskorail.com/", links["korail"])
         assertTrue(links.values.all { it.startsWith("https://") })
     }
+
+    @Test
+    fun `day plan projection parses offset timestamps and cancel is versioned`() {
+        tokenStore.save(activeCredential())
+        server.enqueue(
+            MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody(
+                """[{"id":"plan-1","planDate":"2040-06-01","timezone":"Asia/Seoul","status":"CONFIRMED","version":2,"items":[{"id":"item-1","sequence":0,"title":"병원","timeType":"FIXED_START","startsAt":"2040-06-01T09:00:00+09:00","endsAt":"2040-06-01T10:00:00+09:00","durationMinutes":60,"placeName":"강남병원","address":"서울","status":"PLANNED","version":0,"notificationAt":"2040-06-01T08:45:00+09:00","reminderStatus":"SCHEDULE_PENDING","reminderVersion":0}],"travelLegs":[]}]""",
+            ),
+        )
+
+        val plan = client().dayPlans("2040-06-01").single()
+
+        val read = server.takeRequest()
+        assertEquals("/api/device/day-plans?date=2040-06-01", read.path)
+        assertEquals("병원", plan.items.single().title)
+        assertEquals("Asia/Seoul", plan.timezone)
+        assertEquals(2L, plan.version)
+        assertEquals(2_222_121_600_000L, plan.items.single().startsAtEpochMillis)
+
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        client().cancelDayPlanItem("plan-1", sequence = 0, expectedPlanVersion = 2)
+        val cancel = server.takeRequest()
+        assertEquals("POST", cancel.method)
+        assertEquals("/api/device/day-plans/plan-1/items/0/cancel", cancel.path)
+        assertTrue(cancel.headers["Idempotency-Key"].orEmpty().isNotBlank())
+    }
 }

@@ -1,6 +1,5 @@
 package com.middleproject.reminder;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.middleproject.reminder.application.EventService;
 import com.middleproject.reminder.application.IdempotencyService;
@@ -30,8 +29,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
@@ -80,61 +77,6 @@ class Postgres16IntegrationTest {
     @Autowired MutableClock mutableClock;
     @Autowired TransactionalFailureService transactionalFailureService;
     @Autowired DataSource dataSource;
-
-    @Test
-    void postgresMcpOwnershipIdempotencyAuditAndFlywayEvidence() throws Exception {
-        assertEquals(7, db.queryForObject("select count(*) from flyway_schema_history where success=true and version in ('1','2','3','4','5','6','7')", Integer.class));
-        // The MCP adapter serves the deployment-fixed demo owner, so the seed must be
-        // created under that owner or every MCP call would deny it.
-        var data = newReminderSeed("mcp", "demo-owner");
-        String id = data.reminder().id().toString();
-        // The single-owner noauth contract: Principal and X-User-Id never change ownership,
-        // so any caller still resolves to the demo owner and these all succeed.
-        // Read-only calls prove a hostile identity cannot steal or deny the demo-owner scope;
-        // the mutation evidence below uses correctly versioned, mutually non-conflicting flows.
-        JsonNode ownerList = mcp("list_reminders", "{}", "bob", "alice");
-        assertFalse(ownerList.has("error"), "list_reminders must run as the demo owner");
-        assertTrue(ownerList.path("result").path("structuredContent").size() >= 1);
-        JsonNode readAsBob = mcp("get_reminder", "{\"reminderId\":\"" + id + "\"}", "bob", "alice");
-        assertFalse(readAsBob.has("error"), "get_reminder must run as the demo owner");
-        assertEquals(id, readAsBob.path("result").path("structuredContent").path("id").asText());
-        JsonNode statusAsBob = mcp("get_delivery_status", "{\"reminderId\":\"" + id + "\"}", "bob", "alice");
-        assertFalse(statusAsBob.has("error"), "get_delivery_status must run as the demo owner");
-        // get_delivery_status returns an empty list for a reminder with no attempts; that is
-        // still a successful demo-owner resolution (no error), not an ownership denial.
-        assertTrue(statusAsBob.path("result").path("structuredContent").isArray());
-        // A second demo-owner reminder is used for the write flow so the update and cancel
-        // calls run against fresh version 0 state without conflicting with the read-only seed.
-        var write = newReminderSeed("mcp-write", "demo-owner");
-        String writeId = write.reminder().id().toString();
-        // Mutating tools still resolve to the demo owner under a hostile Principal/X-User-Id:
-        // update at version 0 succeeds and bumps the version, then cancel uses the bumped
-        // version so the optimistic lock never goes stale.
-        String updateArgs = "{\"reminderId\":\"" + writeId + "\",\"eventId\":\"" + write.event().id() + "\",\"policyId\":\"" + write.policy().id() + "\",\"expectedVersion\":0,\"idempotencyKey\":\"pg-update\"}";
-        JsonNode updated = mcp("update_reminder", updateArgs, "bob", "alice");
-        assertFalse(updated.has("error"), "update_reminder must run as the demo owner");
-        assertEquals(1, updated.path("result").path("structuredContent").path("version").asInt());
-        JsonNode cancelled = mcp("cancel_reminder", "{\"reminderId\":\"" + writeId + "\",\"expectedVersion\":1,\"idempotencyKey\":\"pg-cancel\"}", "bob", "alice");
-        assertFalse(cancelled.has("error"), "cancel_reminder must run as the demo owner");
-        assertEquals("CANCELLED", cancelled.path("result").path("structuredContent").path("status").asText());
-        String createArgs = "{\"eventId\":\"" + data.event().id() + "\",\"policyId\":\"" + data.policy().id() + "\",\"idempotencyKey\":\"pg-create\"}";
-        JsonNode first = mcp("create_reminder", createArgs, null, null);
-        JsonNode retry = mcp("create_reminder", createArgs, null, null);
-        assertEquals(first.toString(), retry.toString());
-        assertEquals(3, db.queryForObject("select count(*) from reminders", Integer.class));
-        assertTrue(db.queryForObject("select count(*) from mcp_audit where user_id='demo-owner'", Integer.class) >= 3);
-        assertEquals(0, db.queryForObject("select count(*) from mcp_audit where user_id='bob'", Integer.class));
-        // Audit-reference clearing: the read-only seed reminder is still at version 0, so a
-        // direct delete at version 0 succeeds and its single get_reminder audit row loses the
-        // reminder reference via on delete set null. The hostile get_reminder above already
-        // proved the demo-owner read contract, so no second get_reminder call is issued here.
-        reminders.delete(data.reminder().id(), 0, "pg-delete");
-        assertEquals(1, db.queryForObject("select count(*) from mcp_audit where user_id='demo-owner' and tool_name='get_reminder' and reminder_id is null", Integer.class));
-    }
-
-    private record McpSeed(com.middleproject.reminder.domain.Event event, com.middleproject.reminder.domain.NotificationPolicy policy, com.middleproject.reminder.domain.Reminder reminder) {}
-    private McpSeed newReminderSeed(String key, String owner) { var event = events.create(key, OffsetDateTime.now().plusHours(2), null, key + "-event-" + UUID.randomUUID()); var policy = policies.create("EMAIL", 5, key + "-policy-" + UUID.randomUUID()); return new McpSeed(event, policy, reminders.create(event.id(), policy.id(), key + "-reminder-" + UUID.randomUUID(), owner)); }
-    private JsonNode mcp(String tool, String args, String user, String spoofed) throws Exception { var request = post("/api/mcp").contentType(MediaType.APPLICATION_JSON).content("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"" + tool + "\",\"arguments\":" + args + "}}"); if (user != null) request.principal(() -> user); if (spoofed != null) request.header("X-User-Id", spoofed); return objectMapper.readTree(mockMvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()); }
 
     @DynamicPropertySource
     static void postgresProperties(DynamicPropertyRegistry registry) {
@@ -341,7 +283,6 @@ class Postgres16IntegrationTest {
     }
 
     private void cleanRows() {
-        db.update("delete from mcp_audit");
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");

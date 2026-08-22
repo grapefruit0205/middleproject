@@ -89,7 +89,7 @@ public class NotificationDeliveryService {
         Context context;
         try {
             context = db.queryForObject(
-                    "select r.status, e.title, p.channel, t.owner_id from reminder_delivery_receipt d "
+                    "select r.status, e.title, p.channel, coalesce(r.owner_id, t.owner_id) as owner_id from reminder_delivery_receipt d "
                             + "join reminders r on r.id=d.reminder_id join events e on e.id=r.event_id "
                             + "join notification_policies p on p.id=r.policy_id "
                             + "left join trips t on t.id=coalesce(r.trip_id,p.trip_id) "

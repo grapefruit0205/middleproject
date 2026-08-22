@@ -47,7 +47,7 @@
       "implementationPromptPath": "docs/phases/phase-15/implement.prompt.md",
       "resultPath": "docs/phases/phase-15/result.md",
       "reviewPath": "docs/phases/phase-15/review.md",
-      "allowedPaths": ["plugins/trip-copilot/**", ".agents/plugins/**", "backend/**", "docs/phases/phase-15/result.md"],
+      "allowedPaths": ["backend/**", "docs/phases/phase-15/result.md"],
       "requiresExternalApproval": false
     },
     {
@@ -69,7 +69,7 @@
       "implementationPromptPath": "docs/phases/phase-17/implement.prompt.md",
       "resultPath": "docs/phases/phase-17/result.md",
       "reviewPath": "docs/phases/phase-17/review.md",
-      "allowedPaths": ["backend/**", "frontend/**", "android/**", "plugins/trip-copilot/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-17/result.md"],
+      "allowedPaths": ["backend/**", "frontend/**", "android/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-17/result.md"],
       "requiresExternalApproval": true
     },
     {
@@ -84,7 +84,7 @@
       "implementationPromptPath": "docs/phases/phase-18/implement.prompt.md",
       "resultPath": "docs/phases/phase-18/result.md",
       "reviewPath": "docs/phases/phase-18/review.md",
-      "allowedPaths": ["backend/**", "android/**", "plugins/trip-copilot/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-18/result.md"],
+      "allowedPaths": ["backend/**", "android/**", "infra/terraform/**", "docs/runbooks/**", "docs/phases/phase-18/result.md"],
       "requiresExternalApproval": false,
       "optional": true
     }

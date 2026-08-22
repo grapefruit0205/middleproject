@@ -46,7 +46,6 @@ class TravelRecommendationConcurrencyIntegrationTest {
     void clean() {
         db.update("delete from travel_recommendation_consent");
         db.update("delete from private_car_routes");
-        db.update("delete from mcp_audit");
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");

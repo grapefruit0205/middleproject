@@ -62,7 +62,6 @@ class PrivateCarPlanningIntegrationTest {
     void clean() {
         clock.set(Instant.parse("2030-01-01T00:00:00Z"));
         db.update("delete from private_car_routes");
-        db.update("delete from mcp_audit");
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");

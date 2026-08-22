@@ -1,6 +1,8 @@
 package com.middleproject.reminder.web;
 
 import com.middleproject.reminder.application.DeviceQueryService;
+import com.middleproject.reminder.application.DeviceDayPlanQueryService;
+import com.middleproject.reminder.application.DayPlanRevisionService;
 import com.middleproject.reminder.application.PublicTransportQueryService;
 import com.middleproject.reminder.application.LandmarkBusStopDiscoveryService;
 import com.middleproject.reminder.application.ReminderService;
@@ -33,6 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -56,11 +59,15 @@ public class DeviceController {
     private final PublicTransportQueryService publicTransport;
     private final LandmarkBusStopDiscoveryService landmarkBusStops;
     private final TransitFavoriteService transitFavorites;
+    private final DeviceDayPlanQueryService dayPlans;
+    private final DayPlanRevisionService dayPlanRevisions;
 
     public DeviceController(DevicePairingService pairing, DeviceQueryService queries, TripService trips,
                             ReminderService reminders, PublicTransportQueryService publicTransport,
                             LandmarkBusStopDiscoveryService landmarkBusStops,
-                            TransitFavoriteService transitFavorites) {
+                            TransitFavoriteService transitFavorites,
+                            DeviceDayPlanQueryService dayPlans,
+                            DayPlanRevisionService dayPlanRevisions) {
         this.pairing = pairing;
         this.queries = queries;
         this.trips = trips;
@@ -68,6 +75,8 @@ public class DeviceController {
         this.publicTransport = publicTransport;
         this.landmarkBusStops = landmarkBusStops;
         this.transitFavorites = transitFavorites;
+        this.dayPlans = dayPlans;
+        this.dayPlanRevisions = dayPlanRevisions;
     }
 
     public record ExchangeRequest(
@@ -139,6 +148,30 @@ public class DeviceController {
     @GetMapping("/reminders/{id}/delivery")
     public List<DeviceQueryService.DeliveryView> reminderDelivery(@PathVariable UUID id) {
         return queries.delivery(id, pairing.ownerId());
+    }
+
+    /** Read-only paired-device projection for the confirmed daily itinerary. */
+    @GetMapping("/day-plans")
+    public List<DeviceDayPlanQueryService.DayPlanView> dayPlans(
+            @RequestParam(required = false) String date) {
+        return dayPlans.findAll(pairing.ownerId(), parsePlanDate(date));
+    }
+
+    @GetMapping("/day-plans/{id}")
+    public DeviceDayPlanQueryService.DayPlanView dayPlan(@PathVariable UUID id) {
+        return dayPlans.find(pairing.ownerId(), id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Day plan not found"));
+    }
+
+    /** Removes one item, cancels its notification, and returns the recomputed preview. */
+    @PostMapping("/day-plans/{id}/items/{sequence}/cancel")
+    public DayPlanRevisionService.RevisionResult cancelDayPlanItem(
+            @PathVariable UUID id,
+            @PathVariable int sequence,
+            @RequestHeader("Idempotency-Key") @Size(max = 200) String key,
+            @Valid @RequestBody VersionRequest request) {
+        requireKey(key);
+        return dayPlanRevisions.cancelItem(id, sequence, request.expectedVersion(), key);
     }
 
     @PostMapping("/reminders/{id}/cancel")
@@ -352,6 +385,19 @@ public class DeviceController {
             LocalDate.parse(value, DateTimeFormatter.BASIC_ISO_DATE);
         } catch (DateTimeParseException exception) {
             badRequest("depPlandTime must be a valid yyyyMMdd date");
+        }
+    }
+
+    private LocalDate parsePlanDate(String value) {
+        if (value == null || value.isBlank()) {
+            return LocalDate.now(ZoneId.of("Asia/Seoul"));
+        }
+        try {
+            if (!value.matches("\\d{4}-\\d{2}-\\d{2}")) throw new DateTimeParseException("invalid date", value, 0);
+            return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException exception) {
+            badRequest("date must be a valid yyyy-MM-dd date");
+            return null;
         }
     }
 

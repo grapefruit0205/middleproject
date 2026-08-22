@@ -113,14 +113,11 @@ resource "aws_iam_role_policy" "web" {
   role = aws_iam_role.web.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = concat(
-      [{ Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.frontend_artifact_key}" }],
-      var.tunnel_client_enabled ? [{
-        Effect   = "Allow"
-        Action   = ["secretsmanager:GetSecretValue"]
-        Resource = var.tunnel_runtime_api_key_secret_arn
-      }] : []
-    )
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject"]
+      Resource = "${aws_s3_bucket.artifacts.arn}/${var.frontend_artifact_key}"
+    }]
   })
 }
 
@@ -273,20 +270,12 @@ resource "aws_launch_template" "web" {
     }
   }
   user_data = base64encode(templatefile("${path.module}/templates/web.sh.tftpl", {
-    bucket                            = aws_s3_bucket.artifacts.id
-    artifact_key                      = var.frontend_artifact_key
-    internal_alb_dns                  = aws_lb.internal.dns_name
-    apache_access_log_group           = aws_cloudwatch_log_group.apache_access.name
-    apache_error_log_group            = aws_cloudwatch_log_group.apache_error.name
-    environment                       = var.environment
-    aws_region                        = var.aws_region
-    tunnel_client_enabled             = var.tunnel_client_enabled
-    tunnel_id                         = var.tunnel_id
-    tunnel_runtime_api_key_secret_arn = var.tunnel_runtime_api_key_secret_arn
-    tunnel_client_download_url        = var.tunnel_client_download_url
-    tunnel_client_sha256              = lower(var.tunnel_client_sha256)
-    tunnel_client_installer           = file("${path.module}/templates/install-tunnel-client.sh")
-    tunnel_loopback_port              = var.tunnel_loopback_port
+    bucket                  = aws_s3_bucket.artifacts.id
+    artifact_key            = var.frontend_artifact_key
+    internal_alb_dns        = aws_lb.internal.dns_name
+    apache_access_log_group = aws_cloudwatch_log_group.apache_access.name
+    apache_error_log_group  = aws_cloudwatch_log_group.apache_error.name
+    environment             = var.environment
   }))
   metadata_options { http_tokens = "required" }
   tag_specifications {

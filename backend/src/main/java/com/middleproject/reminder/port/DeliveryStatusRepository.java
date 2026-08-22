@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Delivery attempts for one reminder: the generic map form used by existing MCP APIs. */
+/** Delivery attempts for one reminder in a transport-neutral map form. */
 public interface DeliveryStatusRepository {
     List<Map<String, Object>> findByReminder(UUID reminderId);
 

@@ -4,9 +4,9 @@
 
 현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했습니다. 출장 코파일럿은 `Phase 12` Trip Domain/MCP 기반, `Phase 13` 자차 이동, `Phase 14` 여행 맥락·추천, `Phase 15` 비공개 ChatGPT Plugin 패키징, `Phase 16` Android Companion까지 PASS했습니다. `Phase 17`은 신뢰된 HTTPS 도메인, AWS 3-Tier 재배포, OpenAI Secure MCP Tunnel과 ChatGPT 비공개 MCP 연결, Firebase 서버 설정까지 검증했으며 Android 실기기의 FCM·로컬 알람·ACK E2E만 남아 있습니다. `Phase 18`은 승인된 서울 열린데이터광장·TAGO 조회 계약, 8개 대중교통 MCP 도구, Android 조회 화면과 공식 예약 앱/사이트 연결을 구현해 AWS에 배포했습니다. 목적지·도착 마감만 제시된 출장과 “지하철/버스 언제 와?” 같은 모호한 요청은 먼저 출발지 또는 출발역을 질문한 뒤 조회하도록 MCP 설명과 플러그인 계약을 보강했습니다.
 
-> AWS 상태: 2026-08-17 KST에 Phase 18 대중교통 통합을 `ap-northeast-2`의 기존 Phase 17 스택에 적용했습니다. `https://trip.tripjunseok.site`가 Public ALB에 연결되어 있고 WEB/WAS 각 2대, Multi-AZ RDS, ALB, NAT Gateway 등 과금 리소스가 실행 중입니다. 서울 실시간 지하철 HTTP 제공자는 시연을 위해 일시 활성화되어 있으며, 실기기 테스트가 끝나면 다시 비활성화하고 Runbook에 따라 스택을 철거해야 합니다.
+> AWS 상태: 2026-08-18 KST에 Phase 17/18 시연 스택을 검토된 Terraform destroy plan으로 철거했습니다. Terraform state는 비어 있으며 과금 방지를 위한 주요 AWS 리소스 inventory도 0건으로 확인했습니다. Secure MCP Tunnel과 비공개 Plugin 런타임은 폐기되었습니다.
 
-현재 배포 화면은 연결 확인용 smoke test입니다. 화면의 `Backend ready`는 Public ALB → WEB → Internal ALB → WAS readiness 경로가 정상임을 뜻합니다. 일정 등록·조회·알림 설정용 프런트엔드 화면은 아직 구현하지 않았으며, 현재 기능 경계는 REST API와 MCP Adapter입니다.
+현재 AWS 환경은 철거된 상태입니다. 일정 등록·조회·알림 설정용 프런트엔드 화면은 아직 구현하지 않았으며, 다음 배포의 기능 경계는 REST API로 정리할 예정입니다.
 
 ## Architecture
 
@@ -18,15 +18,10 @@ Android / Ops Dashboard
   -> External Tomcat WAS Tier
   -> RDS PostgreSQL Multi-AZ
 
-ChatGPT Private Plugin
-  -> Secure MCP Tunnel
-  -> Apache WEB Tier
-  -> Internal ALB -> WAS -> RDS
-
 EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 ```
 
-Public ALB는 `/api/mcp`를 거부합니다. Phase 12~18의 비공개 단일 사용자 시연은 Cognito/OIDC 대신 Secure MCP Tunnel과 Android 일회용 기기 페어링을 사용합니다. 공개 배포 또는 다중 사용자 지원에는 OAuth 2.1 IdP가 필요합니다.
+MCP Controller, Secure MCP Tunnel, 비공개 Plugin 패키지는 2026-08-18에 제거했습니다. 향후 클라이언트 연동은 공개 ALB를 통과하는 REST API 경계로 재구성합니다.
 
 - Frontend: React/PWA, Apache HTTP Server 2.4
 - Backend: Java 21, Spring Boot 3.5, Gradle Kotlin DSL, Gradle Wrapper
@@ -67,17 +62,7 @@ Public ALB는 `/api/mcp`를 거부합니다. Phase 12~18의 비공개 단일 사
 
 ## AWS live deployment and teardown
 
-2026-08-17 KST 현재 Phase 18이 반영된 환경이 AWS 계정 끝자리 `1416`, 서울 리전에 실행 중입니다.
-
-- Public URL: `https://trip.tripjunseok.site`
-- WEB/WAS: 각 2대, 두 가용 영역의 Target 모두 healthy
-- Secure MCP Tunnel: WEB 양쪽에서 active, Phase 18 배포 후 `tools/list` 25개
-- ChatGPT: 비공개 MCP 커넥터 생성·연결 완료(사용자 확인)
-- Firebase push 설정: 활성화, 프로젝트 `trip-copilot-1ff7c`
-- Terraform: 사후 detailed-exitcode `0`, no-drift
-- Public `/api/mcp`: `403`, loopback MCP만 Tunnel에 허용
-
-EC2/EBS, Multi-AZ RDS, Public/Internal ALB, NAT Gateway, CloudWatch, S3 등에서 비용이 발생합니다. Android E2E 또는 시연이 끝나면 아래 철거 절차와 [`Phase 17 E2E Runbook`](docs/runbooks/phase-17-trip-copilot-e2e.md)을 사용해 destroy plan을 검토하고 제거합니다. Cost Explorer는 지연되므로 철거 완료는 live inventory로 판정합니다.
+2026-08-18 KST에 AWS 계정 끝자리 `1416`, 서울 리전의 Phase 17/18 시연 환경을 철거했습니다. 저장된 destroy plan은 90개 managed resource 삭제를 포함했고 적용 후 Terraform state는 0개입니다. Public/Internal ALB, WEB/WAS, Multi-AZ RDS, NAT, S3, SQS, Scheduler, CloudWatch 및 프로젝트 ACM 인증서의 live inventory도 제거 여부를 확인했습니다. Cost Explorer는 지연되므로 철거 완료 판정에는 사용하지 않습니다.
 
 ### Redeploy prerequisites
 
@@ -134,7 +119,7 @@ terraform -chdir="$tfDir" show -no-color "$planPath"
 terraform -chdir="$tfDir" apply -input=false "$planPath"
 ```
 
-적용 후 Public ALB → WEB → Internal ALB → WAS readiness, CloudWatch 수집, Terraform no-drift를 확인합니다. 브라우저 경고가 발생하는 self-signed 단기 인증서는 공개 서비스나 ChatGPT MCP endpoint에 사용하지 않습니다.
+적용 후 Public ALB → WEB → Internal ALB → WAS readiness, CloudWatch 수집, Terraform no-drift를 확인합니다. 브라우저 경고가 발생하는 self-signed 단기 인증서는 공개 서비스에 사용하지 않습니다.
 
 ### 3. Teardown after the test window
 
@@ -182,6 +167,5 @@ terraform -chdir=infra/terraform validate
 - [`docs/adr`](docs/adr): Architecture Decision Records
 - [`docs/phases`](docs/phases): Phase별 계약, 구현 결과, 독립 검토
 - [`tools/orchestration`](tools/orchestration): Phase 01~10과 Phase 12~18 구현·검증 오케스트레이터
-- [`plugins/trip-copilot`](plugins/trip-copilot): 로컬 MCP 연결과 출장 계획 Skill을 포함한 비공개 Plugin 패키지
 
 Git 저장소가 기술적 Source of Truth이며, Notion의 `Reliable Multi-Channel Reminder Platform · Project Hub`는 탐색과 프로젝트 운영을 위한 허브로 사용합니다.

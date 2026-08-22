@@ -71,6 +71,14 @@ interface DeviceRefreshBackend {
     fun transportHandoffs(): Map<String, String> = emptyMap()
 
     fun transitFavorites(): List<DeviceApiClient.TransitFavorite> = emptyList()
+
+    /** Read-only daily itinerary projection; unsupported backends return no plans. */
+    fun dayPlans(date: String? = null): List<DeviceApiClient.DayPlanView> = emptyList()
+
+    /** Versioned destructive edit; unsupported backends fail explicitly. */
+    fun cancelDayPlanItem(planId: String, sequence: Int, expectedPlanVersion: Long) {
+        throw UnsupportedOperationException("Day-plan item cancellation is unavailable")
+    }
 }
 
 /**
@@ -127,6 +135,47 @@ class DeviceApiClient(
         val status: String,
         val version: Long,
         val alarmTimeEpochMillis: Long?,
+    )
+
+    data class DayPlanView(
+        val id: String,
+        val planDate: String,
+        val timezone: String,
+        val status: String,
+        val version: Long,
+        val items: List<DayPlanItemView>,
+        val travelLegs: List<TravelLegView>,
+    )
+
+    data class DayPlanItemView(
+        val id: String,
+        val sequence: Int,
+        val title: String,
+        val timeType: String,
+        val startsAtEpochMillis: Long?,
+        val endsAtEpochMillis: Long?,
+        val durationMinutes: Int,
+        val placeName: String,
+        val address: String?,
+        val status: String,
+        val version: Long,
+        val notificationAtEpochMillis: Long?,
+        val reminderStatus: String?,
+        val reminderVersion: Long?,
+    )
+
+    data class TravelLegView(
+        val id: String,
+        val fromItemId: String?,
+        val toItemId: String,
+        val mode: String,
+        val durationMinutes: Int,
+        val bufferMinutes: Int,
+        val departureAtEpochMillis: Long?,
+        val arrivalAtEpochMillis: Long?,
+        val provider: String,
+        val source: String,
+        val sequence: Int,
     )
 
     data class DeliveryView(val channel: String, val status: String, val attemptedAtEpochMillis: Long?)
@@ -354,6 +403,21 @@ class DeviceApiClient(
         }
     }
 
+    override fun dayPlans(date: String?): List<DayPlanView> {
+        val body = get("/api/device/day-plans", date?.let { mapOf("date" to it) }.orEmpty())
+        return try {
+            val array = JSONArray(body)
+            (0 until array.length()).map { index -> parseDayPlan(array.getJSONObject(index)) }
+        } catch (e: JSONException) {
+            throw ApiException.Invalid("Invalid day plans response")
+        }
+    }
+
+    override fun cancelDayPlanItem(planId: String, sequence: Int, expectedPlanVersion: Long) {
+        require(sequence >= 0) { "sequence must be nonnegative" }
+        postWrite("/api/device/day-plans/$planId/items/$sequence/cancel", expectedPlanVersion)
+    }
+
     fun disconnect() {
         execute(authedRequest("/api/device/disconnect").post("".toRequestBody(JSON)).build())
     }
@@ -368,7 +432,13 @@ class DeviceApiClient(
 
     // ---- internals ----
 
-    private fun get(path: String): String = execute(authedRequest(path).get().build())
+    private fun get(path: String, query: Map<String, String> = emptyMap()): String {
+        val url = base.newBuilder().encodedPath(path).apply {
+            query.forEach { (name, value) -> addQueryParameter(name, value) }
+        }.build()
+        val credential = currentCredentialOrThrow()
+        return execute(Request.Builder().url(url).header("Authorization", "Bearer ${credential.token}").get().build())
+    }
 
     private fun transportGet(path: String, query: Map<String, String>): TransportResult {
         val url = base.newBuilder().encodedPath(path).apply {
@@ -464,6 +534,57 @@ class DeviceApiClient(
         }
     }
 
+    private fun parseDayPlan(root: JSONObject): DayPlanView {
+        val items = root.optJSONArray("items") ?: JSONArray()
+        val parsedItems = (0 until items.length()).map { index ->
+            val item = items.getJSONObject(index)
+            DayPlanItemView(
+                id = item.getString("id"),
+                sequence = item.optInt("sequence"),
+                title = item.optString("title"),
+                timeType = item.optString("timeType"),
+                startsAtEpochMillis = optEpochMillis(item, "startsAt"),
+                endsAtEpochMillis = optEpochMillis(item, "endsAt"),
+                durationMinutes = item.optInt("durationMinutes"),
+                placeName = item.optString("placeName"),
+                address = item.optString("address").takeIf { it.isNotBlank() && it != "null" },
+                status = item.optString("status"),
+                version = item.optLong("version"),
+                notificationAtEpochMillis = optEpochMillis(item, "notificationAt"),
+                reminderStatus = item.optString("reminderStatus").takeIf { it.isNotBlank() && it != "null" },
+                reminderVersion = if (item.has("reminderVersion") && !item.isNull("reminderVersion")) {
+                    item.optLong("reminderVersion")
+                } else null,
+            )
+        }
+        val legs = root.optJSONArray("travelLegs") ?: JSONArray()
+        val parsedLegs = (0 until legs.length()).map { index ->
+            val leg = legs.getJSONObject(index)
+            TravelLegView(
+                id = leg.getString("id"),
+                fromItemId = leg.optString("fromItemId").takeIf { it.isNotBlank() && it != "null" },
+                toItemId = leg.getString("toItemId"),
+                mode = leg.optString("mode"),
+                durationMinutes = leg.optInt("durationMinutes"),
+                bufferMinutes = leg.optInt("bufferMinutes"),
+                departureAtEpochMillis = optEpochMillis(leg, "departureAt"),
+                arrivalAtEpochMillis = optEpochMillis(leg, "arrivalAt"),
+                provider = leg.optString("provider"),
+                source = leg.optString("source"),
+                sequence = leg.optInt("sequence"),
+            )
+        }
+        return DayPlanView(
+            id = root.getString("id"),
+            planDate = root.optString("planDate"),
+            timezone = root.optString("timezone"),
+            status = root.optString("status"),
+            version = root.optLong("version"),
+            items = parsedItems,
+            travelLegs = parsedLegs,
+        )
+    }
+
     private fun optEpochMillis(o: JSONObject, key: String): Long? {
         if (!o.has(key) || o.isNull(key)) return null
         val raw = o.optString(key).trim()
@@ -474,7 +595,11 @@ class DeviceApiClient(
         return try {
             java.time.Instant.parse(raw).toEpochMilli()
         } catch (e: Exception) {
-            throw ApiException.Invalid("Invalid timestamp in response")
+            try {
+                java.time.OffsetDateTime.parse(raw).toInstant().toEpochMilli()
+            } catch (_: Exception) {
+                throw ApiException.Invalid("Invalid timestamp in response")
+            }
         }
     }
 }

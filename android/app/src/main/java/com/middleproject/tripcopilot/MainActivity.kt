@@ -87,6 +87,7 @@ class MainActivity : ComponentActivity() {
                         onCancelTrip = viewModel::cancelTrip,
                         onCancelReminder = viewModel::cancelReminder,
                         onAckReminder = viewModel::ackReminder,
+                        onCancelDayPlanItem = viewModel::cancelDayPlanItem,
                         onDisconnect = viewModel::disconnect,
                         onSubwayArrivals = viewModel::realtimeSubwayArrivals,
                         onNearbyBusStops = viewModel::findNearbyBusStops,
@@ -162,6 +163,7 @@ private fun CompanionScreen(
     onCancelTrip: (String, Long) -> Unit,
     onCancelReminder: (String, Long) -> Unit,
     onAckReminder: (String, Long) -> Unit,
+    onCancelDayPlanItem: (String, Int, Long) -> Unit,
     onDisconnect: () -> Unit,
     onSubwayArrivals: (String) -> Unit,
     onNearbyBusStops: (Double, Double) -> Unit,
@@ -188,6 +190,7 @@ private fun CompanionScreen(
             onCancelTrip = onCancelTrip,
             onCancelReminder = onCancelReminder,
             onAckReminder = onAckReminder,
+            onCancelDayPlanItem = onCancelDayPlanItem,
             onDisconnect = onDisconnect,
             onSubwayArrivals = onSubwayArrivals,
             onNearbyBusStops = onNearbyBusStops,
@@ -254,6 +257,7 @@ private fun PairedScreen(
     onCancelTrip: (String, Long) -> Unit,
     onCancelReminder: (String, Long) -> Unit,
     onAckReminder: (String, Long) -> Unit,
+    onCancelDayPlanItem: (String, Int, Long) -> Unit,
     onDisconnect: () -> Unit,
     onSubwayArrivals: (String) -> Unit,
     onNearbyBusStops: (Double, Double) -> Unit,
@@ -297,8 +301,11 @@ private fun PairedScreen(
             onUseCurrentLocation = onUseCurrentLocation,
         )
         Spacer(Modifier.height(8.dp))
-        if (state.trips.isEmpty() && state.reminders.isEmpty()) {
-            Text("No trips or reminders yet. Pull refresh to sync.")
+        if (state.dayPlans.isEmpty() && state.trips.isEmpty() && state.reminders.isEmpty()) {
+            Text("No day plans, trips, or reminders yet. Pull refresh to sync.")
+        }
+        state.dayPlans.forEach { plan ->
+            DayPlanCard(plan, onCancelDayPlanItem)
         }
         state.trips.forEach { trip ->
             TripCard(trip, onCancelTrip)
@@ -310,6 +317,36 @@ private fun PairedScreen(
                 onCancelReminder = onCancelReminder,
                 onAckReminder = onAckReminder,
             )
+        }
+    }
+}
+
+@Composable
+private fun DayPlanCard(
+    plan: DeviceApiClient.DayPlanView,
+    onCancelItem: (String, Int, Long) -> Unit,
+) {
+    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Column(Modifier.padding(12.dp)) {
+            Text("Daily itinerary · ${plan.planDate}", style = MaterialTheme.typography.titleMedium)
+            Text("Status: ${plan.status} · version ${plan.version} · ${plan.timezone}")
+            plan.items.sortedBy { it.sequence }.forEach { item ->
+                Spacer(Modifier.height(6.dp))
+                Text("${item.sequence + 1}. ${item.title} · ${item.placeName}")
+                item.startsAtEpochMillis?.let { Text("Start: ${formatTime(it)}") }
+                item.endsAtEpochMillis?.let { Text("End: ${formatTime(it)}") }
+                item.notificationAtEpochMillis?.let { Text("Notification: ${formatTime(it)}") }
+                item.reminderStatus?.let { Text("Reminder: $it") }
+                if (item.status != "CANCELLED" && item.status != "COMPLETED") {
+                    Button(onClick = { onCancelItem(plan.id, item.sequence, plan.version) }) {
+                        Text("Cancel item")
+                    }
+                }
+            }
+            if (plan.travelLegs.isNotEmpty()) {
+                Spacer(Modifier.height(6.dp))
+                Text("Travel legs: ${plan.travelLegs.joinToString { "${it.mode} ${it.durationMinutes} min" }}")
+            }
         }
     }
 }

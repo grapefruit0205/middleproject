@@ -99,15 +99,6 @@ output "session_logging_document_name" {
   description = "Project-scoped SSM Session Manager document with CloudWatch recording."
 }
 
-output "secure_mcp_tunnel" {
-  value = {
-    enabled              = var.tunnel_client_enabled
-    tunnel_id            = var.tunnel_client_enabled ? var.tunnel_id : null
-    private_mcp_endpoint = var.tunnel_client_enabled ? "http://127.0.0.1:${var.tunnel_loopback_port}/api/mcp" : null
-  }
-  description = "Non-sensitive Secure MCP Tunnel handoff data. The endpoint is loopback-only on WEB instances."
-}
-
 output "push_delivery" {
   value = {
     enabled             = var.notification_push_enabled

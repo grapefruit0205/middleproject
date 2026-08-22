@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Private-car vertical slice application service. Both the REST and MCP adapters call exactly
+ * Private-car vertical slice application service. Transport adapters call exactly
  * these methods; no other code path can change the trip or write confirmed routes.
  */
 @Service

@@ -28,14 +28,12 @@ LoadModule proxy_module modules/mod_proxy.so
 LoadModule proxy_http_module modules/mod_proxy_http.so
 LoadModule headers_module modules/mod_headers.so
 ProxyRequests Off
-Listen 127.0.0.1:${tunnel_loopback_port}
 SetEnvIf X-Amzn-Trace-Id "(?:^|;)Root=(1-[0-9A-Fa-f]{8}-[0-9A-Fa-f]{24})(?:;|$)" alb_trace_root=\$1
 RequestHeader set X-Alb-Trace-Root "%%{alb_trace_root}e" env=alb_trace_root
 LogFormat "%h %l %u %t \\"%r\\" %>s %b \\"%%{Referer}i\\" \\"%%{User-Agent}i\\" trace=\\"%%{alb_trace_root}e\\" correlation=\\"%%{X-Correlation-Id}o\\"" reminder_trace
 <VirtualHost *:80>
   CustomLog /var/log/httpd/reminder-access.log reminder_trace
   ProxyPass /healthz !
-  ProxyPass /api/mcp !
   ProxyPass /api/actuator/health/readiness http://${internal_alb_dns}/actuator/health/readiness
   ProxyPassReverse /api/actuator/health/readiness http://${internal_alb_dns}/actuator/health/readiness
   ProxyPass /api/ http://${internal_alb_dns}/api/
@@ -44,17 +42,6 @@ LogFormat "%h %l %u %t \\"%r\\" %>s %b \\"%%{Referer}i\\" \\"%%{User-Agent}i\\" 
     SetHandler none
     Require all granted
   </Location>
-  <LocationMatch "^/api/mcp(?:/.*)?$">
-    Require all denied
-  </LocationMatch>
-</VirtualHost>
-<VirtualHost 127.0.0.1:${tunnel_loopback_port}>
-  ProxyPreserveHost On
-  ProxyPass /api/mcp http://${internal_alb_dns}/api/mcp nocanon
-  ProxyPassReverse /api/mcp http://${internal_alb_dns}/api/mcp
-  <LocationMatch "^/api/mcp(?:/.*)?$">
-    Require local
-  </LocationMatch>
 </VirtualHost>
 EOF
 cat >/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<EOF
@@ -91,62 +78,4 @@ for attempt in 1 2 3 4 5; do
   sleep $((attempt * 5))
 done
 systemctl enable --now httpd
-%{ if tunnel_client_enabled }
-useradd --system --home-dir /var/lib/tunnel-client --create-home --shell /sbin/nologin tunnel-client
-cat >/tmp/install-tunnel-client.sh <<'INSTALL_TUNNEL_CLIENT'
-${tunnel_client_installer}
-INSTALL_TUNNEL_CLIENT
-bash /tmp/install-tunnel-client.sh \
-  '${tunnel_client_download_url}' \
-  '${tunnel_client_sha256}' \
-  /usr/local/bin/tunnel-client
-cat >/usr/local/sbin/tunnel-client-start <<'EOF'
-#!/bin/bash
-set -euo pipefail
-export HOME=/var/lib/tunnel-client
-CONTROL_PLANE_API_KEY="$(aws secretsmanager get-secret-value \
-  --region '${aws_region}' \
-  --secret-id '${tunnel_runtime_api_key_secret_arn}' \
-  --query SecretString \
-  --output text)"
-if [ -z "$CONTROL_PLANE_API_KEY" ] || [ "$CONTROL_PLANE_API_KEY" = "None" ]; then
-  echo "ERROR: tunnel runtime API key secret is empty" >&2
-  exit 1
-fi
-export CONTROL_PLANE_API_KEY
-/usr/local/bin/tunnel-client init \
-  --profile trip-copilot \
-  --tunnel-id '${tunnel_id}' \
-  --mcp-server-url 'http://127.0.0.1:${tunnel_loopback_port}/api/mcp'
-exec /usr/local/bin/tunnel-client run --profile trip-copilot
-EOF
-chown root:tunnel-client /usr/local/sbin/tunnel-client-start
-chmod 0750 /usr/local/sbin/tunnel-client-start
-cat >/etc/systemd/system/tunnel-client.service <<'EOF'
-[Unit]
-Description=OpenAI Secure MCP Tunnel client
-After=network-online.target httpd.service
-Wants=network-online.target
-Requires=httpd.service
-
-[Service]
-Type=simple
-User=tunnel-client
-Group=tunnel-client
-ExecStart=/usr/local/sbin/tunnel-client-start
-Restart=on-failure
-RestartSec=5
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectHome=true
-ProtectSystem=strict
-ReadWritePaths=/var/lib/tunnel-client
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl daemon-reload
-systemctl enable --now tunnel-client
-rm -f /tmp/install-tunnel-client.sh
-%{ endif }
 rm -f /tmp/frontend.zip

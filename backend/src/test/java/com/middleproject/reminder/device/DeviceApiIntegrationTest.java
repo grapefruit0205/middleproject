@@ -60,7 +60,6 @@ class DeviceApiIntegrationTest {
         db.update("delete from device_fcm_registration");
         db.update("delete from devices");
         db.update("delete from device_pairing_codes");
-        db.update("delete from mcp_audit");
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");

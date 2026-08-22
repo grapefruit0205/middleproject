@@ -16,6 +16,7 @@ sealed interface CompanionUiState {
     data class Paired(
         val trips: List<DeviceApiClient.TripView>,
         val reminders: List<DeviceApiClient.ReminderView>,
+        val dayPlans: List<DeviceApiClient.DayPlanView> = emptyList(),
         val delivery: Map<String, List<DeviceApiClient.DeliveryView>> = emptyMap(),
         val loading: Boolean = false,
         val error: String? = null,
@@ -92,6 +93,7 @@ class CompanionViewModel(
                 _state.value = CompanionUiState.Paired(
                     trips = result.trips,
                     reminders = result.reminders,
+                    dayPlans = result.dayPlans,
                     delivery = result.delivery,
                     degradedAlarm = result.degradedAlarm,
                     transport = TransportUiState(
@@ -140,6 +142,17 @@ class CompanionViewModel(
                 refresh()
             } catch (e: Exception) {
                 setError("Acknowledge failed: ${e.message}")
+            }
+        }
+    }
+
+    fun cancelDayPlanItem(planId: String, sequence: Int, expectedPlanVersion: Long) {
+        viewModelScope.launch {
+            try {
+                repository.cancelDayPlanItem(planId, sequence, expectedPlanVersion)
+                refresh()
+            } catch (e: Exception) {
+                setError("Cancel schedule item failed: ${e.message}")
             }
         }
     }

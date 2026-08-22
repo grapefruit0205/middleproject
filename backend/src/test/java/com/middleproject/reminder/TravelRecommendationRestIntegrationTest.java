@@ -67,7 +67,6 @@ class TravelRecommendationRestIntegrationTest {
         clock.set(Instant.parse("2030-01-01T00:00:00Z"));
         db.update("delete from travel_recommendation_consent");
         db.update("delete from private_car_routes");
-        db.update("delete from mcp_audit");
         db.update("delete from notification_attempt");
         db.update("delete from reminder_delivery_receipt");
         db.update("delete from schedule_outbox");
@@ -255,57 +254,4 @@ class TravelRecommendationRestIntegrationTest {
         assertEquals(0, count("select count(*) from travel_recommendation_consent where trip_id=?", other));
     }
 
-    @Test
-    void restAndMcpStructuredResultsAreEquivalent() throws Exception {
-        Trip trip = trip();
-
-        JsonNode context = postJson("/api/trips/" + trip.id() + "/travel/context",
-                "{\"departureTiming\":\"PREVIOUS_DAY\",\"sort\":\"PRICE\"}", null);
-
-        String mcpContext = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"get_trip_travel_context\",\"arguments\":{\"tripId\":\"" + trip.id() + "\",\"departureTiming\":\"PREVIOUS_DAY\",\"sort\":\"PRICE\"}}}";
-        MvcResult mcpResult = mvc.perform(post("/api/mcp").contentType(MediaType.APPLICATION_JSON)
-                        .content(mcpContext).principal(() -> "alice"))
-                .andExpect(status().isOk()).andReturn();
-        JsonNode mcpContextResult = mapper.readTree(mcpResult.getResponse().getContentAsString())
-                .path("result").path("structuredContent");
-        assertEquals("PROPOSED", context.path("consentStatus").asText());
-        assertEquals("PROPOSED", mcpContextResult.path("consentStatus").asText());
-        assertEquals(context.toString(), mcpContextResult.toString());
-
-        JsonNode consent = postJson("/api/trips/" + trip.id() + "/travel/consent",
-                "{\"accepted\":true}", "equiv-key-1");
-
-        String mcpConsent = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"record_trip_followup_consent\",\"arguments\":{\"tripId\":\"" + trip.id() + "\",\"accepted\":true,\"idempotencyKey\":\"equiv-key-1\"}}}";
-        MvcResult mcpConsentResult = mvc.perform(post("/api/mcp").contentType(MediaType.APPLICATION_JSON)
-                        .content(mcpConsent).principal(() -> "alice"))
-                .andExpect(status().isOk()).andReturn();
-        JsonNode mcpConsentNode = mapper.readTree(mcpConsentResult.getResponse().getContentAsString())
-                .path("result").path("structuredContent");
-        assertEquals(consent.toString(), mcpConsentNode.toString());
-        assertEquals(1, count("select count(*) from travel_recommendation_consent where trip_id=?", trip.id()));
-
-        JsonNode changed = postJson("/api/trips/" + trip.id() + "/travel/consent",
-                "{\"accepted\":false}", "equiv-key-2");
-        assertEquals("DECLINED", changed.path("status").asText());
-
-        String mcpChanged = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"record_trip_followup_consent\",\"arguments\":{\"tripId\":\"" + trip.id() + "\",\"accepted\":false,\"idempotencyKey\":\"equiv-key-2\"}}}";
-        MvcResult mcpChangedResult = mvc.perform(post("/api/mcp").contentType(MediaType.APPLICATION_JSON)
-                        .content(mcpChanged).principal(() -> "alice"))
-                .andExpect(status().isOk()).andReturn();
-        JsonNode mcpChangedNode = mapper.readTree(mcpChangedResult.getResponse().getContentAsString())
-                .path("result").path("structuredContent");
-        assertEquals(changed.toString(), mcpChangedNode.toString());
-
-        JsonNode recommendations = getJson("/api/trips/" + trip.id() + "/travel/recommendations?sort=PRICE");
-
-        String mcpRecommendations = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"get_trip_recommendations\",\"arguments\":{\"tripId\":\"" + trip.id() + "\",\"sort\":\"PRICE\"}}}";
-        MvcResult mcpRecResult = mvc.perform(post("/api/mcp").contentType(MediaType.APPLICATION_JSON)
-                        .content(mcpRecommendations).principal(() -> "alice"))
-                .andExpect(status().isOk()).andReturn();
-        JsonNode mcpRecResultNode = mapper.readTree(mcpRecResult.getResponse().getContentAsString())
-                .path("result").path("structuredContent");
-        assertEquals("DECLINED", recommendations.path("consentStatus").asText());
-        assertEquals("DECLINED", mcpRecResultNode.path("consentStatus").asText());
-        assertEquals(recommendations.toString(), mcpRecResultNode.toString());
-    }
 }
