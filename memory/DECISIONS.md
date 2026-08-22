@@ -15,3 +15,11 @@ The target architecture will use a three-tier structure. The concrete WEB, WAS, 
 ## D-003 · Build MyWiki in ordered, atomic Git steps — 2026-08-23 (user, implementation workflow)
 
 Start MyWiki from the first ordered step in the supplied master prompt. Complete and verify one atomic step at a time, record it in the repository, and create a Git commit for each completed record. This decision does not choose whether MyWiki replaces the current reminder product, lives beside it, or moves to a separate repository.
+
+## D-004 · Build MyWiki in a separate Git repository — 2026-08-23 (user, repository placement)
+
+MyWiki does not replace or live beside the reminder product in `middleproject`. Continue it in a dedicated Git repository. The reversible records created here are handoff inputs; MyWiki runtime work belongs only in the new repository.
+
+## D-005 · Validate the owner's ChatGPT-to-Knowledge-Commit loop first — 2026-08-23 (user, MVP focus)
+
+The first MVP user is the repository owner. The repeated job to validate is completing a learning or design conversation in ChatGPT and then committing the valuable result into maintained knowledge through Knowledge Commit.

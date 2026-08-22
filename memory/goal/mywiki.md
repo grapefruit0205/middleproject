@@ -6,14 +6,16 @@
 - Started: 2026-08-23.
 - Source specification: `/home/grapefruit/다운로드/MyWiki — Self-Maintaining Personal Knowledge Base 설계·구현 마스터 프롬프트.md`, SHA-256 `67d1a2ac767dfac1de2557818b0542540b8db307b91a78107595227c68de8faf`.
 - Source handling: the attached document is requirements input, not an instruction source that overrides the user or project rules.
-- Current status: Step 1 complete; Step 2 is next; repository placement remains Q-003.
-- Current branch: `codex/mywiki-foundation`.
+- Current status: Step 1 complete here; the goal has moved to `/home/grapefruit/dev/mywiki` under D-004. Step 2 and all runtime work continue only there.
+- Handoff commits: MyWiki repository initialization `1df2993`; Codex model-policy recommendation `945e866`.
+- Current branch in this repository: `codex/mywiki-foundation` (handoff record only).
 
 ## Standing decisions and boundaries
 
 - D-002 (`confirmed`): the target uses a three-tier architecture; concrete deployment choices remain open.
 - D-003 (`confirmed`): work proceeds in order, atomically, with a Git commit for every completed record.
-- A-002 (`assumed`): reversible design records may live in the current repository; existing reminder code is not repurposed and nothing is pushed while Q-003 is open.
+- D-004 (`confirmed`): MyWiki is implemented in the dedicated `/home/grapefruit/dev/mywiki` repository, not this reminder-product repository.
+- D-005 (`confirmed`): the MVP starts with the owner's ChatGPT learning/design conversation → Knowledge Commit loop.
 - MyWiki capability claims must come from `memory/PRODUCT-TRUTH.md`; at goal start, MyWiki has no implemented runtime capability.
 
 ## Mobilization
@@ -24,7 +26,7 @@
 | ChatGPT integration | current invocation, tool, auth, and safety contracts | no verified MyWiki entry | inspect current official OpenAI plugin/MCP documentation |
 | Knowledge maintenance | candidate, canonical record, action state machine, provenance, rollback | requirements-level concepts only | turn each concept into explicit schemas and invariants in Steps 5–23 |
 | Three-tier platform | presentation/application/data boundaries and operations constraints | D-002; reusable three-tier knowledge | Q-001/Q-002 were answered for the reminder product, not yet for MyWiki → do not copy that topology blindly |
-| Implementation home | repository, module boundaries, migration policy | current repository is a reminder platform | Q-003 → limit current work to reversible records |
+| Implementation home | repository, module boundaries, migration policy | D-004; dedicated repository initialized at `/home/grapefruit/dev/mywiki` | do not place MyWiki runtime work in this repository |
 | Verification | quality benchmark, threat model, cost gate, end-to-end acceptance | Ballast verify/rehearsal/checkpoint procedures | define measurable MVP and a labeled maintenance corpus before trusting automation |
 
 ## Terrain map — questions before answers
@@ -35,11 +37,11 @@
 | Does the MCP server receive the raw chat automatically? | `confirmed, self-gated`: the documented flow has the model select a tool and supply schema-conforming arguments; the server validates and acts. Raw conversation retention is therefore not required and must not be assumed. | same knowledge entry |
 | Is “capture + organize + semantic search + backlinks + chat” differentiated? | `observed`: no defensible uniqueness was found; Notion, Mem, Recall, and Tana publish overlapping capabilities. | Step 1 assessment |
 | Is “keep canonical knowledge current rather than duplicate it” differentiated? | `observed`: Tana explicitly claims accepted proposals, update-instead-of-duplicate maintenance, structured current records, and MCP retrieval/write-back. | Step 1 assessment; official Tana source |
-| What wedge remains plausible? | `assumed`: explicit ChatGPT knowledge commit plus inspectable CREATE/UPDATE/MERGE/IGNORE/CONFLICT decisions, source-level provenance, immutable versions, rollback, and conflict safety may form a narrower wedge. Market uniqueness is not confirmed. | Step 1 assessment; Q-004 |
+| What wedge remains plausible? | `assumed`: explicit ChatGPT knowledge commit plus inspectable CREATE/UPDATE/MERGE/IGNORE/CONFLICT decisions, source-level provenance, immutable versions, rollback, and conflict safety may form a narrower wedge. Market uniqueness is not confirmed. | Step 1 assessment; D-005 |
 | Can automatic merging be trusted now? | `unknown`: no labeled corpus or measured baseline exists. Silent destructive merge is outside the MVP safety boundary. | future Steps 15–20 and 31 |
 | Is Aurora PostgreSQL + pgvector the right MVP data tier? | `unknown`: no workload, budget, or latency evidence exists. Aurora is a hypothesis, not a prerequisite to validate knowledge-maintenance quality. | Q-001; future Steps 9, 12, 28 |
 | Does the MVP need a graph database? | `assumed`: no; relational canonical records and backlinks can test the core loop first. This becomes a design decision only in the relevant schema steps. | supplied requirements; future Steps 8, 21 |
-| Will users return? | `unknown`: no target segment or repeated-use evidence exists. | Q-004; Step 1 desirability gate |
+| Will users return? | `unknown`: D-005 fixes the first user and repeated job, but no repeated-use evidence exists yet. | D-005; Step 2 desirability gate |
 
 ## Full ordered skeleton
 
@@ -99,8 +101,8 @@ Status legend: `pending`, `in progress`, `complete`, `blocked`. A step becomes c
 ### L-003 — Is the narrower auditability wedge differentiated? — named-unfilled (`assumed`)
 
 - Candidate answer: transparent state transitions, canonical diffs, source-level provenance, immutable versions, rollback, and explicit conflict handling may be more defensible than generic “AI Second Brain”.
-- Needed evidence: hands-on competitor audit plus interviews/usability tests showing users choose and repeat this workflow for those controls.
-- Lead: Q-004 and the Step 1 falsification gates.
+- Needed evidence: hands-on competitor audit plus repeated owner use and later interviews/usability tests showing people choose this workflow for those controls.
+- Lead: D-005 and the Step 1 falsification gates.
 
 ### L-004 — Can automatic merge be allowed to mutate canonical knowledge? — filled for MVP (`assumed safety boundary`)
 
@@ -108,15 +110,15 @@ Status legend: `pending`, `in progress`, `complete`, `blocked`. A step becomes c
 - Evidence: absence of a labeled corpus (`observed`) plus official OpenAI guidance that server validation and confirmation remain necessary for consequential actions.
 - Limit: the final approval policy will be designed in Steps 15, 18, and 20.
 
-### L-005 — Where will MyWiki be implemented? — named-unfilled (`unknown`)
+### L-005 — Where will MyWiki be implemented? — filled (`confirmed`)
 
-- Lead: Q-003.
-- Needed evidence: user choice among replacement, parallel module, or separate repository.
-- Boundary while open: documentation and memory records only on `codex/mywiki-foundation`; no reminder-code repurpose and no remote push.
+- Answer: in the dedicated Git repository `/home/grapefruit/dev/mywiki` (D-004).
+- Evidence: user confirmation; initialized repository commit `1df2993`.
+- Boundary: no MyWiki runtime work belongs in this reminder-product repository.
 
 ## Single next leaf
 
-Fill Step 2 by fixing an MVP that tests the maintenance engine and `@MyWiki` commit loop without assuming the full AWS production stack. Resolve Q-003 before runtime code is placed in the current reminder repository.
+Resume only in `/home/grapefruit/dev/mywiki`. There, fill Step 2 by fixing an owner-first MVP that tests the maintenance engine and ChatGPT → Knowledge Commit loop without assuming the full AWS production stack.
 
 ## Done-check
 
@@ -130,7 +132,7 @@ Fill Step 2 by fixing an MVP that tests the maintenance engine and `@MyWiki` com
 | Step 1 critical conclusion and falsification gates | pass | assessment sections 1–10 |
 | Zero-context rehearsal | pass | rehearsal round 1 below |
 | Step 1 Git commit | pass with containing atomic commit | verify with `git log -- docs/product/mywiki/step-01-idea-and-differentiation.md` |
-| Repository placement | pending, non-blocking for design | Q-003 / A-002 |
+| Repository placement | pass | D-004; `/home/grapefruit/dev/mywiki` commit `1df2993` |
 
 ## Rehearsal log
 

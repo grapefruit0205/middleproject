@@ -28,3 +28,7 @@ One short section per working session: what was worked on, what was decided (wit
 - Recorded reusable findings in `memory/knowledge/mywiki-market-and-openai-plugin.md` with self-gated and vendor-published labels. No external Ballast researcher was configured.
 - Zero-context rehearsal round 1 passed cleanly: the executor derived the Conditional GO boundary, all required Step 2 decisions, and the runtime no-start condition without a blocking stall.
 - Archived the outgoing three-tier checkpoint and replaced `memory/CHECKPOINT.md` with the MyWiki Step 1 return point. Next: answer Q-003/Q-004 and execute Step 2.
+- The user closed Q-003 and Q-004: MyWiki belongs in a separate repository (D-004), and the first repeated job is the owner's ChatGPT learning/design conversation → Knowledge Commit loop (D-005). Provisional A-002 ended.
+- Initialized `/home/grapefruit/dev/mywiki` at commit `1df2993`, importing the original source prompt, Step 1 assessment, goal skeleton, and verified research without reminder runtime code.
+- Recorded the proposed Codex working-model policy in the new repository at commit `945e866`: Terra/medium by default, Sol/high for hard or high-risk review, and Luna only for stable mechanical work. This is a proposal, not a user-confirmed decision, and MyWiki runtime-model selection remains deferred to Step 24.
+- Replaced this repository's checkpoint with a durable handoff boundary. All further MyWiki steps continue in the dedicated repository.
