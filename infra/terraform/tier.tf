@@ -124,7 +124,7 @@ resource "aws_iam_role_policy" "was" {
     Version = "2012-10-17"
     Statement = concat([
       { Effect = "Allow", Action = ["s3:GetObject"], Resource = "${aws_s3_bucket.artifacts.arn}/${var.backend_artifact_key}" },
-      { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = aws_db_instance.this.master_user_secret[0].secret_arn },
+      { Effect = "Allow", Action = ["secretsmanager:GetSecretValue"], Resource = [var.db_runtime_secret_arn, var.owner_auth_secret_arn] },
       { Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes"], Resource = aws_sqs_queue.reminder.arn },
       { Effect = "Allow", Action = ["scheduler:CreateSchedule", "scheduler:UpdateSchedule", "scheduler:DeleteSchedule"], Resource = "arn:aws:scheduler:${var.aws_region}:*:schedule/${var.scheduler_group}/reminder-*" },
       { Effect = "Allow", Action = ["iam:PassRole"], Resource = aws_iam_role.scheduler.arn, Condition = { StringEquals = { "iam:PassedToService" = "scheduler.amazonaws.com" } } }
@@ -150,6 +150,92 @@ resource "aws_iam_instance_profile" "web" {
 resource "aws_iam_instance_profile" "was" {
   name = "${var.name}-${var.environment}-was"
   role = aws_iam_role.was.name
+}
+
+resource "aws_iam_role" "db_migration" {
+  name               = "${var.name}-${var.environment}-db-migration"
+  assume_role_policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" }, Action = "sts:AssumeRole" }] })
+}
+
+resource "aws_iam_role_policy" "db_migration" {
+  name = "${var.name}-${var.environment}-db-migration"
+  role = aws_iam_role.db_migration.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject"]
+        Resource = "${aws_s3_bucket.artifacts.arn}/${var.backend_artifact_key}"
+      },
+      {
+        Effect = "Allow"
+        Action = ["secretsmanager:GetSecretValue"]
+        Resource = [
+          aws_db_instance.this.master_user_secret[0].secret_arn,
+          var.db_migration_secret_arn,
+          var.db_runtime_secret_arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "db_migration_ssm" {
+  role       = aws_iam_role.db_migration.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "db_migration" {
+  name = "${var.name}-${var.environment}-db-migration"
+  role = aws_iam_role.db_migration.name
+}
+
+resource "aws_launch_template" "db_migration" {
+  depends_on = [
+    aws_s3_object.backend_artifact,
+    aws_route_table_association.private,
+    aws_iam_role_policy.db_migration,
+    aws_iam_role_policy_attachment.db_migration_ssm,
+  ]
+
+  name_prefix   = substr("${local.name_slug}-db-migration-", 0, 37)
+  image_id      = data.aws_ssm_parameter.al2023.value
+  instance_type = var.instance_type
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.db_migration.name
+  }
+
+  vpc_security_group_ids = [aws_security_group.db_migration.id]
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      encrypted   = true
+      volume_type = "gp3"
+    }
+  }
+
+  user_data = base64encode(templatefile("${path.module}/templates/db-migration.sh.tftpl", {
+    bucket                = aws_s3_bucket.artifacts.id
+    artifact_key          = var.backend_artifact_key
+    db_host               = aws_db_instance.this.address
+    db_name               = var.db_name
+    master_secret_arn     = aws_db_instance.this.master_user_secret[0].secret_arn
+    migration_secret_arn  = var.db_migration_secret_arn
+    db_runtime_secret_arn = var.db_runtime_secret_arn
+  }))
+
+  metadata_options { http_tokens = "required" }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name    = "${var.name}-${var.environment}-db-migration"
+      Purpose = "ephemeral-database-migration"
+    }
+  }
 }
 
 resource "aws_lb" "public" {
@@ -187,6 +273,26 @@ resource "aws_lb_listener" "public" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.web.arn
+  }
+}
+
+resource "aws_lb_listener_rule" "public_block_mcp" {
+  listener_arn = aws_lb_listener.public.arn
+  priority     = 10
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "application/json"
+      message_body = jsonencode({ error = "not_found" })
+      status_code  = "404"
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/mcp", "/api/mcp/*"]
+    }
   }
 }
 
@@ -279,9 +385,9 @@ resource "aws_autoscaling_group" "web" {
     aws_iam_role_policy_attachment.web_ssm,
   ]
   name                      = "${var.name}-${var.environment}-web"
-  min_size                  = 2
-  max_size                  = 2
-  desired_capacity          = 2
+  min_size                  = var.web_capacity.min
+  max_size                  = var.web_capacity.max
+  desired_capacity          = var.web_capacity.desired
   vpc_zone_identifier       = [aws_subnet.this["web_a"].id, aws_subnet.this["web_c"].id]
   target_group_arns         = [aws_lb_target_group.web.arn]
   health_check_type         = "ELB"
@@ -335,10 +441,10 @@ resource "aws_launch_template" "was" {
     bucket                     = aws_s3_bucket.artifacts.id
     artifact_key               = var.backend_artifact_key
     tomcat_version             = var.tomcat_version
-    db_secret_arn              = aws_db_instance.this.master_user_secret[0].secret_arn
+    db_runtime_secret_arn      = var.db_runtime_secret_arn
+    owner_auth_secret_arn      = var.owner_auth_secret_arn
     db_host                    = aws_db_instance.this.address
     db_name                    = var.db_name
-    db_username                = var.db_username
     scheduler_aws_enabled      = var.scheduler_aws_enabled
     scheduler_group            = var.scheduler_group
     scheduler_role_arn         = aws_iam_role.scheduler.arn
@@ -371,9 +477,9 @@ resource "aws_autoscaling_group" "was" {
     aws_iam_role_policy_attachment.was_ssm,
   ]
   name                      = "${var.name}-${var.environment}-was"
-  min_size                  = 2
-  max_size                  = 2
-  desired_capacity          = 2
+  min_size                  = var.was_capacity.min
+  max_size                  = var.was_capacity.max
+  desired_capacity          = var.was_capacity.desired
   vpc_zone_identifier       = [aws_subnet.this["was_a"].id, aws_subnet.this["was_c"].id]
   target_group_arns         = [aws_lb_target_group.was.arn]
   health_check_type         = "ELB"
@@ -409,7 +515,7 @@ resource "aws_db_instance" "this" {
   allocated_storage           = var.db_allocated_storage
   storage_type                = "gp3"
   storage_encrypted           = true
-  multi_az                    = true
+  multi_az                    = var.rds_multi_az
   db_name                     = var.db_name
   username                    = var.db_username
   manage_master_user_password = true

@@ -245,7 +245,7 @@ class Phase08ReliabilityIntegrationTest {
         assertEquals(ReminderStatus.SCHEDULED, reminders.find(reminder.id()).status());
     }
 
-    @Test void providerTimeoutThenLaterSuccessRecordsBothAttempts() {
+    @Test void providerTimeoutBecomesOutcomeUnknownWithoutBlindResend() {
         var reminder = newReminder("provider-timeout");
         reminders.transition(reminder.id(), ReminderStatus.SCHEDULE_PENDING, 0, "transition-timeout");
         db.update("update reminders set status='DISPATCHED' where id=?", reminder.id());
@@ -256,11 +256,11 @@ class Phase08ReliabilityIntegrationTest {
         NotificationDeliveryService service = new NotificationDeliveryService(db, sender);
 
         var timeout = service.deliver(reminder.id(), "a@example.test", "subject", "body");
-        var success = service.deliver(reminder.id(), "a@example.test", "subject", "body");
-        assertEquals("RETRYABLE_TIMEOUT", timeout.status());
-        assertEquals("SUCCEEDED", success.status());
-        assertEquals(ReminderStatus.DELIVERED, reminders.find(reminder.id()).status());
-        assertEquals(2, db.queryForObject("select count(*) from notification_attempt where reminder_id=?", Integer.class, reminder.id()));
+        var second = service.deliver(reminder.id(), "a@example.test", "subject", "body");
+        assertEquals("OUTCOME_UNKNOWN", timeout.status());
+        assertEquals("ALREADY_PROCESSED", second.status());
+        assertEquals(ReminderStatus.DELIVERY_UNKNOWN, reminders.find(reminder.id()).status());
+        assertEquals(1, db.queryForObject("select count(*) from notification_attempt where reminder_id=?", Integer.class, reminder.id()));
     }
 
     @Test void concurrentDistinctKeysWithSameVersionYieldOneUpdateAndOneConflict() throws Exception {

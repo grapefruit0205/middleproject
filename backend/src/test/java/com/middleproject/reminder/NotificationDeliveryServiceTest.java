@@ -56,18 +56,19 @@ class NotificationDeliveryServiceTest {
         verify(db).update(startsWith("update notification_attempt"), eq("PROVIDER_FAILURE"), isNull(), eq("PROVIDER_FAILURE"), eq("rejected"), any(), eq(result.correlationId()));
     }
 
-    @Test void timeoutWithoutCauseIsRetryable() {
+    @Test void timeoutWithoutCauseIsOutcomeUnknownAndNotBlindlyRetried() {
         when(sender.send(any())).thenThrow(new NotificationTimeoutException("slow SES", null));
         var result = service.deliver(reminderId, "a@example.test", "subject", "body");
-        assertEquals("RETRYABLE_TIMEOUT", result.status());
-        assertTrue(result.retryable());
+        assertEquals("OUTCOME_UNKNOWN", result.status());
+        assertFalse(result.retryable());
+        verify(db).update(startsWith("update reminders set status=?"), eq("DELIVERY_UNKNOWN"), any(), eq(reminderId), eq("DISPATCHED"));
     }
 
-    @Test void timeoutIsRetryableAndPersisted() {
+    @Test void timeoutIsPersistedAsOutcomeUnknown() {
         when(sender.send(any())).thenThrow(new NotificationTimeoutException("slow SES", new TimeoutException("slow SES")));
         var result = service.deliver(reminderId, "a@example.test", "subject", "body");
-        assertEquals("RETRYABLE_TIMEOUT", result.status());
-        verify(db).update(startsWith("update notification_attempt"), eq("RETRYABLE_TIMEOUT"), isNull(), eq("RETRYABLE_TIMEOUT"), eq("slow SES"), any(), eq(result.correlationId()));
+        assertEquals("OUTCOME_UNKNOWN", result.status());
+        verify(db).update(startsWith("update notification_attempt"), eq("OUTCOME_UNKNOWN"), isNull(), eq("OUTCOME_UNKNOWN"), eq("slow SES"), any(), eq(result.correlationId()));
     }
 
     @Test void sdkClientFailureIsRetryableProvider() {

@@ -37,6 +37,13 @@ ProxyPass /api/actuator/health/readiness http://${internal_alb_dns}/actuator/hea
 ProxyPassReverse /api/actuator/health/readiness http://${internal_alb_dns}/actuator/health/readiness
 ProxyPass /api/ http://${internal_alb_dns}/api/
 ProxyPassReverse /api/ http://${internal_alb_dns}/api/
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "same-origin"
+Header always set X-Frame-Options "DENY"
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+<Location /api/>
+  Header always set Cache-Control "no-store"
+</Location>
 <Location /healthz>
   SetHandler none
   Require all granted

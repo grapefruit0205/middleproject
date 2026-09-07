@@ -16,6 +16,13 @@ Purpose: this folder is the durable memory for middleproject. Conversations forg
 | `CHECKPOINT.md` | Current thirty-second return point | Keep current; archive the outgoing version before every update |
 | `checkpoints/` | Append-only checkpoint history | Never overwrite archived checkpoints |
 
+## Current middleproject service track — 2026-09-07
+
+- `../SERVICE_IMPLEMENTATION_PROMPT.md`: Korean implementation prompt for the reminder web service, S01–S05. This is separate from legacy Phase 00–18 and MyWiki.
+- `../progress.json`: canonical phase status, acceptance evidence, blockers, and resume pointer. S01–S04 and local S05-A1 are complete; status is `blocked` on external S05-A2/A3 only.
+- D-007 authorized and completed the local implementation run. D-010 subsequently authorizes committing and pushing the current implementation/redesign batch to a dedicated service branch. AWS apply/destroy, DNS and live email still require explicit scoped authority; future unrelated Git publication is not covered.
+- MyWiki provenance remains in this directory, but MyWiki implementation belongs only in its separate repository (D-004).
+
 ## Operating principles
 
 1. **Record in-session.** Decisions and important facts are written the moment they appear, not at the end. Zero loss.

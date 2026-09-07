@@ -170,10 +170,12 @@ public class NotificationDeliveryService {
         MDC.remove("deliveryKey");
         MDC.remove("notificationAttemptCorrelationId");
         MDC.remove("deliveryStatus");
-        ReminderStatus target = "SUCCEEDED".equals(status)
-                ? ReminderStatus.DELIVERED
-                : ("RETRYABLE_TIMEOUT".equals(status) || "RETRYABLE_PROVIDER".equals(status)
-                ? ReminderStatus.RETRYING : ReminderStatus.DELIVERY_FAILED);
+        ReminderStatus target = switch (status) {
+            case "SUCCEEDED" -> ReminderStatus.DELIVERED;
+            case "OUTCOME_UNKNOWN" -> ReminderStatus.DELIVERY_UNKNOWN;
+            case "RETRYABLE_PROVIDER" -> ReminderStatus.RETRYING;
+            default -> ReminderStatus.DELIVERY_FAILED;
+        };
         transitionReminder(reminderId, currentStatus, target);
         return new AttemptResult(correlationId, status, provider);
     }
@@ -212,9 +214,9 @@ public class NotificationDeliveryService {
         return status == ReminderStatus.DISPATCHED || status == ReminderStatus.RETRYING;
     }
     static String classify(Throwable failure) {
-        if (failure instanceof NotificationTimeoutException) return "RETRYABLE_TIMEOUT";
+        if (failure instanceof NotificationTimeoutException) return "OUTCOME_UNKNOWN";
         for (Throwable t = failure; t != null; t = t.getCause()) {
-            if (t instanceof TimeoutException || t instanceof SocketTimeoutException) return "RETRYABLE_TIMEOUT";
+            if (t instanceof TimeoutException || t instanceof SocketTimeoutException) return "OUTCOME_UNKNOWN";
         }
         if (failure instanceof DataAccessException) return "PERSISTENCE_FAILURE";
         if (failure instanceof SdkClientException) return "RETRYABLE_PROVIDER";
@@ -230,7 +232,7 @@ public class NotificationDeliveryService {
 
     public record AttemptResult(UUID correlationId, String status, String providerMessageId) {
         public boolean retryable() {
-            return "RETRYING".equals(status) || "RETRYABLE_TIMEOUT".equals(status) || "RETRYABLE_PROVIDER".equals(status);
+            return "RETRYABLE_PROVIDER".equals(status);
         }
     }
 

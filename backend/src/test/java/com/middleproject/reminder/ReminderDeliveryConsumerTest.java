@@ -30,13 +30,13 @@ class ReminderDeliveryConsumerTest {
         verify(sqs, never()).deleteMessage(any(DeleteMessageRequest.class));
     }
 
-    @Test void retryableResultIsNotDeleted() {
+    @Test void retryableProviderResultIsNotDeleted() {
         SqsClient sqs = mock(SqsClient.class);
         ReminderDeliveryService delivery = mock(ReminderDeliveryService.class);
         NotificationDeliveryService notifications = mock(NotificationDeliveryService.class);
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class))).thenReturn(ReceiveMessageResponse.builder().messages(message()).build());
         when(delivery.acceptResult(BODY)).thenReturn(ReminderDeliveryService.AcceptResult.ACCEPTED);
-        when(notifications.deliver(BODY)).thenReturn(new NotificationDeliveryService.AttemptResult(null, "RETRYABLE_TIMEOUT", null));
+        when(notifications.deliver(BODY)).thenReturn(new NotificationDeliveryService.AttemptResult(null, "RETRYABLE_PROVIDER", null));
 
         assertEquals(1, new ReminderDeliveryConsumer(sqs, delivery, notifications, "queue").pollOnce());
         verify(sqs, never()).deleteMessage(any(DeleteMessageRequest.class));
@@ -51,6 +51,18 @@ class ReminderDeliveryConsumerTest {
         when(notifications.deliver(BODY)).thenReturn(new NotificationDeliveryService.AttemptResult(null, "MALFORMED", null));
 
         assertEquals(0, new ReminderDeliveryConsumer(sqs, delivery, notifications, "queue").pollOnce());
+        verify(sqs).deleteMessage(any(DeleteMessageRequest.class));
+    }
+
+    @Test void outcomeUnknownIsDeletedInsteadOfBlindlyResent() {
+        SqsClient sqs = mock(SqsClient.class);
+        ReminderDeliveryService delivery = mock(ReminderDeliveryService.class);
+        NotificationDeliveryService notifications = mock(NotificationDeliveryService.class);
+        when(sqs.receiveMessage(any(ReceiveMessageRequest.class))).thenReturn(ReceiveMessageResponse.builder().messages(message()).build());
+        when(delivery.acceptResult(BODY)).thenReturn(ReminderDeliveryService.AcceptResult.ACCEPTED);
+        when(notifications.deliver(BODY)).thenReturn(new NotificationDeliveryService.AttemptResult(null, "OUTCOME_UNKNOWN", null));
+
+        assertEquals(1, new ReminderDeliveryConsumer(sqs, delivery, notifications, "queue").pollOnce());
         verify(sqs).deleteMessage(any(DeleteMessageRequest.class));
     }
 

@@ -2,6 +2,7 @@ package com.middleproject.reminder;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.context.annotation.Bean;
 import software.amazon.awssdk.services.scheduler.SchedulerClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -16,6 +17,13 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 public class ReminderPlatformApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
+        if (Boolean.parseBoolean(System.getenv().getOrDefault("MIGRATION_ONLY", "false"))) {
+            try (var context = new SpringApplicationBuilder(ReminderPlatformApplication.class)
+                    .web(WebApplicationType.NONE)
+                    .run(args)) {
+                return;
+            }
+        }
         SpringApplication.run(ReminderPlatformApplication.class, args);
     }
 

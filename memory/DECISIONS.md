@@ -23,3 +23,29 @@ MyWiki does not replace or live beside the reminder product in `middleproject`. 
 ## D-005 · Validate the owner's ChatGPT-to-Knowledge-Commit loop first — 2026-08-23 (user, MVP focus)
 
 The first MVP user is the repository owner. The repeated job to validate is completing a learning or design conversation in ChatGPT and then committing the valuable result into maintained knowledge through Knowledge Commit.
+
+## D-006 · Prepare a resumable middleproject service implementation handoff — 2026-09-07 (user)
+
+The user requested a Markdown implementation prompt and `progress.json` for completing the current reminder service direction, with continued implementation across phase boundaries. Create these artifacts for `middleproject`, not MyWiki. A phase boundary alone must not require another user approval during a subsequently authorized implementation run; a new session resumes from recorded state.
+
+This request authorizes preparing the handoff, not executing the service phases, provisioning AWS, sending email, or making Git commits/pushes. Detailed single-owner demo defaults are provisional A-003, not additional confirmed product decisions. Existing physical three-tier decisions remain unchanged.
+
+## D-007 · Start the continuous service-mvp implementation run — 2026-09-07 (user)
+
+The user explicitly instructed the agent to execute `SERVICE_IMPLEMENTATION_PROMPT.md` and `progress.json`, starting at S01 and continuing across phase boundaries. This authorizes local in-scope implementation and proportional verification for S01–S04, followed by the local portion of S05.
+
+This does not authorize AWS apply/destroy, DNS changes, live email sending, Git commits, or Git pushes. Those authorities remain false in `progress.json` until explicitly granted. External S05 evidence may remain blocked while local implementation continues.
+
+## D-008 · Treat email-provider timeout as an unknown terminal outcome — 2026-09-07 (user-approved implementation prompt)
+
+The active service prompt requires uncertain provider outcomes to be distinguished and forbids blind resend. Therefore a provider timeout is persisted as `DELIVERY_UNKNOWN`/`OUTCOME_UNKNOWN`, shown separately from success and failure, and is not automatically retried through SQS. A provider acceptance remains distinct from actual inbox receipt or user read evidence.
+
+This favors duplicate-mail prevention. A future provider-status lookup or explicit operator retry policy may supersede it, but neither is part of the current MVP.
+
+## D-009 · Apply the supplied pastel dashboard visual direction — 2026-09-08 (user)
+
+The user asked to change the web design to the feel of the attached dashboard image. Apply its warm cream background, lavender navigation, rounded pastel cards, soft dimensional details and friendly illustration to the existing reminder web service. This authorizes the frontend redesign while preserving the existing reminder workflow.
+
+## D-010 · Publish the current service implementation and redesign — 2026-09-08 (user)
+
+The user explicitly requested GitHub commit and push if the current work had not yet been published. This grants Git commit/push authority for the current pending middleproject service implementation, pastel redesign, and accompanying records to the existing origin repository. It is not standing authority for future unrelated changes, a main-branch merge, AWS provisioning, DNS changes, or live email. Preserve existing local history and publish on a dedicated service branch.

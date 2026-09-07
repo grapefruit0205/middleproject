@@ -1,27 +1,29 @@
-# Reliable Multi-Channel Reminder Platform
+# Deadline Companion — Reliable Reminder Platform
 
-자연어로 일정과 알림 정책을 만들고, 예약·전송·확인 상태를 추적하는 멀티채널 리마인더 플랫폼입니다.
+놓치기 쉬운 접수·예매·제출 일정을 등록하고, 서버가 예약·발송 상태를 영속적으로 관리하는 본인용 일정 알림 웹서비스입니다.
+
+현재 서비스 MVP에는 일정 등록·조회·수정·상태 취소, 낙관적 충돌 방지, 서버 Outbox/Scheduler/SQS 처리, 발송 이력, 단일 소유자 인증이 구현되어 있습니다. 로컬에서는 Apache WEB → 외장 Tomcat WAS → PostgreSQL 16의 세 계층을 Docker Compose로 재현합니다. AWS 배포와 실메일 수신은 별도 승인·설정이 필요한 최종 확인 항목입니다.
+
+실행 방법과 비밀/DB 역할 분리는 [Service MVP Runbook](docs/runbooks/service-mvp.md)을 따릅니다. 이번 연속 구현 진행 원본은 [progress.json](progress.json)입니다.
 
 현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. `Phase 12~18` 출장 코파일럿은 구현 계약과 DeepSeek V4 Pro/Codex 오케스트레이션을 준비했으며 애플리케이션 구현은 아직 시작하지 않았습니다.
 
 > AWS 상태: 2026-08-15 KST에 비용 방지를 위해 단기 검증용 Phase 11 HA 스택을 철거했습니다. 승인된 destroy plan은 `0 add / 0 change / 90 destroy`였고 적용 후 Terraform state와 프로젝트 범위 AWS inventory가 비어 있음을 확인했습니다. 이전 Public ALB 주소는 더 이상 사용할 수 없습니다.
 
-현재 배포 화면은 연결 확인용 smoke test입니다. 화면의 `Backend ready`는 Public ALB → WEB → Internal ALB → WAS readiness 경로가 정상임을 뜻합니다. 일정 등록·조회·알림 설정용 프런트엔드 화면은 아직 구현하지 않았으며, 현재 기능 경계는 REST API와 MCP Adapter입니다.
+기존 Phase 00~11 기록은 인프라·신뢰성 기반선의 과거 증거이며, 현재 서비스 MVP의 새 실행 증거와 동일시하지 않습니다. 현재 AWS 스택은 철거된 상태입니다.
 
 ## Architecture
 
 ```text
-Android / Ops Dashboard
+Browser
   -> Public ALB
   -> Apache WEB Tier
   -> Internal ALB
   -> External Tomcat WAS Tier
   -> RDS PostgreSQL Multi-AZ
 
-ChatGPT Private Plugin
-  -> Secure MCP Tunnel
-  -> Apache WEB Tier
-  -> Internal ALB -> WAS -> RDS
+Public `/api/mcp` and `/api/mcp/*`
+  -> fixed 404 at Public ALB
 
 EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
 ```

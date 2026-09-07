@@ -1,2 +1,7 @@
 .commandcode/
 .orchestration/
+.env
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.plan

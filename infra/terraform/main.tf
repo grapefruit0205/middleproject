@@ -226,6 +226,28 @@ resource "aws_security_group" "was" {
   }
 }
 
+resource "aws_security_group" "db_migration" {
+  name        = "${var.name}-${var.environment}-db-migration"
+  description = "Ephemeral Flyway runner traffic boundary; no inbound access"
+  vpc_id      = aws_vpc.this.id
+
+  egress {
+    description = "PostgreSQL to private RDS"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.this["db_a"].cidr_block, aws_subnet.this["db_c"].cidr_block]
+  }
+
+  egress {
+    description = "HTTPS to S3, SSM, package, and Secrets Manager endpoints"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_security_group" "rds" {
   name        = "${var.name}-${var.environment}-rds"
   description = "Private PostgreSQL traffic boundary"
@@ -236,6 +258,13 @@ resource "aws_security_group" "rds" {
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.was.id]
+  }
+  ingress {
+    description     = "PostgreSQL from the ephemeral migration runner"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.db_migration.id]
   }
 }
 

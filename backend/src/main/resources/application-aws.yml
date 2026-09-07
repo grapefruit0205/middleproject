@@ -15,6 +15,16 @@ logging:
         environment: ${ENVIRONMENT:local}
         node-name: ${INSTANCE_ID:local}
 
+app:
+  security:
+    enabled: true
+    owner-id: ${APP_OWNER_ID}
+    owner-token: ${APP_OWNER_TOKEN}
+
+spring:
+  flyway:
+    enabled: false
+
 management:
   cloudwatch:
     metrics:

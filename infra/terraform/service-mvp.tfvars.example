@@ -1,0 +1,17 @@
+# Shape-only example. Do not apply these placeholder ARNs or paths.
+environment = "ha"
+
+certificate_arn       = "arn:aws:acm:ap-northeast-2:111122223333:certificate/00000000-0000-0000-0000-000000000000"
+artifact_bucket_name  = "replace-with-a-globally-unique-private-bucket"
+frontend_artifact_path = "/approved/artifacts/frontend.zip"
+backend_artifact_path  = "/approved/artifacts/ROOT.war"
+
+db_runtime_secret_arn   = "arn:aws:secretsmanager:ap-northeast-2:111122223333:secret:reminder-db-runtime-placeholder"
+db_migration_secret_arn = "arn:aws:secretsmanager:ap-northeast-2:111122223333:secret:reminder-db-migration-placeholder"
+owner_auth_secret_arn   = "arn:aws:secretsmanager:ap-northeast-2:111122223333:secret:reminder-owner-auth-placeholder"
+
+web_capacity = { min = 2, desired = 2, max = 2 }
+was_capacity = { min = 2, desired = 2, max = 2 }
+rds_multi_az = true
+
+notification_email_enabled = false

@@ -1,21 +1,22 @@
-# Checkpoint — MyWiki handed off to a dedicated repository — 2026-08-23 KST
+# Checkpoint — service-mvp local completion — 2026-09-07 KST
 
-## The story so far
+## Current task
 
-The user resolved the two open Step 1 questions. MyWiki is a separate repository (D-004), and its first validation loop is the owner's ChatGPT learning/design conversation → Knowledge Commit workflow (D-005). The source prompt, Step 1 assessment, goal skeleton, and verified research were imported into `/home/grapefruit/dev/mywiki`. No reminder runtime code was repurposed.
+The user started the continuous implementation run (D-007). S01–S04 and the local portion of S05 are implemented and verified. `progress.json` is now `blocked` only because AWS/HTTPS deployment and a real SES delivery require external authority and configuration.
 
-## Handoff evidence
+## Scope and boundaries
 
-- Dedicated repository: `/home/grapefruit/dev/mywiki`.
-- Initialization commit: `1df2993` (`chore: initialize MyWiki repository`).
-- Codex model recommendation commit: `945e866` (`docs: recommend Codex reasoning model policy`).
-- Source prompt SHA-256: `67d1a2ac767dfac1de2557818b0542540b8db307b91a78107595227c68de8faf`.
-- Q-003 closed by D-004; Q-004 closed by D-005; provisional A-002 ended.
+- `confirmed`: local implementation and proportional verification are authorized; AWS apply/destroy, DNS, live email, Git commit, and push are not authorized.
+- `observed`: the final local Apache WEB → external Tomcat WAS → PostgreSQL 16 stack is running at `http://127.0.0.1:8088`; only WEB is host-exposed.
+- `verified`: frontend 11 tests/build/PWA/audit, backend 106 tests with no failures/errors and 9 environment-gated skips, WAR build, authentication 401, aggregate lifecycle, idempotency, 409 conflict, restart persistence, and browser lifecycle all passed.
+- `observed`: S05 browser testing found stale open history after cancellation; `App.tsx` now refreshes it and the regression test passes.
+- `unknown`: current deployable AWS/SES inputs. Q-005 and `progress.json` S05-B1/B2 are the only remaining completion boundary.
+- Keep legacy Phase 00–18 intact. Do not resume the MyWiki or Trip Copilot tracks.
 
-## Boundary
+## Next action
 
-This is the reminder-product repository. Do not resume MyWiki Step 2 or add MyWiki runtime code here. The files retained under `docs/product/mywiki/` and `memory/goal/mywiki.md` are provenance and handoff records only.
+Do not repeat local S01–S05 checks. If the user explicitly authorizes the external scope and securely prepares prerequisites, resolve S05-B1/B2: present the exact Terraform plan, apply only the approved AWS scope, verify HTTPS and 401, then send one approved test email and distinguish provider acceptance from inbox receipt.
 
-## Next first action
+## Previous checkpoint
 
-Open `/home/grapefruit/dev/mywiki`, read its `memory/00-INDEX.md` and `memory/DECISIONS.md`, then execute Step 2. The proposed Codex working baseline is Terra/medium, but adoption remains an open question in the MyWiki repository.
+The pre-implementation service handoff is archived at `memory/checkpoints/2026-09-07-service-mvp-implementation-start.md`. MyWiki remains a separate repository (D-004).

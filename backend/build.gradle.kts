@@ -19,6 +19,7 @@ dependencies {
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation(platform("software.amazon.awssdk:bom:2.31.63"))
     implementation("software.amazon.awssdk:scheduler")
     implementation("software.amazon.awssdk:sqs")

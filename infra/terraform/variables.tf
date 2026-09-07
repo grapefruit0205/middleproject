@@ -114,6 +114,36 @@ variable "instance_type" {
   default = "t3.small"
 }
 
+variable "web_capacity" {
+  description = "WEB Auto Scaling capacity. Defaults preserve the two-AZ HA baseline. A 1/1/1 lab value is not highly available."
+  type = object({
+    min     = number
+    desired = number
+    max     = number
+  })
+  default = { min = 2, desired = 2, max = 2 }
+
+  validation {
+    condition     = var.web_capacity.min >= 1 && var.web_capacity.min <= var.web_capacity.desired && var.web_capacity.desired <= var.web_capacity.max
+    error_message = "web_capacity must satisfy 1 <= min <= desired <= max. A single instance is permitted only as a non-HA lab profile."
+  }
+}
+
+variable "was_capacity" {
+  description = "WAS Auto Scaling capacity. Defaults preserve the two-AZ HA baseline. A 1/1/1 lab value is not highly available."
+  type = object({
+    min     = number
+    desired = number
+    max     = number
+  })
+  default = { min = 2, desired = 2, max = 2 }
+
+  validation {
+    condition     = var.was_capacity.min >= 1 && var.was_capacity.min <= var.was_capacity.desired && var.was_capacity.desired <= var.was_capacity.max
+    error_message = "was_capacity must satisfy 1 <= min <= desired <= max. A single instance is permitted only as a non-HA lab profile."
+  }
+}
+
 variable "db_instance_class" {
   type    = string
   default = "db.t4g.micro"
@@ -130,8 +160,49 @@ variable "db_name" {
 }
 
 variable "db_username" {
-  type    = string
-  default = "reminder_app"
+  description = "RDS bootstrap administrator name. The WAS never uses this account or its managed master secret."
+  type        = string
+  default     = "reminder_admin"
+}
+
+variable "db_runtime_secret_arn" {
+  description = "Pre-created Secrets Manager ARN containing dbUsername and dbPassword for the least-privileged WAS database role."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^arn:aws:secretsmanager:ap-northeast-2:[0-9]{12}:secret:.+$", var.db_runtime_secret_arn))
+    error_message = "db_runtime_secret_arn must be a Seoul Secrets Manager secret ARN."
+  }
+}
+
+variable "owner_auth_secret_arn" {
+  description = "Pre-created Secrets Manager ARN containing ownerId and a revocable ownerToken of at least 24 bytes."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition = (
+      can(regex("^arn:aws:secretsmanager:ap-northeast-2:[0-9]{12}:secret:.+$", var.owner_auth_secret_arn)) &&
+      var.owner_auth_secret_arn != var.db_runtime_secret_arn
+    )
+    error_message = "owner_auth_secret_arn must be a distinct Seoul Secrets Manager secret ARN."
+  }
+}
+
+variable "db_migration_secret_arn" {
+  description = "Pre-created Secrets Manager ARN containing dbUsername and dbPassword for the dedicated Flyway role. It must differ from the runtime secret."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition = (
+      can(regex("^arn:aws:secretsmanager:ap-northeast-2:[0-9]{12}:secret:.+$", var.db_migration_secret_arn)) &&
+      var.db_migration_secret_arn != var.db_runtime_secret_arn &&
+      var.db_migration_secret_arn != var.owner_auth_secret_arn
+    )
+    error_message = "db_migration_secret_arn must be a distinct Seoul Secrets Manager secret ARN."
+  }
 }
 
 variable "postgres_engine_version" {
@@ -142,6 +213,12 @@ variable "postgres_engine_version" {
 variable "skip_final_snapshot" {
   type    = bool
   default = false
+}
+
+variable "rds_multi_az" {
+  description = "Keep true for the HA baseline. false is allowed only for a lower-cost lab and provides no database AZ failover."
+  type        = bool
+  default     = true
 }
 
 variable "deletion_protection" {

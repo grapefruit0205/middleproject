@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'Reminder Platform',
         short_name: 'Reminder',
         description: 'Reminder Platform local foundation',
-        theme_color: '#0f172a',
-        background_color: '#ffffff',
+        theme_color: '#b99bdc',
+        background_color: '#fcf7f2',
         display: 'standalone',
         start_url: '/',
         icons: [

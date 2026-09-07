@@ -50,8 +50,10 @@ Environment=SPRING_PROFILES_ACTIVE=aws
 Environment=ENVIRONMENT=${environment}
 Environment=INSTANCE_ID=$INSTANCE_ID
 Environment=DB_URL=jdbc:postgresql://${db_host}:5432/${db_name}
-Environment=DB_USERNAME=${db_username}
-Environment=DB_SECRET_ARN=${db_secret_arn}
+Environment=DB_RUNTIME_SECRET_ARN=${db_runtime_secret_arn}
+Environment=OWNER_AUTH_SECRET_ARN=${owner_auth_secret_arn}
+Environment=SPRING_FLYWAY_ENABLED=false
+Environment=APP_SECURITY_ENABLED=true
 Environment=SCHEDULER_AWS_ENABLED=${scheduler_aws_enabled}
 Environment=SCHEDULER_GROUP=${scheduler_group}
 Environment=SCHEDULER_ROLE_ARN=${scheduler_role_arn}
@@ -62,7 +64,7 @@ Environment=DELIVERY_SQS_QUEUE_URL=${delivery_queue_url}
 Environment=NOTIFICATION_EMAIL_ENABLED=${notification_email_enabled}
 Environment=NOTIFICATION_EMAIL_FROM=${notification_email_from}
 Environment=NOTIFICATION_EMAIL_TO=${notification_email_to}
-ExecStart=/usr/bin/bash -c 'set -euo pipefail; export DB_PASSWORD="\$(aws secretsmanager get-secret-value --secret-id "\$DB_SECRET_ARN" --query SecretString --output text | jq -r .password)"; exec /opt/tomcat/bin/catalina.sh run'
+ExecStart=/usr/bin/bash -c 'set -euo pipefail; db_secret="\$(aws secretsmanager get-secret-value --secret-id "\$DB_RUNTIME_SECRET_ARN" --query SecretString --output text)"; auth_secret="\$(aws secretsmanager get-secret-value --secret-id "\$OWNER_AUTH_SECRET_ARN" --query SecretString --output text)"; export DB_USERNAME="\$(jq -er .dbUsername <<<"\$db_secret")" DB_PASSWORD="\$(jq -er .dbPassword <<<"\$db_secret")" APP_OWNER_ID="\$(jq -er .ownerId <<<"\$auth_secret")" APP_OWNER_TOKEN="\$(jq -er .ownerToken <<<"\$auth_secret")"; unset db_secret auth_secret; exec /opt/tomcat/bin/catalina.sh run'
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target

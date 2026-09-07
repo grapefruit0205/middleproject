@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "project": "middleproject",
+  "track": "service-mvp",
+  "prompt_file": "SERVICE_IMPLEMENTATION_PROMPT.md",
+  "created_at": "2026-09-07T02:03:03Z",
+  "updated_at": "2026-09-07T22:29:06Z",
+  "status": "blocked",
+  "current_phase": "S05",
+  "baseline": {
+    "observed_commit": "2a1679db252add3284cbf2d5903fa482610eb7d4",
+    "claim": "observed",
+    "note": "기존 리마인더 백엔드와 3-Tier Terraform 소스는 있으나, 이번 서비스 완성 트랙의 구현·실행 확인은 시작하지 않았다. 과거 Phase PASS를 새 완료 근거로 사용하지 않는다."
+  },
+  "execution_policy": {
+    "auto_advance_within_active_run": true,
+    "stop_after_each_phase": false,
+    "max_in_progress_phases": 1,
+    "background_runner_included": false,
+    "resume_requires_user_or_existing_host_run": true,
+    "separate_review_before_final_phase": false,
+    "final_installation_check_phase": "S05",
+    "verification_policy": "S01~S04는 변경 부분의 최소 기능 확인만 한다. 전체 설치·통합·출시 점검은 S05에 한다."
+  },
+  "authority": {
+    "current_request": "2026-09-07 연속 서비스 구현 요청에 이어, 2026-09-08 사용자가 현재 미게시 작업의 GitHub 커밋·푸시를 명시적으로 요청함(D-010).",
+    "service_implementation_start_received": true,
+    "aws_apply_authorized": false,
+    "aws_destroy_authorized": false,
+    "live_email_send_authorized": false,
+    "dns_change_authorized": false,
+    "git_commit_authorized_for_this_track": true,
+    "git_push_authorized_for_this_track": true,
+    "git_publication_scope": "현재 대기 중인 서비스 구현·파스텔 디자인 및 관련 기록을 origin의 codex/service-mvp-pastel-dashboard 브랜치에 게시. main 병합이나 향후 무관한 변경은 포함하지 않음.",
+    "note": "Git 권한은 D-010의 이번 게시 범위에만 적용한다. AWS/DNS/실메일 권한은 변경하지 않는다. 인증 정보의 존재나 JSON 편집 자체는 승인이 아니다."
+  },
+  "scope": {
+    "product": "일정·마감 알림 웹서비스",
+    "audience": "본인용 단일 소유자 데모",
+    "audience_claim": "assumed",
+    "assumption_reference": "memory/OPEN-QUESTIONS.md#readings-in-force--assumed-not-decided",
+    "timezone": "Asia/Seoul",
+    "notification_channels": ["email"],
+    "reminders_per_event_initially": 1,
+    "preserve_three_tier": true,
+    "legacy_phase_records_are_not_this_track": true,
+    "out_of_scope": [
+      "MyWiki 및 출장 코파일럿 구현",
+      "Android 앱·새 MCP 터널·플러그인",
+      "다중 사용자 SaaS·외부 사이트 자동 수집",
+      "여러 채널·반복 알림·강제 대량 재발송",
+      "Bedrock·SageMaker 실제 연결 및 모델 학습",
+      "RAG·Kubernetes·마이크로서비스 전환",
+      "기본 완료 조건으로서의 부하 시험·장애 주입·RDS 강제 failover"
+    ]
+  },
+  "completion": {
+    "local_implementation_complete": true,
+    "final_local_flow_verified": true,
+    "aws_three_tier_flow_verified": false,
+    "live_email_receipt_verified": false,
+    "service_scope_complete": false
+  },
+  "design_followup": {
+    "requested_at": "2026-09-08",
+    "status": "completed",
+    "decision": "D-009",
+    "summary": "첨부 이미지의 크림/라벤더 파스텔 대시보드 스타일을 반영했다. 실제 데이터 기반 요약, 검색·상태 필터·서울 시간 달력, 모바일 레이아웃과 로컬 토끼 이미지를 연결했다.",
+    "record": "docs/design/pastel-dashboard.md",
+    "verification": "프론트엔드 12개 테스트, TypeScript, production/PWA build 및 실제 브라우저 검색·달력·320px/~400px 가로 넘침 확인 통과.",
+    "external_s05_scope_changed": false
+  },
+  "external_prerequisites": [
+    {
+      "id": "aws_environment",
+      "needed_by": "S05",
+      "status": "awaiting_authorization",
+      "required": "AWS 계정·서울 리전·대상 환경·비용 상한·실행 유효시간·종료 계획·필요한 자격증명과 실행 승인. 비밀값은 이 파일에 저장하지 않는다."
+    },
+    {
+      "id": "https_configuration",
+      "needed_by": "S05",
+      "status": "awaiting_authorization",
+      "required": "승인된 도메인/HTTPS 경로와 유효한 인증서 설정. 새 DNS 변경이 필요하면 별도로 승인받는다."
+    },
+    {
+      "id": "email_configuration",
+      "needed_by": "S05",
+      "status": "awaiting_authorization",
+      "required": "사용 가능한 SES 발신 설정·승인된 본인 수신 주소·실제 발송 승인·수신 확인 방법."
+    }
+  ],
+  "phases": [
+    {
+      "id": "S01",
+      "title": "일정 등록·조회가 되는 첫 화면",
+      "status": "completed",
+      "depends_on": [],
+      "started_at": "2026-09-07T02:14:46Z",
+      "completed_at": "2026-09-07T05:06:38Z",
+      "acceptance": [
+        {"id": "S01-A1", "description": "화면에서 등록한 일정·알림 설정이 PostgreSQL에 저장되고 새로고침 후 조회된다.", "satisfied": true, "evidence_ids": ["S01-E1", "S01-E3"]},
+        {"id": "S01-A2", "description": "잘못된 입력·요청 실패를 처리하고 부분 저장 잔재나 가짜 성공을 남기지 않는다.", "satisfied": true, "evidence_ids": ["S01-E1", "S01-E2"]},
+        {"id": "S01-A3", "description": "로딩·빈 목록·API 실패를 표시하고 모바일 너비에서 핵심 폼과 목록을 사용할 수 있다.", "satisfied": true, "evidence_ids": ["S01-E1", "S01-E4"]}
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/middleproject/reminder/application/DeadlineService.java",
+        "backend/src/main/java/com/middleproject/reminder/web/DeadlineController.java",
+        "backend/src/test/java/com/middleproject/reminder/DeadlineApiIntegrationTest.java",
+        "backend/src/test/java/com/middleproject/reminder/DeadlinePostgresIntegrationTest.java",
+        "frontend/src/App.tsx",
+        "frontend/src/App.test.tsx",
+        "frontend/src/styles.css"
+      ],
+      "checks": [
+        {"id": "S01-E1", "kind": "command", "command_or_observation": "cd frontend && npm test -- --run src/App.test.tsx", "result": "passed", "checked_at": "2026-09-07T05:06:32Z", "summary": "대시보드 로딩·빈 목록·저장·입력 오류·API 재시도 5개 테스트가 통과했다."},
+        {"id": "S01-E2", "kind": "command", "command_or_observation": "JDK 21 컨테이너에서 ./gradlew test --tests com.middleproject.reminder.DeadlineApiIntegrationTest --no-daemon", "result": "passed", "checked_at": "2026-09-07T02:24:10Z", "summary": "H2 격리 테스트 2개로 집계 생성·멱등 재전송과 유효성 실패 시 부분 업무 행이 남지 않음을 확인했다."},
+        {"id": "S01-E3", "kind": "command", "command_or_observation": "PostgreSQL 16.15 컨테이너에서 DeadlinePostgresIntegrationTest 실행", "result": "passed", "checked_at": "2026-09-07T02:29:51Z", "summary": "Flyway V1~V6 적용 후 집계 등록과 별도 HTTP 조회, 업무 테이블·Outbox 행 수를 PostgreSQL에서 확인했다."},
+        {"id": "S01-E4", "kind": "manual", "command_or_observation": "frontend/src/App.tsx의 접근 가능한 폼·상태 DOM과 styles.css의 820px/560px 반응형 규칙을 확인", "result": "passed", "checked_at": "2026-09-07T05:06:38Z", "summary": "핵심 폼과 목록이 단일 열로 축소되고 320px 최소 폭에서 사용할 수 있도록 구성되어 있다. 최종 브라우저 시연은 S05에 남겼다."}
+      ],
+      "result_summary": "일정·정책·리마인더·Outbox를 하나의 멱등 트랜잭션으로 생성하고 조합 조회하는 API와 실제 대시보드를 구현했다. PostgreSQL 16 영속 조회까지 확인했다."
+    },
+    {
+      "id": "S02",
+      "title": "수정·취소와 중복·충돌 처리",
+      "status": "completed",
+      "depends_on": ["S01"],
+      "started_at": "2026-09-07T05:06:38Z",
+      "completed_at": "2026-09-07T05:12:22Z",
+      "acceptance": [
+        {"id": "S02-A1", "description": "일정 시각·선행 시간 변경이 알림 예약 변경까지 반영되고 영속화된다.", "satisfied": true, "evidence_ids": ["S02-E1", "S02-E3"]},
+        {"id": "S02-A2", "description": "취소 상태를 유지하고 통제된 이전 버전 메시지의 추가 발송 처리를 막는다.", "satisfied": true, "evidence_ids": ["S02-E1", "S02-E2"]},
+        {"id": "S02-A3", "description": "동일 요청 재전송은 중복 생성되지 않고 오래된 버전 수정은 충돌로 처리한다.", "satisfied": true, "evidence_ids": ["S02-E1", "S02-E2"]}
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/middleproject/reminder/application/DeadlineService.java",
+        "backend/src/main/java/com/middleproject/reminder/web/DeadlineController.java",
+        "backend/src/test/java/com/middleproject/reminder/DeadlineLifecycleIntegrationTest.java",
+        "frontend/src/App.tsx",
+        "frontend/src/App.test.tsx",
+        "frontend/src/styles.css"
+      ],
+      "checks": [
+        {"id": "S02-E1", "kind": "command", "command_or_observation": "JDK 21 컨테이너에서 ./gradlew test --tests com.middleproject.reminder.DeadlineLifecycleIntegrationTest --no-daemon", "result": "passed", "checked_at": "2026-09-07T05:12:01Z", "summary": "집계 수정·새 Outbox 세대·새로고침 영속성·멱등 재전송·409 충돌·상태 취소·옛 메시지 무효화 2개 통합 테스트가 통과했다."},
+        {"id": "S02-E2", "kind": "command", "command_or_observation": "cd frontend && npm test -- --run src/App.test.tsx", "result": "passed", "checked_at": "2026-09-07T05:11:48Z", "summary": "수정·취소 확인·409 최신화 UI를 포함한 대시보드 8개 테스트가 통과했다."},
+        {"id": "S02-E3", "kind": "command", "command_or_observation": "JDK 21 컨테이너에서 ./gradlew test --tests com.middleproject.reminder.AwsSchedulerAdapterTest --no-daemon", "result": "passed", "checked_at": "2026-09-07T05:12:17Z", "summary": "동일 리마인더 이름의 기존 AWS Scheduler 예약을 update하는 경로를 포함한 2개 어댑터 테스트가 통과했다."}
+      ],
+      "result_summary": "집계 수정과 상태 기반 취소를 추가했다. 수정은 모든 낙관적 버전을 검사해 새 Scheduler 세대를 만들고, 취소는 DELETE Outbox와 버전 상승으로 이전 메시지를 무효화한다."
+    },
+    {
+      "id": "S03",
+      "title": "서버 측 알림 처리와 이력 화면",
+      "status": "completed",
+      "depends_on": ["S02"],
+      "started_at": "2026-09-07T05:12:22Z",
+      "completed_at": "2026-09-07T05:19:20Z",
+      "acceptance": [
+        {"id": "S03-A1", "description": "등록 응답은 발송 완료를 기다리지 않고 worker가 서버 측에서 처리하도록 연결된다.", "satisfied": true, "evidence_ids": ["S03-E1", "S03-E3"]},
+        {"id": "S03-A2", "description": "이력 API와 화면이 영속화된 예약·시도 결과와 비활성/실패 상태를 구분한다.", "satisfied": true, "evidence_ids": ["S03-E1", "S03-E2"]},
+        {"id": "S03-A3", "description": "통제된 중복 전달·일시 실패 확인으로 기존 중복 방지·복구 정책을 확인한다. 실메일 수신과는 구분한다.", "satisfied": true, "evidence_ids": ["S03-E1"]}
+      ],
+      "files_changed": [
+        "backend/src/main/java/com/middleproject/reminder/application/DeadlineHistoryService.java",
+        "backend/src/main/java/com/middleproject/reminder/application/NotificationDeliveryService.java",
+        "backend/src/main/java/com/middleproject/reminder/domain/ReminderStatus.java",
+        "backend/src/main/java/com/middleproject/reminder/web/DeadlineController.java",
+        "backend/src/main/resources/db/migration/V7__delivery_outcome_unknown.sql",
+        "backend/src/test/java/com/middleproject/reminder/DeadlineHistoryIntegrationTest.java",
+        "backend/src/test/java/com/middleproject/reminder/NotificationDeliveryServiceTest.java",
+        "backend/src/test/java/com/middleproject/reminder/NotificationPersistenceIntegrationTest.java",
+        "backend/src/test/java/com/middleproject/reminder/Phase08ReliabilityIntegrationTest.java",
+        "backend/src/test/java/com/middleproject/reminder/ReminderDeliveryConsumerTest.java",
+        "frontend/src/App.tsx",
+        "frontend/src/App.test.tsx",
+        "frontend/src/styles.css"
+      ],
+      "checks": [
+        {"id": "S03-E1", "kind": "command", "command_or_observation": "JDK 21 컨테이너에서 DeadlineHistoryIntegrationTest, NotificationPersistenceIntegrationTest, ReminderDeliveryConsumerTest, NotificationDeliveryServiceTest targeted 실행", "result": "passed", "checked_at": "2026-09-07T05:19:13Z", "summary": "이력 2개, 영속 발송 7개, 소비자 4개, 발송 서비스 8개 등 21개 테스트가 통과했다. 비활성 상태, 제공자 수락, 중복, 제한 재시도, 결과 불명확 무재발송을 포함한다."},
+        {"id": "S03-E2", "kind": "command", "command_or_observation": "cd frontend && npm test -- --run src/App.test.tsx", "result": "passed", "checked_at": "2026-09-07T05:18:59Z", "summary": "비활성 모드와 제공자 수락/실수신 구분 타임라인을 포함한 대시보드 9개 테스트가 통과했다."},
+        {"id": "S03-E3", "kind": "manual", "command_or_observation": "ReminderWorkers, SchedulerOutboxService, ReminderDeliveryConsumer의 서버 SmartLifecycle 및 Outbox/SQS 연결 조건을 소스에서 확인", "result": "passed", "checked_at": "2026-09-07T05:19:20Z", "summary": "브라우저 타이머가 아니라 서버 worker가 설정 활성화 시 Outbox 조정과 SQS 소비를 수행하며, 등록 트랜잭션은 Outbox 기록 후 응답한다."}
+      ],
+      "result_summary": "예약·발송 영속 이력 API와 카드 타임라인을 구현했다. 외부 연동 비활성, 제공자 요청 수락, 실패, 결과 불명확을 구분하고 timeout 결과는 중복 위험 때문에 자동 재발송하지 않는다."
+    },
+    {
+      "id": "S04",
+      "title": "제한된 데모를 위한 보안·배포 코드 마무리",
+      "status": "completed",
+      "depends_on": ["S03"],
+      "started_at": "2026-09-07T05:19:20Z",
+      "completed_at": "2026-09-07T05:38:16Z",
+      "acceptance": [
+        {"id": "S04-A1", "description": "보호 API의 인증·단일 소유자 경계를 서버에서 적용하고 인증 없는 접근을 거부한다.", "satisfied": true, "evidence_ids": ["S04-E1", "S04-E2"]},
+        {"id": "S04-A2", "description": "공개 MCP 차단·계층별 네트워크·DB 실행 계정 최소 권한을 소스와 targeted 확인으로 뒷받침한다.", "satisfied": true, "evidence_ids": ["S04-E3"]},
+        {"id": "S04-A3", "description": "WAR/외장 Tomcat·PostgreSQL·마이그레이션·환경 설정의 재현 가능한 실행 경로를 제공한다. 최종 설치 실행은 S05에 남긴다.", "satisfied": true, "evidence_ids": ["S04-E3"]}
+      ],
+      "files_changed": [
+        ".dockerignore",
+        ".env.example",
+        ".gitignore",
+        "README.md",
+        "backend/build.gradle.kts",
+        "backend/src/main/java/com/middleproject/reminder/ReminderPlatformApplication.java",
+        "backend/src/main/java/com/middleproject/reminder/security/OwnerTokenAuthenticationFilter.java",
+        "backend/src/main/java/com/middleproject/reminder/security/SecurityConfiguration.java",
+        "backend/src/main/java/com/middleproject/reminder/web/DeadlineController.java",
+        "backend/src/main/resources/application-aws.yml",
+        "backend/src/main/resources/application.yml",
+        "backend/src/test/java/com/middleproject/reminder/SingleOwnerSecurityIntegrationTest.java",
+        "compose.yaml",
+        "docs/runbooks/service-mvp.md",
+        "frontend/src/App.tsx",
+        "frontend/src/App.test.tsx",
+        "frontend/src/styles.css",
+        "infra/local/backend.Dockerfile",
+        "infra/local/httpd/reminder.conf",
+        "infra/local/postgres/init-roles.sh",
+        "infra/local/web.Dockerfile",
+        "infra/terraform/.terraform.lock.hcl",
+        "infra/terraform/main.tf",
+        "infra/terraform/outputs.tf",
+        "infra/terraform/service-mvp.tfvars.example",
+        "infra/terraform/templates/db-migration.sh.tftpl",
+        "infra/terraform/templates/was.sh.tftpl",
+        "infra/terraform/templates/web.sh.tftpl",
+        "infra/terraform/tier.tf",
+        "infra/terraform/variables.tf"
+      ],
+      "checks": [
+        {"id": "S04-E1", "kind": "command", "command_or_observation": "JDK 21 컨테이너에서 SingleOwnerSecurityIntegrationTest와 McpAdapterIntegrationTest targeted 실행", "result": "passed", "checked_at": "2026-09-07T05:36:58Z", "summary": "단일 소유자 인증 3개와 기존 MCP principal/소유권 경계 10개 등 13개 테스트가 통과했다. 미인증 API/MCP 401, 스푸핑 무시, 설정 누락 거부를 포함한다."},
+        {"id": "S04-E2", "kind": "command", "command_or_observation": "cd frontend && npm test -- --run src/App.test.tsx", "result": "passed", "checked_at": "2026-09-07T05:25:19Z", "summary": "탭 메모리 Bearer 입력과 401 재인증을 포함한 대시보드 10개 테스트가 통과했다."},
+        {"id": "S04-E3", "kind": "command", "command_or_observation": "terraform fmt/validate, bootstrap shell 구문, compose YAML 구조, IAM/MCP/secret/localStorage source contract 확인", "result": "passed", "checked_at": "2026-09-07T05:38:16Z", "summary": "Terraform이 유효하며 공개 MCP 404, WAS의 runtime/auth secret 한정, 별도 migration 역할, 가변 HA, WEB만 loopback 공개하는 로컬 3-Tier 구성이 확인됐다. 실제 설치 실행은 S05에 남겼다."}
+      ],
+      "result_summary": "폐기 가능한 단일 소유자 Bearer 경계, 공개 MCP ALB 차단, DB 관리자/Flyway/runtime 역할과 IAM 분리, 가변 HA 및 로컬 Apache·외장 Tomcat·PostgreSQL 재현 구성을 완성했다."
+    },
+    {
+      "id": "S05",
+      "title": "마지막 설치·통합·실메일 시연",
+      "status": "blocked",
+      "depends_on": ["S04"],
+      "started_at": "2026-09-07T05:38:16Z",
+      "completed_at": null,
+      "acceptance": [
+        {"id": "S05-A1", "description": "최종 로컬 설치·빌드·통합 시나리오가 PostgreSQL/외장 Tomcat을 포함해 통과한다.", "satisfied": true, "evidence_ids": ["S05-E1", "S05-E2", "S05-E3", "S05-E4", "S05-E5"]},
+        {"id": "S05-A2", "description": "승인된 AWS 3-Tier 환경에서 HTTPS 사용자 흐름과 비인가 접근 차단을 직접 확인한다.", "satisfied": false, "evidence_ids": []},
+        {"id": "S05-A3", "description": "승인된 주소로 예약 이메일을 실제 수신하고 제공자 접수와 수신 근거를 구분한다.", "satisfied": false, "evidence_ids": []}
+      ],
+      "files_changed": [
+        "frontend/src/App.tsx",
+        "frontend/src/App.test.tsx",
+        "docs/runbooks/service-mvp.md",
+        "progress.json"
+      ],
+      "checks": [
+        {"id": "S05-E1", "kind": "command", "command_or_observation": "cd frontend && npm test -- --run && npm run build && npm run verify:build; npm audit --omit=dev --audit-level=high", "result": "passed", "checked_at": "2026-09-07T05:48:57Z", "summary": "프론트엔드 11개 테스트, Vite/PWA production build·산출물 검증이 통과했고 production dependency 고위험 취약점은 0개였다."},
+        {"id": "S05-E2", "kind": "command", "command_or_observation": "JDK 21 컨테이너에서 ./gradlew clean test bootWar --no-daemon", "result": "passed", "checked_at": "2026-09-07T05:40:15Z", "summary": "전체 backend 106개 테스트에서 실패·오류 0개, 환경변수 의존 PostgreSQL 테스트 9개 skip, ROOT.war 생성이 통과했다. PostgreSQL 경로는 S05-E3/E4에서 별도로 실행했다."},
+        {"id": "S05-E3", "kind": "command", "command_or_observation": "Compose 2.40.3으로 config 확인, WEB/WAS 이미지 build 및 PostgreSQL 16 + external Tomcat + Apache up; /healthz와 compose ps 확인", "result": "passed", "checked_at": "2026-09-07T05:48:57Z", "summary": "WEB만 127.0.0.1:8088에 공개됐고 PostgreSQL은 healthy, WAS/DB는 내부 포트만 사용했다. healthz=ok, 보호 API 미인증 응답은 401이었다."},
+        {"id": "S05-E4", "kind": "command", "command_or_observation": "Apache WEB 경유 실제 API로 멱등 생성·조회·수정·stale 수정·이력·취소 후 WAS 재시작 조회", "result": "passed", "checked_at": "2026-09-07T05:45:31Z", "summary": "동일 생성 요청은 같은 ID와 업무 행 1개, 수정 200, stale 버전 409, 비활성 이력 200, 취소 CANCELLED였다. WAS 재시작 뒤 PostgreSQL에서 CANCELLED/version 2를 재조회했다."},
+        {"id": "S05-E5", "kind": "browser", "command_or_observation": "http://127.0.0.1:8088에서 접근 키 인증 → 등록 → 새로고침·재인증 → 수정 → 이력 → 취소 → 최신 이력 확인", "result": "passed", "checked_at": "2026-09-07T05:49:00Z", "summary": "브라우저에서 전체 사용자 흐름을 완료했다. 취소 카드와 최신 CANCELLED/예약 취소 PENDING 이력이 보였고, 열린 이력이 상태 변경 후 자동 갱신되도록 발견 결함을 수정했다."},
+        {"id": "S05-E6", "kind": "manual", "command_or_observation": "AWS 3-Tier apply/HTTPS 시연 권한과 배포 입력 확인", "result": "blocked", "checked_at": "2026-09-07T05:50:04Z", "summary": "AWS apply·비용·대상·HTTPS/DNS 승인이 없어 리소스를 만들거나 변경하지 않았다."},
+        {"id": "S05-E7", "kind": "manual", "command_or_observation": "SES 발신/수신 설정과 실제 이메일 발송 권한 확인", "result": "blocked", "checked_at": "2026-09-07T05:50:04Z", "summary": "승인된 SES 발신 설정·본인 수신 주소·실발송 승인이 없어 실제 메일을 보내지 않았다."}
+      ],
+      "result_summary": "S01~S04 구현과 S05 로컬 설치·전체 빌드·3계층 사용자 흐름은 완료됐다. S05-A2/A3는 비용과 외부 전송이 수반되는 AWS/HTTPS 배포 및 실메일 승인이 없어 대기 중이다."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "S05-B1",
+      "phase_id": "S05",
+      "acceptance_ids": ["S05-A2"],
+      "reason": "AWS 리소스 생성 비용과 HTTPS/DNS 변경을 수반하는 배포에 대한 대상·비용·유효시간·종료 계획 및 명시적 실행 승인이 없다.",
+      "required_input": "승인할 AWS 계정/프로파일과 서울 리전 대상, 환경명, 비용 상한, 실행 종료 시각·정리 계획, apply 승인, 사용할 도메인/인증서와 DNS 변경 승인 여부를 알려야 한다. 비밀값은 progress.json에 넣지 않는다.",
+      "can_continue_locally": false
+    },
+    {
+      "id": "S05-B2",
+      "phase_id": "S05",
+      "acceptance_ids": ["S05-A3"],
+      "reason": "실제 외부 이메일 전송에 필요한 승인된 SES 발신 설정·본인 수신 주소·실발송 승인이 없다.",
+      "required_input": "검증된 SES 발신 주소/도메인과 리전, 승인된 본인 수신 주소, 한 건의 실제 예약 메일 발송 승인이 필요하다. 자격증명은 채팅이나 저장소에 기록하지 않는다.",
+      "can_continue_locally": false
+    }
+  ],
+  "resume": {
+    "phase_id": "S05",
+    "next_action": "사용자가 S05-B1/B2의 외부 비용·전송 범위를 명시적으로 승인하고 필요한 비밀이 로컬/AWS에 안전하게 준비되면, 먼저 승인 범위의 Terraform plan을 제시하고 apply 후 HTTPS 흐름과 단일 실메일 수신을 확인한다.",
+    "read_next": [
+      "infra/terraform/service-mvp.tfvars.example",
+      "infra/terraform/variables.tf",
+      "infra/terraform/tier.tf",
+      "docs/runbooks/service-mvp.md",
+      "progress.json"
+    ],
+    "unfinished_work": "모든 로컬 구현·설치·통합 확인은 완료됐다. S05-A2 AWS HTTPS 3-Tier 시연과 S05-A3 실제 SES 메일 수신만 외부 승인·입력 대기다.",
+    "checks_to_run_after_implementation": [
+      "승인된 Terraform plan과 apply 결과 확인",
+      "승인된 HTTPS WEB → WAS → RDS 사용자 흐름 및 미인증 401 확인",
+      "승인된 한 건의 SES 제공자 접수와 실제 수신함 도착을 별도 증거로 확인"
+    ]
+  },
+  "deferred_backlog": [
+    {"id": "AI-01", "title": "Bedrock 기반 일정 해석 어댑터", "status": "deferred", "blocks_service_completion": false},
+    {"id": "AI-02", "title": "검증된 사용 문장으로 정확도·비용·지연 비교", "status": "deferred", "blocks_service_completion": false},
+    {"id": "AI-03", "title": "필요시 기존 소형/증류모델 배포 또는 직접 증류 검토", "status": "deferred", "blocks_service_completion": false}
+  ]
+}

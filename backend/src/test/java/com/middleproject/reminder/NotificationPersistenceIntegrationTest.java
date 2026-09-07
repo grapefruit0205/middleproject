@@ -86,20 +86,19 @@ class NotificationPersistenceIntegrationTest {
         assertEquals("rejected", db.queryForObject("select error_message from notification_attempt where correlation_id=?", String.class, result.correlationId()));
     }
     @Test
-    void timeoutRetryIsPersistedAndCanDeliverLater() {
+    void timeoutOutcomeUnknownIsPersistedWithoutAutomaticResend() {
         sender.failNext(new NotificationTimeoutException("slow SES", null));
         Fixture fixture = fixture("EMAIL");
         NotificationDeliveryService.AttemptResult first = notifications.deliver(fixture.payload());
-        assertEquals("RETRYABLE_TIMEOUT", first.status());
-        assertTrue(first.retryable());
-        assertEquals("RETRYING", reminderStatus(fixture.reminderId()));
+        assertEquals("OUTCOME_UNKNOWN", first.status());
+        assertFalse(first.retryable());
+        assertEquals("DELIVERY_UNKNOWN", reminderStatus(fixture.reminderId()));
         NotificationDeliveryService.AttemptResult second = notifications.deliver(fixture.payload());
-        assertEquals("SUCCEEDED", second.status());
-        assertEquals("DELIVERED", reminderStatus(fixture.reminderId()));
-        assertEquals(2, sender.calls());
-        assertEquals(2, db.queryForObject("select count(*) from notification_attempt", Integer.class));
-        assertEquals("RETRYABLE_TIMEOUT", db.queryForObject("select error_classification from notification_attempt where correlation_id=?", String.class, first.correlationId()));
-        assertEquals("SUCCEEDED", db.queryForObject("select status from notification_attempt where correlation_id=?", String.class, second.correlationId()));
+        assertEquals("ALREADY_PROCESSED", second.status());
+        assertEquals("DELIVERY_UNKNOWN", reminderStatus(fixture.reminderId()));
+        assertEquals(1, sender.calls());
+        assertEquals(1, db.queryForObject("select count(*) from notification_attempt", Integer.class));
+        assertEquals("OUTCOME_UNKNOWN", db.queryForObject("select error_classification from notification_attempt where correlation_id=?", String.class, first.correlationId()));
     }
     @Test
     void disabledEmailRetainsRetryableMessageWithoutProviderCall() {

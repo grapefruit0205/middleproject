@@ -1,0 +1,88 @@
+#!/bin/bash
+set -euo pipefail
+
+for attempt in 1 2 3 4 5; do
+  if dnf install -y java-21-amazon-corretto jq awscli postgresql16; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "ERROR: unable to install migration packages after 5 attempts" >&2
+    exit 1
+  fi
+  sleep $((attempt * 5))
+done
+
+install -d -m 0700 /opt/middleproject-migration
+aws s3 cp "s3://${bucket}/${artifact_key}" /opt/middleproject-migration/ROOT.war
+
+MASTER_SECRET="$(aws secretsmanager get-secret-value --secret-id '${master_secret_arn}' --query SecretString --output text)"
+MIGRATION_SECRET="$(aws secretsmanager get-secret-value --secret-id '${migration_secret_arn}' --query SecretString --output text)"
+RUNTIME_SECRET="$(aws secretsmanager get-secret-value --secret-id '${db_runtime_secret_arn}' --query SecretString --output text)"
+
+MASTER_USER="$(jq -er .username <<<"$MASTER_SECRET")"
+MASTER_PASSWORD="$(jq -er .password <<<"$MASTER_SECRET")"
+MIGRATION_USER="$(jq -er .dbUsername <<<"$MIGRATION_SECRET")"
+MIGRATION_PASSWORD="$(jq -er .dbPassword <<<"$MIGRATION_SECRET")"
+APP_USER="$(jq -er .dbUsername <<<"$RUNTIME_SECRET")"
+APP_PASSWORD="$(jq -er .dbPassword <<<"$RUNTIME_SECRET")"
+unset MASTER_SECRET MIGRATION_SECRET RUNTIME_SECRET
+
+for identifier in "$MASTER_USER" "$MIGRATION_USER" "$APP_USER"; do
+  if [[ ! "$identifier" =~ ^[A-Za-z_][A-Za-z0-9_]{0,62}$ ]]; then
+    echo "ERROR: database role name has an invalid format" >&2
+    exit 1
+  fi
+done
+if [ "$MASTER_USER" = "$MIGRATION_USER" ] || [ "$MASTER_USER" = "$APP_USER" ] || [ "$MIGRATION_USER" = "$APP_USER" ]; then
+  echo "ERROR: administrator, migration, and runtime database roles must be distinct" >&2
+  exit 1
+fi
+
+for attempt in $(seq 1 30); do
+  if PGPASSWORD="$MASTER_PASSWORD" psql --host='${db_host}' --username="$MASTER_USER" --dbname='${db_name}' --no-password --command='select 1' >/dev/null 2>&1; then
+    break
+  fi
+  if [ "$attempt" -eq 30 ]; then
+    echo "ERROR: PostgreSQL did not become ready" >&2
+    exit 1
+  fi
+  sleep 10
+done
+
+PGPASSWORD="$MASTER_PASSWORD" psql \
+  --host='${db_host}' --username="$MASTER_USER" --dbname='${db_name}' --no-password --set=ON_ERROR_STOP=1 \
+  --set=migration_user="$MIGRATION_USER" --set=migration_password="$MIGRATION_PASSWORD" \
+  --set=app_user="$APP_USER" --set=app_password="$APP_PASSWORD" --set=db_name='${db_name}' <<'SQL'
+select format('create role %I login password %L', :'migration_user', :'migration_password')
+where not exists (select 1 from pg_roles where rolname = :'migration_user') \gexec
+select format('alter role %I login password %L nosuperuser nocreatedb nocreaterole noinherit', :'migration_user', :'migration_password') \gexec
+select format('create role %I login password %L', :'app_user', :'app_password')
+where not exists (select 1 from pg_roles where rolname = :'app_user') \gexec
+select format('alter role %I login password %L nosuperuser nocreatedb nocreaterole noinherit', :'app_user', :'app_password') \gexec
+select format('grant connect on database %I to %I', :'db_name', :'migration_user') \gexec
+select format('grant connect on database %I to %I', :'db_name', :'app_user') \gexec
+select format('grant usage, create on schema public to %I', :'migration_user') \gexec
+select format('grant usage on schema public to %I', :'app_user') \gexec
+select format('revoke create on schema public from %I', :'app_user') \gexec
+SQL
+
+MIGRATION_ONLY=true \
+DB_URL='jdbc:postgresql://${db_host}:5432/${db_name}' \
+DB_USERNAME="$APP_USER" DB_PASSWORD="$APP_PASSWORD" \
+SPRING_FLYWAY_ENABLED=true SPRING_FLYWAY_URL='jdbc:postgresql://${db_host}:5432/${db_name}' \
+SPRING_FLYWAY_USER="$MIGRATION_USER" SPRING_FLYWAY_PASSWORD="$MIGRATION_PASSWORD" APP_SECURITY_ENABLED=false \
+SCHEDULER_AWS_ENABLED=false DELIVERY_SQS_ENABLED=false NOTIFICATION_EMAIL_ENABLED=false \
+java -jar /opt/middleproject-migration/ROOT.war
+
+PGPASSWORD="$MASTER_PASSWORD" psql \
+  --host='${db_host}' --username="$MASTER_USER" --dbname='${db_name}' --no-password --set=ON_ERROR_STOP=1 \
+  --set=migration_user="$MIGRATION_USER" --set=app_user="$APP_USER" <<'SQL'
+select format('grant select, insert, update, delete on all tables in schema public to %I', :'app_user') \gexec
+select format('grant usage, select, update on all sequences in schema public to %I', :'app_user') \gexec
+select format('alter default privileges for role %I in schema public grant select, insert, update, delete on tables to %I', :'migration_user', :'app_user') \gexec
+select format('alter default privileges for role %I in schema public grant usage, select, update on sequences to %I', :'migration_user', :'app_user') \gexec
+SQL
+
+unset MASTER_PASSWORD MIGRATION_PASSWORD APP_PASSWORD
+touch /var/log/middleproject-migration-success
+shutdown -h +1

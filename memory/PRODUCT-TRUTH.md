@@ -10,30 +10,40 @@ Rule: every entry carries evidence (code path, test, screenshot), a date, and th
 Evidence: <code path / test / screenshot>
 Checked: <YYYY-MM-DD> — re-confirm against the code once this is over 90 days old -->
 
-## EC2 Apache–Tomcat–RDS three-tier infrastructure — state: implemented; historically verified, not currently operational — 2026-08-22
+## EC2 Apache–Tomcat–RDS three-tier infrastructure — state: implemented; historically verified, not currently operational — 2026-09-07
 
-Evidence: `infra/terraform/main.tf`, `tier.tf`, `security.tf`, and bootstrap templates implement Public ALB → private Apache WEB ASG → Internal ALB → private external-Tomcat WAS ASG → isolated RDS. `docs/phases/phase-11/result.md` and `review.md` record one healthy live baseline; `README.md` records its 2026-08-15 teardown.
-Checked: 2026-08-22 — direct code/document inspection; no live AWS rerun.
+Evidence: `infra/terraform/main.tf`, `tier.tf`, `security.tf`, and bootstrap templates implement Public ALB → private Apache WEB ASG → Internal ALB → private external-Tomcat WAS ASG → isolated RDS. The public listener rejects `/api/mcp`, WEB/WAS capacities and RDS Multi-AZ are configurable with HA defaults, and WAS/migration IAM and DB secrets are separated. `docs/phases/phase-11/result.md` records an older live baseline; no 2026-09-07 AWS apply was authorized.
+Checked: 2026-09-07 — Terraform fmt/validate and source contracts passed; live AWS state remains absent.
 
-## Reminder core and REST/MCP application surfaces — state: implemented — 2026-08-22
+## Deadline aggregate REST service and dashboard — state: verified locally — 2026-09-07
 
-Evidence: backend domain/application/web source, Flyway V1–V6 migrations, and checked-in integration/unit tests. REST and MCP reuse reminder application services; MCP rejects a missing `Principal` but production identity wiring is excluded from this claim.
-Checked: 2026-08-22 — direct code inspection; backend test rerun unavailable because Java is absent.
+Evidence: `DeadlineService`, `DeadlineController`, Flyway V1–V7, and the React dashboard implement transactional registration/list/detail/update/stateful cancellation, idempotent replay, optimistic 409 conflicts, loading/empty/error/mobile states, and persistent history. S05 exercised the flow through Apache and external Tomcat against PostgreSQL 16 and repeated it in the browser.
+Checked: 2026-09-07 — full local build plus API/browser integration passed.
 
-## Scheduler/outbox/queue/delivery reliability mechanisms — state: implemented — 2026-08-22
+## Scheduler/outbox/queue/delivery reliability mechanisms — state: implemented and locally verified; external providers unverified — 2026-09-07
 
-Evidence: `SchedulerOutboxService`, Scheduler/SQS adapters, idempotency lease/fencing migrations and services, delivery consumer/service, SQS/DLQ Terraform, and phase 06–08 results/reviews.
-Checked: 2026-08-22 — direct code/document inspection; no live provider delivery rerun.
+Evidence: `SchedulerOutboxService`, Scheduler/SQS adapters, idempotency lease/fencing, delivery consumer/service, SQS/DLQ Terraform, V7 outcome migration, and current tests. Provider timeout persists `DELIVERY_UNKNOWN`/`OUTCOME_UNKNOWN` and is not blindly resent; provider acceptance is not labeled as receipt.
+Checked: 2026-09-07 — full test suite and local disabled-provider history passed; no live AWS Scheduler/SQS/SES rerun.
+
+## Single-owner API security — state: verified locally — 2026-09-07
+
+Evidence: `OwnerTokenAuthenticationFilter`, `SecurityConfiguration`, `DeadlineController`, and `SingleOwnerSecurityIntegrationTest` enforce a minimum-length server-configured Bearer token, derive ownership from the authenticated principal, keep the browser token in React memory only, and protect `/api/**` while leaving actuator health available.
+Checked: 2026-09-07 — missing credentials returned 401 through Apache; security tests passed.
+
+## Local Apache–external Tomcat–PostgreSQL runtime — state: verified and operational locally — 2026-09-07
+
+Evidence: `compose.yaml`, `infra/local/`, `.env.example`, and `docs/runbooks/service-mvp.md`. S05 built and ran all three tiers, exposed only Apache at `127.0.0.1:8088`, separated admin/migrator/runtime DB roles, ran Flyway, and retained a cancelled aggregate across a WAS restart.
+Checked: 2026-09-07 — live local runtime and browser scenario passed.
 
 ## Host and request observability configuration — state: wired; historically observed — 2026-08-22
 
 Evidence: `infra/terraform/observability.tf`, `security.tf`, Apache/Tomcat CloudWatch Agent bootstrap, correlation filter and metrics code. Phase 11 records log ingestion, correlation propagation, alarm recovery, and no drift during the historical baseline.
 Checked: 2026-08-22 — configuration inspected; stack currently absent.
 
-## React readiness smoke page — state: verified locally — 2026-08-22
+## React deadline dashboard — state: verified locally — 2026-09-08
 
-Evidence: `frontend/src/App.tsx`; on 2026-08-22 Vitest passed 4/4, Vite/PWA build and `verify:build` passed, and production dependency audit reported 0 vulnerabilities.
-Checked: 2026-08-22.
+Evidence: `frontend/src/App.tsx`, `App.test.tsx`, `components/DeadlineCalendar.tsx`, and `styles.css`. The pastel redesign uses actual saved data for counts, search, status/date filters, and calendar dots. Vitest passed 12/12, TypeScript and Vite/PWA build passed. Browser search/month/date/reset and actual CSS widths 320px/~400px were checked. The full CRUD browser lifecycle and production dependency audit were last checked on 2026-09-07.
+Checked: 2026-09-08.
 
 ## Not implemented
 
@@ -43,12 +53,9 @@ capability shipped makes you claim less than you have earned. Sweep it on the sa
 
 - A currently running AWS environment. The Phase 11 stack was torn down on 2026-08-15. Checked: 2026-08-22 (`README.md`).
 - Demonstrated WEB/WAS failure recovery, RDS failover, measured RTO/RPO, final 15-minute rehearsal, and a final Phase 11 PASS. Checked: 2026-08-22 (`docs/phases/phase-11/result.md`, `review.md`).
-- Public ALB rejection of `/api/mcp`. The public listener currently has only a default forward action. Checked: 2026-08-22 (`infra/terraform/tier.tf`, `web.sh.tftpl`).
-- Secure MCP Tunnel, Demo Owner production identity wiring, Android pairing/device tokens, and Trip Copilot Phase 12–18 application features. Checked: 2026-08-22 (ADR-005, Phase 12–18 briefs, source tree).
-- Authentication/authorization wiring for the public REST API and a production provider for the MCP controller's `Principal`. Checked: 2026-08-22 (`backend/build.gradle.kts`, controllers, WAS bootstrap).
-- Demand-driven WEB/WAS scaling. Both ASGs are fixed at two and no scaling policy exists. Checked: 2026-08-22 (`infra/terraform/tier.tf`).
-- Separate RDS admin/migration/runtime database principals. WAS currently consumes the RDS managed-master secret. Checked: 2026-08-22 (`tier.tf`, `was.sh.tftpl`).
-- Feature-complete reminder frontend. The React app is a readiness smoke page only. Checked: 2026-08-22 (`frontend/src/App.tsx`, `README.md`).
+- Secure MCP Tunnel, OAuth/multi-user identity, Android pairing/device tokens, and Trip Copilot Phase 12–18 application features. The current boundary is a server-configured single-owner token only. Checked: 2026-09-07.
+- Demand-driven WEB/WAS autoscaling policies. Desired/min/max capacity is configurable, but no load metric scaling policy exists. Checked: 2026-09-07 (`infra/terraform/tier.tf`).
+- A verified live AWS HTTPS deployment and a real SES inbox receipt for the current code. These are S05-A2/A3 and await explicit external authority/configuration. Checked: 2026-09-07 (`progress.json`).
 - WAF, VPC interface endpoints, Kubernetes, Kafka, and microservices. These remain later scope, not present capability. Checked: 2026-08-22 (`architecture-v1.2.md`).
 - MyWiki knowledge capture, canonical maintenance, semantic retrieval, versioning, provenance, conflict handling, ChatGPT plugin, and MyWiki web UI. Only product/design evaluation records exist; no MyWiki runtime code is implemented. Checked: 2026-08-23 (`docs/product/mywiki/step-01-idea-and-differentiation.md`, repository source tree).
 

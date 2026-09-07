@@ -14,6 +14,7 @@ output "security_group_ids" {
     web          = aws_security_group.web.id
     internal_alb = aws_security_group.internal_alb.id
     was          = aws_security_group.was.id
+    db_migration = aws_security_group.db_migration.id
     rds          = aws_security_group.rds.id
   }
 }
@@ -31,6 +32,16 @@ output "web_instance_profile_name" {
 output "was_instance_profile_name" {
   value       = aws_iam_instance_profile.was.name
   description = "WAS instance profile with SSM, backend artifact, and database secret access."
+}
+
+output "db_migration_launch_template_id" {
+  value       = aws_launch_template.db_migration.id
+  description = "Launch template for an operator-started, ephemeral Flyway runner. Terraform does not launch it automatically."
+}
+
+output "db_migration_instance_profile_name" {
+  value       = aws_iam_instance_profile.db_migration.name
+  description = "Dedicated profile that can read migration/runtime DB secrets and the RDS master secret; WAS cannot."
 }
 
 output "nat_profile" {
@@ -51,6 +62,16 @@ output "internal_alb_dns_name" {
 output "rds_endpoint" {
   value       = aws_db_instance.this.endpoint
   description = "Private PostgreSQL endpoint used by the WAS tier."
+}
+
+output "ha_profile" {
+  value = {
+    web_capacity = var.web_capacity
+    was_capacity = var.was_capacity
+    rds_multi_az = var.rds_multi_az
+    guaranteed   = var.web_capacity.min >= 2 && var.was_capacity.min >= 2 && var.rds_multi_az
+  }
+  description = "Whether configured capacities retain the two-AZ application/database HA baseline."
 }
 
 output "artifact_bucket_name" {

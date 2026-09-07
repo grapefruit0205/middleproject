@@ -8,6 +8,13 @@ spring:
   flyway:
     enabled: true
 
+app:
+  demo-owner-id: ${APP_DEMO_OWNER_ID:demo-owner}
+  security:
+    enabled: ${APP_SECURITY_ENABLED:false}
+    owner-id: ${APP_OWNER_ID:}
+    owner-token: ${APP_OWNER_TOKEN:}
+
 delivery:
   sqs:
     enabled: ${DELIVERY_SQS_ENABLED:false}
