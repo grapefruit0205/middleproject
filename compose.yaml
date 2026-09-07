@@ -1,0 +1,62 @@
+name: middleproject
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: reminder
+      POSTGRES_USER: reminder_admin
+      POSTGRES_PASSWORD: ${LOCAL_DB_ADMIN_PASSWORD:?set LOCAL_DB_ADMIN_PASSWORD in .env}
+      DB_MIGRATION_USERNAME: reminder_migrator
+      DB_MIGRATION_PASSWORD: ${LOCAL_DB_MIGRATION_PASSWORD:?set LOCAL_DB_MIGRATION_PASSWORD in .env}
+      DB_APP_USERNAME: reminder_app
+      DB_APP_PASSWORD: ${LOCAL_DB_APP_PASSWORD:?set LOCAL_DB_APP_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reminder_admin -d reminder"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - reminder-db:/var/lib/postgresql/data
+      - ./infra/local/postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
+    networks: [was-db]
+
+  was:
+    build:
+      context: .
+      dockerfile: infra/local/backend.Dockerfile
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/reminder
+      DB_USERNAME: reminder_app
+      DB_PASSWORD: ${LOCAL_DB_APP_PASSWORD:?set LOCAL_DB_APP_PASSWORD in .env}
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_URL: jdbc:postgresql://db:5432/reminder
+      SPRING_FLYWAY_USER: reminder_migrator
+      SPRING_FLYWAY_PASSWORD: ${LOCAL_DB_MIGRATION_PASSWORD:?set LOCAL_DB_MIGRATION_PASSWORD in .env}
+      APP_SECURITY_ENABLED: "true"
+      APP_OWNER_ID: ${LOCAL_OWNER_ID:?set LOCAL_OWNER_ID in .env}
+      APP_OWNER_TOKEN: ${LOCAL_OWNER_TOKEN:?set LOCAL_OWNER_TOKEN in .env}
+      SCHEDULER_AWS_ENABLED: "false"
+      DELIVERY_SQS_ENABLED: "false"
+      NOTIFICATION_EMAIL_ENABLED: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [web-was, was-db]
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/local/web.Dockerfile
+    ports:
+      - "127.0.0.1:${LOCAL_WEB_PORT:-8088}:80"
+    depends_on: [was]
+    networks: [web-was]
+
+networks:
+  web-was: {}
+  was-db:
+    internal: true
+
+volumes:
+  reminder-db: {}
