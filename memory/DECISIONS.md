@@ -53,3 +53,13 @@ The user explicitly requested GitHub commit and push if the current work had not
 ## D-011 · Publish README architecture documentation and explain frontend priorities — 2026-09-08 (user)
 
 The user requested adding the architecture to the GitHub README, explaining the current structure, and recommending the next frontend implementation. This authorizes a documentation update and publication to the existing service branch, not a main merge, frontend implementation, architecture migration, AWS provisioning, or live email. Proposed frontend priorities remain recommendations, not confirmed product decisions.
+
+## D-012 · Implement status refresh and remove the local access-code step — 2026-09-08 (user)
+
+The user accepted the next frontend implementation and asked to remove access-code login. Implement automatic deadline/history refresh as the first recommended frontend step. The current loopback-only local preview opens without a code and retains its fixed owner; this does not authorize an unauthenticated public/AWS deployment or decide the future public identity model.
+
+## D-013 · Publish the status-refresh and README follow-up — 2026-09-08 (user)
+
+The user explicitly requested committing and pushing the current pending changes. This grants one-time Git commit and push authority for the D-012 automatic-refresh/local-direct-access implementation, the user-edited architecture README, and their accompanying project records on the existing `codex/service-mvp-pastel-dashboard` branch.
+
+This is not standing publication authority and does not authorize a main-branch merge, AWS provisioning or teardown, DNS changes, live email, credentials, or unrelated future changes.

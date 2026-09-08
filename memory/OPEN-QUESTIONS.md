@@ -9,6 +9,7 @@ Rule: anything unresolved gets a row here the moment it surfaces. A question is 
 | Q-003 | Should MyWiki replace the current reminder product in `middleproject`, be added beside it, or be built in a separate repository? | 2026-08-23 | closed → D-004 |
 | Q-004 | Which first user segment and repeated job will be used to falsify or validate MyWiki's retention and differentiation hypotheses? | 2026-08-23 | closed → D-005 |
 | Q-005 | Which AWS environment, execution window/budget, HTTPS configuration, SES identities, recipient, and explicit execution permissions will be used for service-mvp S05? Local S01–S05-A1 is complete; this now blocks only S05-A2/A3. | 2026-09-07 | open; `progress.json` S05-B1/B2; related to Q-001 |
+| Q-006 | If the service is later exposed beyond loopback, which user-facing identity flow should replace the removed local access-code step while preserving authenticated ownership? | 2026-09-08 | open; local direct access is D-012, AWS Bearer remains until superseded |
 
 ## Readings in force — assumed, not decided
 

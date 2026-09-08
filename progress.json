@@ -4,7 +4,7 @@
   "track": "service-mvp",
   "prompt_file": "SERVICE_IMPLEMENTATION_PROMPT.md",
   "created_at": "2026-09-07T02:03:03Z",
-  "updated_at": "2026-09-07T22:29:06Z",
+  "updated_at": "2026-09-08T04:56:17Z",
   "status": "blocked",
   "current_phase": "S05",
   "baseline": {
@@ -23,7 +23,7 @@
     "verification_policy": "S01~S04는 변경 부분의 최소 기능 확인만 한다. 전체 설치·통합·출시 점검은 S05에 한다."
   },
   "authority": {
-    "current_request": "2026-09-07 연속 서비스 구현 요청에 이어, 2026-09-08 사용자가 현재 미게시 작업의 GitHub 커밋·푸시를 명시적으로 요청함(D-010).",
+    "current_request": "2026-09-08 사용자가 D-012 자동 갱신·로컬 직접 접속, 사용자 편집 README와 해당 기록의 기존 서비스 브랜치 커밋·푸시를 요청함(D-013).",
     "service_implementation_start_received": true,
     "aws_apply_authorized": false,
     "aws_destroy_authorized": false,
@@ -31,8 +31,8 @@
     "dns_change_authorized": false,
     "git_commit_authorized_for_this_track": true,
     "git_push_authorized_for_this_track": true,
-    "git_publication_scope": "현재 대기 중인 서비스 구현·파스텔 디자인 및 관련 기록을 origin의 codex/service-mvp-pastel-dashboard 브랜치에 게시. main 병합이나 향후 무관한 변경은 포함하지 않음.",
-    "note": "Git 권한은 D-010의 이번 게시 범위에만 적용한다. AWS/DNS/실메일 권한은 변경하지 않는다. 인증 정보의 존재나 JSON 편집 자체는 승인이 아니다."
+    "last_git_publication": "D-013은 현재 미커밋 D-012·README 후속 변경을 origin/codex/service-mvp-pastel-dashboard에 한 번 게시하는 범위만 허용한다. 완료 여부는 로컬 HEAD와 원격 branch equality로 확인한다.",
+    "note": "D-013 권한은 이번 정확한 변경 집합에만 적용되며 이후 변경의 상시 권한이 아니다. AWS/DNS/실메일 권한과 main 병합 권한은 변경하지 않는다."
   },
   "scope": {
     "product": "일정·마감 알림 웹서비스",
@@ -68,6 +68,15 @@
     "summary": "첨부 이미지의 크림/라벤더 파스텔 대시보드 스타일을 반영했다. 실제 데이터 기반 요약, 검색·상태 필터·서울 시간 달력, 모바일 레이아웃과 로컬 토끼 이미지를 연결했다.",
     "record": "docs/design/pastel-dashboard.md",
     "verification": "프론트엔드 12개 테스트, TypeScript, production/PWA build 및 실제 브라우저 검색·달력·320px/~400px 가로 넘침 확인 통과.",
+    "external_s05_scope_changed": false
+  },
+  "frontend_followup": {
+    "requested_at": "2026-09-08",
+    "status": "completed",
+    "decision": "D-012",
+    "summary": "일정 목록과 열린 이력의 30초·탭 복귀·온라인 복귀 자동 갱신, 수동 새로고침, 마지막 확인 및 stale/offline 표시를 구현했다. 로컬 loopback 미리보기는 기존 owner를 유지하며 접속 코드 없이 열린다.",
+    "verification": "프론트엔드 23개 테스트, TypeScript, production/PWA build 통과. 기존 DB volume을 보존한 브라우저 직접 접속에서 2개 일정 조회. Apache Syntax OK, 정상 로컬 요청 200 및 잘못된 Host/외부 Origin/다른 포트 Origin/cross-site 요청 403 확인.",
+    "aws_authentication_changed": false,
     "external_s05_scope_changed": false
   },
   "external_prerequisites": [

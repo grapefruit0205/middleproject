@@ -98,6 +98,10 @@ svg { flex-shrink: 0; }
 .step-badge svg { width: 18px; height: 18px; }
 .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 25px; margin: -4px 0 16px; color: #a08ea5; font-size: 10px; }
 .list-toolbar .text-button { padding: 3px 6px; font-size: 10px; }
+.refresh-status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; margin: -6px 0 14px; color: #796783; font-size: 10px; line-height: 1.6; }
+.refresh-warning { margin: 0 0 14px; padding: 13px; border-radius: 13px; background: #fff0e2; color: #845437; font-size: 12px; overflow-wrap: anywhere; }
+.refresh-warning p { margin: 6px 0 10px; line-height: 1.6; }
+.refresh-warning .text-button { background: #ffdfbf; color: #764625; }
 form { display: grid; gap: 16px; }
 .create-panel form { grid-template-columns: 1fr 1fr; gap: 16px; }
 .create-panel form > label:first-child, .create-panel .form-actions, .create-panel .feedback { grid-column: 1 / -1; }

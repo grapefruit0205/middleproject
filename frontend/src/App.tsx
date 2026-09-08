@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import DeadlineCalendar from './components/DeadlineCalendar'
 import Icon from './components/Icon'
+import useAutoRefresh from './hooks/useAutoRefresh'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -53,6 +54,7 @@ type HistoryState = {
   status: 'loading' | 'ready' | 'error'
   data?: DeadlineHistory
   message?: string
+  refreshing?: boolean
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api'
@@ -86,34 +88,92 @@ function App() {
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'all' | 'scheduled' | 'attention' | 'cancelled'>('all')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshError, setRefreshError] = useState('')
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
+  const [online, setOnline] = useState(() => navigator.onLine)
   const titleInput = useRef<HTMLInputElement>(null)
   const pendingSubmission = useRef<PendingSubmission | null>(null)
   const pendingCancellations = useRef(new Map<string, string>())
+  const hasLoaded = useRef(false)
+  const listRequest = useRef<AbortController | null>(null)
+  const historyRequest = useRef<AbortController | null>(null)
+  const editingSnapshot = useRef<Deadline | null>(null)
+  const activeHistory = useRef<string | null>(null)
+  const mutationBusy = useRef(false)
+  const automaticRefresh = useRef(false)
 
-  async function loadDeadlines(signal?: AbortSignal): Promise<void> {
-    setLoadState('loading')
+  function abortReads(): void {
+    listRequest.current?.abort()
+    historyRequest.current?.abort()
+    setRefreshing(false)
+  }
+
+  async function loadDeadlines(signal?: AbortSignal, includeHistory = false): Promise<void> {
+    listRequest.current?.abort()
+    const controller = new AbortController()
+    listRequest.current = controller
+    const abort = () => controller.abort()
+    signal?.addEventListener('abort', abort, { once: true })
+    if (signal?.aborted) controller.abort()
+    if (hasLoaded.current) setRefreshing(true)
+    else setLoadState('loading')
     setLoadError('')
     try {
       const response = await fetch(`${API_BASE_URL}/deadlines`, {
         headers: authorizedHeaders(authToken, { Accept: 'application/json' }),
-        signal,
+        signal: controller.signal,
       })
+      if (controller.signal.aborted) return
       if (response.status === 401) {
         requireAuthentication('접근 키를 입력해 내 일정에 연결해 주세요.')
         return
       }
       if (!response.ok) throw new Error(await responseMessage(response, '일정을 불러오지 못했습니다.'))
       const body = (await response.json()) as Deadline[]
-      setDeadlines(Array.isArray(body) ? body : [])
+      if (controller.signal.aborted) return
+      if (!Array.isArray(body)) throw new Error('서버가 올바른 일정 목록을 반환하지 않았습니다.')
+      setDeadlines(body)
+      hasLoaded.current = true
       setLoadState('ready')
+      const historyId = activeHistory.current
+      if (includeHistory && historyId && body.some((item) => item.id === historyId)) {
+        const succeeded = await loadHistory(historyId, true, controller.signal)
+        if (!succeeded || controller.signal.aborted) return
+      } else if (historyId && !body.some((item) => item.id === historyId)) {
+        historyRequest.current?.abort()
+        activeHistory.current = null
+        setOpenHistoryId(null)
+      }
+      if (controller.signal.aborted) return
+      setLastUpdatedAt(new Date())
+      setRefreshError('')
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return
-      setLoadState('error')
-      setLoadError(errorMessage(error, '일정을 불러오지 못했습니다.'))
+      if (controller.signal.aborted) return
+      const message = errorMessage(error, '일정을 불러오지 못했습니다.')
+      if (hasLoaded.current) setRefreshError(message)
+      else {
+        setLoadState('error')
+        setLoadError(message)
+      }
+    } finally {
+      signal?.removeEventListener('abort', abort)
+      if (listRequest.current === controller) {
+        listRequest.current = null
+        setRefreshing(false)
+      }
     }
   }
 
   function requireAuthentication(message: string): void {
+    abortReads()
+    hasLoaded.current = false
+    activeHistory.current = null
+    setDeadlines([])
+    setHistoryState({})
+    setOpenHistoryId(null)
+    setLastUpdatedAt(null)
+    setRefreshError('')
     setAuthToken('')
     setAuthRequired(true)
     setAuthError(message)
@@ -129,33 +189,67 @@ function App() {
     }
     setAuthenticating(true)
     setAuthError('')
+    const controller = new AbortController()
+    listRequest.current?.abort()
+    listRequest.current = controller
     try {
       const response = await fetch(`${API_BASE_URL}/deadlines`, {
         headers: authorizedHeaders(candidate, { Accept: 'application/json' }),
+        signal: controller.signal,
       })
       if (!response.ok) {
         if (response.status === 401) throw new Error('접근 키가 올바르지 않습니다.')
         throw new Error(await responseMessage(response, '일정 서버에 연결하지 못했습니다.'))
       }
       const body = await response.json() as Deadline[]
+      if (controller.signal.aborted) return
+      if (!Array.isArray(body)) throw new Error('서버가 올바른 일정 목록을 반환하지 않았습니다.')
+      hasLoaded.current = true
       setAuthToken(candidate)
       setTokenInput('')
       setDeadlines(Array.isArray(body) ? body : [])
       setLoadState('ready')
       setAuthRequired(false)
       setAuthError('')
+      setLastUpdatedAt(new Date())
+      setRefreshError('')
     } catch (error) {
+      if (controller.signal.aborted) return
       setAuthError(errorMessage(error, '인증하지 못했습니다.'))
     } finally {
+      if (listRequest.current === controller) listRequest.current = null
       setAuthenticating(false)
     }
   }
 
   useEffect(() => {
     const controller = new AbortController()
+    const updateConnection = () => setOnline(navigator.onLine)
+    window.addEventListener('online', updateConnection)
+    window.addEventListener('offline', updateConnection)
     void loadDeadlines(controller.signal)
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      listRequest.current?.abort()
+      historyRequest.current?.abort()
+      window.removeEventListener('online', updateConnection)
+      window.removeEventListener('offline', updateConnection)
+    }
   }, [])
+
+  useAutoRefresh({
+    enabled: hasLoaded.current && !authRequired && !refreshError,
+    busy: submitting || cancellingId !== null || (refreshing && !automaticRefresh.current),
+    onRefresh: async (signal) => {
+      if (mutationBusy.current || listRequest.current) return
+      automaticRefresh.current = true
+      try {
+        await loadDeadlines(signal, true)
+      } finally {
+        automaticRefresh.current = false
+      }
+    },
+  })
 
   function updateField(field: keyof DeadlineForm, value: string): void {
     setForm((current) => ({ ...current, [field]: value }))
@@ -165,6 +259,7 @@ function App() {
 
   async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
+    if (mutationBusy.current) return
     const title = form.title.trim()
     const startsAt = parseSeoulLocalDateTime(form.startsAt)
     const leadMinutes = Number(form.leadMinutes)
@@ -186,7 +281,9 @@ function App() {
       return
     }
 
-    const editing = editingId ? deadlines.find((deadline) => deadline.id === editingId) : undefined
+    // Keep the versions seen when editing began. A background refresh must not
+    // silently upgrade an old draft to the server's new optimistic-lock version.
+    const editing = editingId ? editingSnapshot.current : undefined
     if (editingId && !editing) {
       setFormError('수정할 일정이 최신 목록에 없습니다. 목록을 다시 불러와 주세요.')
       return
@@ -206,6 +303,8 @@ function App() {
       ? pendingSubmission.current.key
       : newIdempotencyKey()
     pendingSubmission.current = { fingerprint, key }
+    mutationBusy.current = true
+    abortReads()
     setSubmitting(true)
     setFormError('')
     setNotice('')
@@ -226,6 +325,7 @@ function App() {
         const message = await responseMessage(response, '일정을 저장하지 못했습니다.')
         if (response.status === 409) {
           pendingSubmission.current = null
+          editingSnapshot.current = null
           setEditingId(null)
           setForm(initialForm)
           await loadDeadlines()
@@ -237,17 +337,20 @@ function App() {
       pendingSubmission.current = null
       setForm(initialForm)
       setEditingId(null)
+      editingSnapshot.current = null
       setNotice(editing ? '일정과 알림 예약을 변경했습니다.' : '일정과 알림을 저장했습니다.')
-      await loadDeadlines()
+      await loadDeadlines(undefined, true)
     } catch (error) {
       setFormError(errorMessage(error, '일정을 저장하지 못했습니다.'))
     } finally {
+      mutationBusy.current = false
       setSubmitting(false)
     }
   }
 
   function beginEdit(deadline: Deadline): void {
-    if (!canChange(deadline.status)) return
+    if (mutationBusy.current || !canChange(deadline.status)) return
+    editingSnapshot.current = { ...deadline }
     setEditingId(deadline.id)
     setForm({
       title: deadline.title,
@@ -268,6 +371,7 @@ function App() {
   }
 
   function stopEditing(): void {
+    editingSnapshot.current = null
     setEditingId(null)
     setForm(initialForm)
     pendingSubmission.current = null
@@ -275,9 +379,12 @@ function App() {
   }
 
   async function cancelDeadline(deadline: Deadline): Promise<void> {
+    if (mutationBusy.current) return
     const fingerprint = `${deadline.id}:${deadline.version}`
     const key = pendingCancellations.current.get(fingerprint) ?? newIdempotencyKey()
     pendingCancellations.current.set(fingerprint, key)
+    mutationBusy.current = true
+    abortReads()
     setCancellingId(deadline.id)
     setActionError(null)
     setNotice('')
@@ -313,30 +420,67 @@ function App() {
     } catch (error) {
       setActionError({ id: deadline.id, message: errorMessage(error, '일정을 취소하지 못했습니다.') })
     } finally {
+      mutationBusy.current = false
       setCancellingId(null)
     }
   }
 
   async function toggleHistory(deadline: Deadline, forceReload = false): Promise<void> {
+    if (mutationBusy.current && !forceReload) return
     if (!forceReload && openHistoryId === deadline.id) {
+      historyRequest.current?.abort()
+      activeHistory.current = null
       setOpenHistoryId(null)
       return
     }
+    activeHistory.current = deadline.id
     setOpenHistoryId(deadline.id)
-    setHistoryState((current) => ({ ...current, [deadline.id]: { status: 'loading' } }))
+    await loadHistory(deadline.id)
+  }
+
+  async function loadHistory(id: string, quiet = false, signal?: AbortSignal): Promise<boolean> {
+    historyRequest.current?.abort()
+    const controller = new AbortController()
+    historyRequest.current = controller
+    const abort = () => controller.abort()
+    signal?.addEventListener('abort', abort, { once: true })
+    if (signal?.aborted) controller.abort()
+    setHistoryState((current) => ({ ...current, [id]: quiet && current[id]?.data
+      ? { ...current[id], status: 'ready', refreshing: true, message: undefined }
+      : { status: 'loading' } }))
     try {
-      const response = await fetch(`${API_BASE_URL}/deadlines/${deadline.id}/history`, {
+      const response = await fetch(`${API_BASE_URL}/deadlines/${id}/history`, {
         headers: authorizedHeaders(authToken, { Accept: 'application/json' }),
+        signal: controller.signal,
       })
-      if (response.status === 401) requireAuthentication('접근 키가 만료되었거나 변경되었습니다. 다시 입력해 주세요.')
+      if (controller.signal.aborted) return false
+      if (response.status === 401) {
+        requireAuthentication('접근 키가 만료되었거나 변경되었습니다. 다시 입력해 주세요.')
+        return false
+      }
       if (!response.ok) throw new Error(await responseMessage(response, '처리 이력을 불러오지 못했습니다.'))
       const data = await response.json() as DeadlineHistory
-      setHistoryState((current) => ({ ...current, [deadline.id]: { status: 'ready', data } }))
+      if (controller.signal.aborted) return false
+      setHistoryState((current) => ({ ...current, [id]: { status: 'ready', data } }))
+      return true
     } catch (error) {
+      if (controller.signal.aborted) return false
+      const message = errorMessage(error, '처리 이력을 불러오지 못했습니다.')
       setHistoryState((current) => ({
         ...current,
-        [deadline.id]: { status: 'error', message: errorMessage(error, '처리 이력을 불러오지 못했습니다.') },
+        [id]: quiet && current[id]?.data
+          ? { ...current[id], status: 'ready', refreshing: false, message }
+          : { status: 'error', message },
       }))
+      if (quiet) setRefreshError(`처리 이력 갱신 실패: ${message}`)
+      return false
+    } finally {
+      signal?.removeEventListener('abort', abort)
+      if (historyRequest.current === controller) {
+        historyRequest.current = null
+        setHistoryState((current) => current[id]
+          ? { ...current, [id]: { ...current[id], refreshing: false } } : current)
+      }
     }
   }
 
@@ -439,9 +583,9 @@ function App() {
       </header>
       <div className="dashboard-status">
         <span><Icon name="sparkle" />오늘의 작은 계획이 내일의 여유로</span>
-        <div className={`connection-pill connection-pill--${loadState}`} aria-live="polite">
+        <div className={`connection-pill connection-pill--${refreshError || !online ? 'error' : loadState}`} aria-live="polite">
           <span aria-hidden="true" />
-          {loadState === 'loading' ? '서버 연결 중' : loadState === 'ready' ? '서버 연결됨' : '서버 연결 실패'}
+          {!online ? '오프라인 · 이전 목록' : refreshError ? '최신 상태 확인 실패' : refreshing ? '최신 상태 확인 중' : loadState === 'loading' ? '서버 연결 중' : loadState === 'ready' ? '서버 연결됨' : '서버 연결 실패'}
         </div>
       </div>
 
@@ -529,7 +673,7 @@ function App() {
             {notice && <p className="feedback feedback--success" role="status">{notice}</p>}
 
             <div className="form-actions">
-              <button className="primary-button" type="submit" disabled={submitting}>
+              <button className="primary-button" type="submit" disabled={submitting || cancellingId !== null}>
                 {submitting ? '저장 중…' : editingId ? '일정 변경 저장' : '일정과 알림 저장'}
                 <Icon name="arrow" />
               </button>
@@ -548,13 +692,23 @@ function App() {
               <p className="section-kicker">YOUR LITTLE PLANS</p>
               <h2 id="list-heading">{viewTitles[view]} <span className="heading-count">{loadState === 'ready' ? filteredDeadlines.length : '—'}</span></h2>
             </div>
-            {loadState === 'error' && (
-              <button className="text-button" type="button" onClick={() => void loadDeadlines()}>
-                다시 불러오기
-              </button>
-            )}
+            <button className="text-button" type="button"
+              disabled={!online || loadState === 'loading' || refreshing || submitting || cancellingId !== null}
+              onClick={() => void loadDeadlines(undefined, true)}>
+              {refreshing ? '확인 중…' : loadState === 'error' ? '다시 불러오기' : '새로고침'}
+            </button>
           </div>
           <div className="list-toolbar"><span>{selectedDate ? `${selectedDate.replaceAll('-', '. ')}의 일정` : '다가오는 순간부터 차례로 보여드려요.'}</span>{(view !== 'all' || search || selectedDate) && <button className="text-button" onClick={resetFilters}>필터 초기화</button>}</div>
+          <div className="refresh-status" aria-live="polite">
+            <span>{lastUpdatedAt ? <>마지막 확인 <time dateTime={lastUpdatedAt.toISOString()}>{formatHistoryTime(lastUpdatedAt.toISOString())}</time></> : '아직 확인한 일정이 없습니다.'}</span>
+            <span>{!online ? '온라인 복귀 후 다시 확인합니다.' : refreshError ? '자동 갱신 일시 중지' : '화면을 보고 있을 때 30초마다 확인'}</span>
+          </div>
+          {refreshError && <div className="refresh-warning" role="alert">
+            <strong>최신 상태를 확인하지 못했습니다.</strong>
+            <p>마지막으로 확인한 목록을 표시하고 있습니다. {refreshError}</p>
+            <button className="text-button" type="button" disabled={!online || refreshing || submitting || cancellingId !== null}
+              onClick={() => void loadDeadlines(undefined, true)}>다시 확인하고 자동 갱신 재개</button>
+          </div>}
 
           {loadState === 'loading' && <DeadlineSkeleton />}
           {loadState === 'error' && (
@@ -703,6 +857,8 @@ function HistoryPanel({ state, onRetry }: { state?: HistoryState; onRetry: () =>
   if (!state.data) return null
   return (
     <div className="history-panel">
+      {state.refreshing && <p role="status">처리 이력 확인 중…</p>}
+      {state.message && <p className="card-error" role="alert">이전 이력을 표시하고 있습니다. {state.message}</p>}
       <div className={`delivery-mode delivery-mode--${state.data.deliveryMode.toLowerCase()}`}>
         <strong>{deliveryModeLabel(state.data.deliveryMode)}</strong>
         <p>{state.data.deliveryModeDetail}</p>

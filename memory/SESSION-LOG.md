@@ -76,3 +76,31 @@ One short section per working session: what was worked on, what was decided (wit
 - Documented the frontend suggestions as proposals: automatic list/history refresh, confirmed rule-parser-to-form input, then global notification configuration guidance. The last item needs a scoped backend settings read API; no secret or user email setting was added.
 - Preserved historical Phase evidence, explicitly labeled it separately from current S01–S05, and retained pending AWS/HTTPS/live-email boundaries. This session changes documentation only.
 - Click initially could not write its observation lock in the sandbox; after reservation expiry, host escalation restored read access. Documentation checks and Git publication use host authority, not a Guarded approval contract.
+
+## 2026-09-08 — automatic status refresh and local direct access
+
+- `confirmed`: D-012 selects the first proposed frontend follow-up and removes the access-code step from the current local preview.
+- `observed`: added a visibility/online-aware 30-second refresh hook for deadline lists and expanded history. It prevents overlapping requests, pauses during mutations and failed refreshes, preserves draft contents and the version captured when editing began, exposes last-check/manual-refresh/stale/offline states, and clears previously loaded records on a protected-mode 401.
+- `observed`: local Compose now disables application authentication only behind loopback-published Apache and maps `LOCAL_OWNER_ID` to the demo owner so the existing PostgreSQL records remain accessible. AWS profile authentication and Terraform secrets were unchanged. No token was placed in frontend code or browser storage.
+- `verified`: 23 frontend tests, TypeScript, and production/PWA build passed. WEB/WAS were rebuilt while preserving the DB volume; the browser opened directly and showed two prior records. Apache syntax passed; expected loopback/CLI requests returned 200 and bad Host/external Origin/different-port Origin/cross-site requests returned 403 without printing response data.
+- `pending`: the next proposed frontend work is rule-parser-assisted one-sentence draft entry. AWS HTTPS and real SES receipt remain blocked in S05.
+
+## 2026-09-08 — reader-first README architecture guide
+
+- `confirmed`: the user requested a more readable README that explains the architecture clearly.
+- `observed`: reorganized the README around the product purpose, working features, local quick start, physical WEB/WAS/DB boundaries, the AWS Terraform topology, the asynchronous delivery sequence, security limits, current evidence, and the next implementation order.
+- `observed`: removed the long duplicated legacy phase table and redeployment walkthrough from the README while preserving their source material under `docs/phases` and the deployment runbooks. No application, infrastructure, credential, database, or runtime state was changed.
+- `pending`: this documentation follow-up has not been committed or pushed. AWS HTTPS and real SES receipt remain the external S05 blockers.
+
+## 2026-09-08 — user-edited README prose applied
+
+- `confirmed`: the user supplied a polished README draft and requested that it replace the current wording.
+- `observed`: applied the supplied structure and prose, restored repository-relative links that had been transformed into Google Search URLs during pasting, and narrowed unsupported wording so actual inbox receipt is not claimed as an independently persisted implemented state.
+- `observed`: this follow-up changes README wording and this session record only; application code, runtime services, infrastructure, credentials, and data were not changed.
+- `pending`: the combined local follow-up remains uncommitted and unpushed. AWS HTTPS and real SES receipt remain the external S05 blockers.
+
+## 2026-09-08 — follow-up publication requested
+
+- `confirmed`: D-013 authorizes one commit and push of the current D-012 implementation, the user-edited README, and their records to the existing `codex/service-mvp-pastel-dashboard` branch.
+- `observed`: the pre-publication worktree contains only the previously implemented local-direct-access/automatic-refresh files and their documentation/progress records. The target remote remains `https://github.com/grapefruit0205/middleproject.git`.
+- `pending`: establish the exact commit and verify that the remote branch resolves to the same commit. This authority does not extend to main, AWS, DNS, live email, credentials, or later changes.

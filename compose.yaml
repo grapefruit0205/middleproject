@@ -33,9 +33,10 @@ services:
       SPRING_FLYWAY_URL: jdbc:postgresql://db:5432/reminder
       SPRING_FLYWAY_USER: reminder_migrator
       SPRING_FLYWAY_PASSWORD: ${LOCAL_DB_MIGRATION_PASSWORD:?set LOCAL_DB_MIGRATION_PASSWORD in .env}
-      APP_SECURITY_ENABLED: "true"
-      APP_OWNER_ID: ${LOCAL_OWNER_ID:?set LOCAL_OWNER_ID in .env}
-      APP_OWNER_TOKEN: ${LOCAL_OWNER_TOKEN:?set LOCAL_OWNER_TOKEN in .env}
+      # Single-owner, loopback-only local mode. AWS keeps its own required auth.
+      APP_SECURITY_ENABLED: "false"
+      # Preserve the owner of existing local reminders when removing login.
+      APP_DEMO_OWNER_ID: ${LOCAL_OWNER_ID:?set LOCAL_OWNER_ID in .env}
       SCHEDULER_AWS_ENABLED: "false"
       DELIVERY_SQS_ENABLED: "false"
       NOTIFICATION_EMAIL_ENABLED: "false"

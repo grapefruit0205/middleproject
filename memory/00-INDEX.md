@@ -20,7 +20,7 @@ Purpose: this folder is the durable memory for middleproject. Conversations forg
 
 - `../SERVICE_IMPLEMENTATION_PROMPT.md`: Korean implementation prompt for the reminder web service, S01–S05. This is separate from legacy Phase 00–18 and MyWiki.
 - `../progress.json`: canonical phase status, acceptance evidence, blockers, and resume pointer. S01–S04 and local S05-A1 are complete; status is `blocked` on external S05-A2/A3 only.
-- D-007 authorized and completed the local implementation run. D-010 subsequently authorizes committing and pushing the current implementation/redesign batch to a dedicated service branch. AWS apply/destroy, DNS and live email still require explicit scoped authority; future unrelated Git publication is not covered.
+- D-007 authorized and completed the local implementation run. D-010's publication was completed on the dedicated service branch. D-012 adds automatic frontend refresh and removes the access-code step only from the loopback local preview; D-013 grants one-time publication of that exact follow-up and its README/records. AWS/public authentication, apply/destroy, DNS, live email, main merge, and later publication remain separately scoped.
 - MyWiki provenance remains in this directory, but MyWiki implementation belongs only in its separate repository (D-004).
 
 ## Operating principles
