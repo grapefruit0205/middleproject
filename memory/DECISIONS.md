@@ -49,3 +49,7 @@ The user asked to change the web design to the feel of the attached dashboard im
 ## D-010 · Publish the current service implementation and redesign — 2026-09-08 (user)
 
 The user explicitly requested GitHub commit and push if the current work had not yet been published. This grants Git commit/push authority for the current pending middleproject service implementation, pastel redesign, and accompanying records to the existing origin repository. It is not standing authority for future unrelated changes, a main-branch merge, AWS provisioning, DNS changes, or live email. Preserve existing local history and publish on a dedicated service branch.
+
+## D-011 · Publish README architecture documentation and explain frontend priorities — 2026-09-08 (user)
+
+The user requested adding the architecture to the GitHub README, explaining the current structure, and recommending the next frontend implementation. This authorizes a documentation update and publication to the existing service branch, not a main merge, frontend implementation, architecture migration, AWS provisioning, or live email. Proposed frontend priorities remain recommendations, not confirmed product decisions.

@@ -6,41 +6,120 @@
 
 실행 방법과 비밀/DB 역할 분리는 [Service MVP Runbook](docs/runbooks/service-mvp.md)을 따릅니다. 이번 연속 구현 진행 원본은 [progress.json](progress.json)입니다.
 
-현재 `Phase 00~09`는 구현과 독립 검증을 완료했습니다. `Phase 10` Observability and Security Hardening은 로컬 검증과 Phase 11 AWS 기준선에서 로그·메트릭·알람 수집을 확인했습니다. `Phase 11`은 실제 HA 스택 배포와 애플리케이션 기준선 검증까지 완료했으며, 장애 주입 실험·RDS failover·15분 리허설은 수행하지 않았습니다. `Phase 12~18` 출장 코파일럿은 구현 계약과 DeepSeek V4 Pro/Codex 오케스트레이션을 준비했으며 애플리케이션 구현은 아직 시작하지 않았습니다.
+## 현재 구현 상태
 
-> AWS 상태: 2026-08-15 KST에 비용 방지를 위해 단기 검증용 Phase 11 HA 스택을 철거했습니다. 승인된 destroy plan은 `0 add / 0 change / 90 destroy`였고 적용 후 Terraform state와 프로젝트 범위 AWS inventory가 비어 있음을 확인했습니다. 이전 Public ALB 주소는 더 이상 사용할 수 없습니다.
+2026-09-08 소스 및 저장된 실행 기록 기준입니다. **로컬 동작 확인, AWS 배포 소스 구현, 실제 외부 서비스 검증을 구분합니다.**
 
-기존 Phase 00~11 기록은 인프라·신뢰성 기반선의 과거 증거이며, 현재 서비스 MVP의 새 실행 증거와 동일시하지 않습니다. 현재 AWS 스택은 철거된 상태입니다.
+| 범위 | 상태 | 확인된 내용 |
+|---|---|---|
+| S01–S04 · 서비스 기능 | 로컬 구현·확인 완료 | 일정 CRUD, 중복 요청·수정 충돌 처리, 이력, 소유자 인증, 배포 구성 |
+| 프론트엔드 | 로컬 확인 완료 | 파스텔 대시보드, 실제 데이터 집계, 제목 검색, 상태·달력 필터, 반응형 화면 |
+| S05 · 로컬 3-Tier | 확인 완료 | Apache → 외장 Tomcat → PostgreSQL의 API·브라우저 흐름과 영속성 |
+| S05 · 현재 코드의 AWS HTTPS 배포 | 미확인 | Terraform 소스는 있으나 재배포 승인·설정 대기 |
+| S05 · 실제 이메일 수신 | 미확인 | SES 어댑터는 있으나 실발송·수신 확인 대기 |
+| Bedrock / SageMaker | 미구현·후순위 | 현재 서비스나 자연어 파서에 연결되어 있지 않음 |
+
+> 마지막 AWS 운영 기록: 2026-08-15 KST에 Phase 11 검증 스택을 철거했습니다. 과거 배포 성공은 현재 서비스 코드의 AWS 운영 증거가 아닙니다. 현재 트랙의 완료 조건은 [progress.json](progress.json), 근거는 [PRODUCT-TRUTH](memory/PRODUCT-TRUTH.md)에 구분되어 있습니다.
 
 ## Architecture
 
-```text
-Browser
-  -> Public ALB
-  -> Apache WEB Tier
-  -> Internal ALB
-  -> External Tomcat WAS Tier
-  -> RDS PostgreSQL Multi-AZ
+**배포는 WEB / WAS / DB 3-Tier, 백엔드 애플리케이션은 하나의 WAR로 배포하는 계층형 모놀리스입니다.** 계층별 서버를 분리했다고 업무 기능마다 별도 서비스인 마이크로서비스가 되는 것은 아닙니다. API와 예약·발송 작업자는 같은 WAS 애플리케이션 안에서 실행됩니다.
 
-Public `/api/mcp` and `/api/mcp/*`
-  -> fixed 404 at Public ALB
+### 1. 로컬 구성 — 동작 확인한 경로
 
-EventBridge Scheduler -> SQS / DLQ -> WAS -> Notification Provider
+```mermaid
+flowchart LR
+    browser["브라우저 · React 화면"]
+    web["WEB · Apache 2.4<br/>정적 파일 / API 프록시"]
+    was["WAS · Tomcat 10.1<br/>Java 21 / Spring Boot · ROOT.war"]
+    db[("DB · PostgreSQL 16<br/>일정 / 알림 / Outbox / 이력")]
+    browser -->|"HTTP · 127.0.0.1:8088"| web
+    web -->|"API · 내부망 :8080"| was
+    was -->|"JDBC · 내부망 :5432"| db
 ```
 
-Public ALB는 `/api/mcp`를 거부합니다. Phase 12~18의 비공개 단일 사용자 시연은 Cognito/OIDC 대신 Secure MCP Tunnel과 Android 일회용 기기 페어링을 사용합니다. 공개 배포 또는 다중 사용자 지원에는 OAuth 2.1 IdP가 필요합니다.
+- React·TypeScript 코드는 브라우저에서 실행되고 Apache는 빌드된 HTML/JS/CSS를 제공합니다. `/api/` 요청만 WAS로 전달합니다.
+- [compose.yaml](compose.yaml)은 WEB만 loopback에 공개합니다. WAS와 DB는 호스트 포트를 열지 않고, WEB–WAS / WAS–DB 네트워크를 나눕니다.
+- PostgreSQL은 Docker volume에 저장됩니다. 브라우저를 닫거나 WAS를 재시작해도 보존되며, 브라우저 저장소가 일정의 원본은 아닙니다.
+- 기본 로컬 구성은 **AWS Scheduler·SQS·이메일을 모두 비활성화**합니다. 일정 저장·이력 확인은 가능하지만 실제 예약 실행이나 이메일 발송이 되는 데모는 아닙니다.
 
-- Frontend: React/PWA, Apache HTTP Server 2.4
-- Backend: Java 21, Spring Boot 3.5, Gradle Kotlin DSL, Gradle Wrapper
-- Runtime: external Tomcat 10.1, executable WAR가 아닌 `ROOT.war` 배포
-- Database: PostgreSQL 16, Flyway
-- Infrastructure: Terraform, AWS 서울 리전, 2개 AZ, Private WEB/WAS, DB 격리
-- Operations: SSM Session Manager, SSH/Bastion 없음
-- Scheduling: EventBridge Scheduler, transactional Outbox, SQS/DLQ
+### 2. AWS 구성 — Terraform에 정의된 배포 경로
 
-상세 제약은 [Project Invariants](docs/architecture/project-invariants.md), 구조 설명은 [Architecture v1.2](docs/architecture/architecture-v1.2.md)에서 확인할 수 있습니다.
+아래는 [Terraform 소스](infra/terraform)의 구조이며 **현재 운영 중인 서비스 그림이 아닙니다.** 실선은 사용자 요청·DB 접근, 점선은 예약·발송 작업입니다.
 
-## Phase progress
+```mermaid
+flowchart TB
+    user["사용자 브라우저"]
+    subgraph vpc ["AWS 서울 · VPC / 2개 AZ"]
+        alb["Public ALB · HTTPS :443<br/>Public Subnet"]
+        web["WEB ASG · Apache<br/>Private WEB Subnets"]
+        ialb["Internal ALB · HTTP :80"]
+        was["WAS ASG · Tomcat / Spring Boot<br/>Private WAS Subnets<br/>API + 백그라운드 작업자"]
+        db[("RDS PostgreSQL<br/>격리 DB Subnets / Multi-AZ 옵션")]
+        alb -->|"HTTP :80"| web
+        web -->|"API 프록시"| ialb
+        ialb -->|"HTTP :8080"| was
+        was -->|"JDBC :5432"| db
+    end
+    user -->|"HTTPS"| alb
+    scheduler["EventBridge Scheduler"]
+    queue["SQS"]
+    dlq["DLQ · 반복 처리 실패 보관"]
+    ses["Amazon SES"]
+    inbox["승인된 수신 메일함"]
+    was -.->|"Outbox 기반 예약 생성·수정·취소"| scheduler
+    scheduler -.->|"예약 시각에 메시지"| queue
+    queue -.->|"WAS 작업자가 polling"| was
+    queue -.->|"반복 수신 실패"| dlq
+    was -.->|"활성화된 경우 발송 요청"| ses
+    ses -.->|"실수신 확인은 별도"| inbox
+```
+
+| 계층 | 책임 | 주요 소스 |
+|---|---|---|
+| WEB | React/PWA 배포, 정적 파일 제공, 같은 출처의 API 프록시 | [frontend](frontend), [Apache 설정](infra/local/httpd/reminder.conf), [WEB bootstrap](infra/terraform/templates/web.sh.tftpl) |
+| WAS | 인증·입력 검증·일정 업무, 트랜잭션, 예약 동기화, 메시지 처리, 발송 이력 | [Spring Boot 소스](backend/src/main/java/com/middleproject/reminder), [WAS bootstrap](infra/terraform/templates/was.sh.tftpl) |
+| DB | 일정·정책·알림·Outbox·발송 시도·멱등 결과의 영속 저장 | [Flyway migrations](backend/src/main/resources/db/migration), [RDS 구성](infra/terraform/tier.tf) |
+
+보조 구성은 S3 배포 산출물, Secrets Manager, IAM, SSM, CloudWatch와 WEB/WAS의 외부 통신용 NAT입니다. 이들은 화면·업무·데이터의 책임을 나누는 세 계층과 별개인 배포·운영 구성입니다.
+
+### 3. 저장과 발송이 분리되는 방식
+
+1. **저장 요청:** 인증된 API가 일정·알림 및 외부 예약에 필요한 Outbox 작업을 하나의 DB 트랜잭션으로 저장하고 응답합니다. 이메일이 전송될 때까지 HTTP 요청을 붙잡지 않습니다.
+2. **예약 반영:** 활성화된 WAS 백그라운드 작업자가 Outbox를 읽고 EventBridge Scheduler 예약을 생성·수정·취소한 뒤 처리 상태를 DB에 기록합니다.
+3. **발송 처리:** 예약 시각에 SQS 메시지가 생성되고 WAS가 현재 상태·버전을 확인해 처리합니다. 취소되었거나 오래된 메시지는 추가 발송 대상에서 제외합니다.
+4. **결과 표시:** 발송 시도와 결과를 DB에서 조회합니다. `저장됨`, `예약 반영됨`, `제공자가 발송 요청을 수락함`, `실제 메일 수신`은 서로 다른 단계입니다. 제공자 응답이 시간 초과되면 `DELIVERY_UNKNOWN`으로 구분하고 무조건 재전송하지 않습니다.
+
+이 경로는 **비동기 예약·발송**이며 DB를 여러 플랫폼으로 복제하는 구조는 아닙니다. 브라우저가 닫혀도 처리할 수 있도록 서버에 작업이 저장되지만, 실제 실행에는 WAS 작업자와 외부 연동이 켜져 있어야 합니다. 현재 UI는 최초 진입·직접 조작 시 조회하며 지속적인 자동 상태 갱신은 다음 프론트 작업입니다.
+
+### 4. 백엔드 코드와 보안 경계
+
+- 코드 책임은 `web`(REST 진입점), `application`(업무·트랜잭션·작업자), `domain`(모델·상태), `port`(인터페이스), `infrastructure`(JDBC/AWS 구현)로 나뉩니다. 일부 업무 서비스가 `JdbcTemplate`을 직접 사용하므로 모든 DB 접근을 포트로 격리한 완전한 헥사고날 구조라고 부르지는 않습니다.
+- 현재 로그인은 **본인용 단일 소유자 Bearer 토큰**입니다. Compose와 AWS 프로파일에서 인증을 켜며, 브라우저는 토큰을 React 메모리에만 보관합니다. 새로고침 후 재입력이 필요하고 다중 사용자 회원가입·OAuth는 아직 없습니다.
+- AWS 보안 그룹은 Public ALB → WEB → Internal ALB → WAS → DB 경로를 제한합니다. HTTPS는 Public ALB에서 종료하고 내부 HTTP로 전달합니다. 계층 분리를 전 구간 TLS로 오해하면 안 됩니다.
+- 공개 ALB에서 `/api/mcp` 및 하위 경로는 `404`로 차단합니다. 레거시 MCP 어댑터 코드는 있지만 Secure MCP Tunnel·Android 페어링은 현재 서비스에 구현된 기능이 아닙니다.
+- DB 관리자 / Flyway migration / 애플리케이션 계정을 분리합니다. AWS WAS는 runtime DB·owner 인증 비밀만 읽고, 별도 일회성 migration 실행 주체가 스키마를 준비합니다. 로컬은 분리된 DB 계정으로 WAS 시작 시 Flyway를 실행합니다.
+- WEB/WAS 관리에는 SSM을 사용하며 SSH/Bastion은 두지 않습니다. HA 기본값은 WEB 2대·WAS 2대·RDS Multi-AZ이고 비용 축소 설정도 가능합니다. **ASG 용량 설정은 있으나 부하 지표 기반 자동 증감 정책과 현재 코드의 장애 복구 실증은 없습니다.**
+
+상세 제약은 [Project Invariants](docs/architecture/project-invariants.md), 과거 기준 설계는 [Architecture v1.2](docs/architecture/architecture-v1.2.md), 현재 실행 방법은 [Service MVP Runbook](docs/runbooks/service-mvp.md)을 참고합니다.
+
+## 다음 프론트엔드 구현 — 제안, 아직 미구현
+
+일정 등록·수정·취소, 이력 펼치기, 검색, 상태 필터, 월 달력·날짜 필터, 모바일 배치는 이미 있습니다. 다음에는 장식용 차트나 화면 수를 늘리기보다 **알림이 지금 어떤 상태인지 알 수 있고 등록이 쉬운 화면**에 집중합니다. 아래는 우선순위 제안이며 새 단계 실행 승인을 뜻하지 않습니다.
+
+| 순서 | 사용자에게 보이는 변화 | 구현 경계 |
+|---|---|---|
+| 1 · 상태 자동 갱신 | 화면을 켜두면 예약·발송 상태가 갱신되고, 탭에 돌아오면 최신 상태와 마지막 확인 시각 표시 | 기존 `GET /api/deadlines`와 `GET /api/deadlines/{id}/history` 활용. 표시 중인 탭만 제한적으로 polling하고 오류·인증 해제 시 중단. 편집 중 입력 보존 |
+| 2 · 한 문장으로 일정 초안 | 지원하는 문장을 입력 → 제목·날짜·시간 미리보기 → 수정·확인 → 기존 등록 폼으로 저장 | 기존 `POST /api/reminder-commands/parse` 연결. `scheduledAt`을 폼의 `startsAt`으로 변환하고 `leadMinutes`는 별도 선택. 모호함·파싱 실패는 직접 입력으로 전환 |
+| 3 · 알림 연결 안내 | 일정이 없어도 현재 외부 알림 활성/비활성·부분 설정과 수신 대상 안내를 볼 수 있음 | 지금은 개별 일정 이력에만 연동 상태가 있음. 전역 표시에는 인증된 설정 조회 API 추가가 필요하며 비밀값은 응답하지 않음. 수신 주소 변경은 별도 백엔드·권한 설계 필요 |
+
+현재 자연어 파서는 **제한된 규칙 기반 구현**이며 LLM이 아닙니다. 모든 한국어 문장이나 '몇 분 전 알림' 추출을 지원한다고 가정하지 않습니다. Bedrock/SageMaker 연동은 이 사용 흐름을 확인한 뒤 별도 어댑터로 검토합니다. API 자동 갱신 실패 시 오래된 화면을 최신 상태로 표시하지 않고, 인증 편의를 위해 토큰을 `localStorage`로 옮기지도 않습니다.
+
+이 프론트 개선 제안과 별개로 현재 서비스 트랙에 남은 필수 확인은 **S05의 AWS HTTPS 배포와 실제 이메일 수신**입니다. 로컬 화면을 더 꾸민다고 이 두 조건이 완료되지는 않습니다.
+
+## Legacy Phase progress — 과거 기반 작업
+
+아래 Phase 00–18은 현재 서비스 트랙 S01–S05와 구분한 과거 기록입니다. Phase 11의 이전 HA 기준선은 확인 후 철거했으며, 장애 주입·RDS failover·최종 리허설은 미실행입니다. Phase 12–18은 계약만 준비했고 해당 애플리케이션은 구현하지 않았습니다.
 
 | Phase | 상태 | 완료 내용 | 검증 커밋 |
 |---|---|---|---|

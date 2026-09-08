@@ -45,6 +45,11 @@ Checked: 2026-08-22 — configuration inspected; stack currently absent.
 Evidence: `frontend/src/App.tsx`, `App.test.tsx`, `components/DeadlineCalendar.tsx`, and `styles.css`. The pastel redesign uses actual saved data for counts, search, status/date filters, and calendar dots. Vitest passed 12/12, TypeScript and Vite/PWA build passed. Browser search/month/date/reset and actual CSS widths 320px/~400px were checked. The full CRUD browser lifecycle and production dependency audit were last checked on 2026-09-07.
 Checked: 2026-09-08.
 
+## Architecture documentation and rule-based parsing boundary — state: source-confirmed — 2026-09-08
+
+Evidence: `compose.yaml`, `infra/local/httpd/reminder.conf`, `infra/terraform/main.tf`, `tier.tf`, `variables.tf`, `application/ReminderWorkers.java`, `application/DeadlineHistoryService.java`, `web/ReminderCommandController.java`, `port/ReminderCommandParser.java`, `infrastructure/parsing/DeterministicReminderCommandParser.java`, and `frontend/src/App.tsx`. The application is a single WAR with in-process asynchronous workers; some application services use JDBC directly. Local external workers/email are disabled. The parse REST endpoint is a bounded deterministic parser, not an LLM. The current frontend does not call it, continuously refresh status, or expose global notification settings; existing per-deadline history exposes configuration flags, not provider health.
+Checked: 2026-09-08 — source inspection only; no new runtime test, AWS inventory query, deployment, or email send. README separates current local evidence from Terraform intent and historical Phase evidence.
+
 ## Not implemented
 
 <!-- Listed explicitly so absence is a fact, not a gap. Copy must not claim these.

@@ -68,3 +68,11 @@ One short section per working session: what was worked on, what was decided (wit
 - `observed`: before publication the worktree held the service implementation and visual redesign, while origin/main remained at `a013e1b`. Existing local documentation commits are preserved in the new branch history.
 - `observed`: a bounded publication-safety check found no private-key or common credential-token patterns in the 59 candidate files. `.env` and generated build/dependency/Terraform state directories are ignored; example secrets are blank or explicit placeholders and security-test values are fixtures.
 - This publication adds no application code changes and does not rerun the already completed frontend/backend validation. Git commit identity and remote branch equality are checked directly after push rather than inferred from this pre-publication record.
+
+## 2026-09-08 — README architecture and frontend priorities
+
+- `confirmed`: D-011 requests a GitHub README update plus explanation and recommendations, not implementation of new UI.
+- `observed`: grounded the local/AWS diagrams in Compose, Apache proxy configuration, Terraform, worker activation flags, and the actual history/parse API. Distinguished the single-WAR application from physical three-tier deployment, local external-provider disablement, configurable HA from load-driven scaling, and provider acceptance from inbox receipt.
+- Documented the frontend suggestions as proposals: automatic list/history refresh, confirmed rule-parser-to-form input, then global notification configuration guidance. The last item needs a scoped backend settings read API; no secret or user email setting was added.
+- Preserved historical Phase evidence, explicitly labeled it separately from current S01–S05, and retained pending AWS/HTTPS/live-email boundaries. This session changes documentation only.
+- Click initially could not write its observation lock in the sandbox; after reservation expiry, host escalation restored read access. Documentation checks and Git publication use host authority, not a Guarded approval contract.
