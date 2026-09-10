@@ -510,7 +510,7 @@ function App() {
       <main className="auth-shell">
         <header className="hero auth-hero">
           <a className="brand" href="/" aria-label="Reminder 홈"><span className="brand-symbol"><Icon name="sparkle" /></span>remi<span className="brand-dot">.</span></a>
-          <div className="auth-illustration"><img src="/images/remi-bunny.png" alt="보라색 하트를 안고 있는 작은 토끼" /></div>
+          <div className="auth-illustration"><Icon name="calendar" /></div>
           <div>
             <p className="eyebrow">A LITTLE HELP FOR YOUR DAY</p>
             <h1>소중한 순간을,<br />함께 챙겨요.</h1>
@@ -549,14 +549,8 @@ function App() {
 
   return (
     <div className="dashboard-layout">
-      <aside className="sidebar" aria-label="사이드바">
+      <header className="sidebar" aria-label="주 메뉴">
         <a className="brand" href="/" aria-label="Reminder 홈"><span className="brand-symbol"><Icon name="sparkle" /></span>remi<span className="brand-dot">.</span></a>
-        <div className="profile">
-          <div className="profile-portrait"><img src="/images/remi-bunny.png" alt="보라색 하트를 안고 있는 일정 도우미 토끼" /></div>
-          <strong>나의 하루 <span aria-hidden="true">♡</span></strong>
-          <span>작은 여유를 만드는 공간</span>
-        </div>
-        <p className="nav-caption">MY WORKSPACE</p>
         <nav className="sidebar-nav" aria-label="일정 보기">
           <button className={view === 'all' ? 'is-active' : ''} onClick={resetFilters} aria-pressed={view === 'all'}><Icon name="grid" />대시보드</button>
           <button className={view === 'scheduled' ? 'is-active' : ''} onClick={() => { setView('scheduled'); setSelectedDate(null) }} aria-pressed={view === 'scheduled'}><Icon name="calendar" />예약된 일정<span className="nav-count">{scheduledCount}</span></button>
@@ -564,25 +558,24 @@ function App() {
           <button className={view === 'cancelled' ? 'is-active' : ''} onClick={() => { setView('cancelled'); setSelectedDate(null) }} aria-pressed={view === 'cancelled'}><Icon name="archive" />취소한 일정</button>
         </nav>
         <button className="sidebar-add" onClick={() => { stopEditing(); focusForm() }}><Icon name="plus" />새 일정 만들기</button>
-        <div className="sidebar-note"><span className="little-flower" aria-hidden="true">✿</span><p>하나씩, 천천히.<br />오늘도 잘하고 있어요.</p><span className="note-line" /></div>
-        <span className="sidebar-footer">a little more peace of mind.</span>
-      </aside>
+      </header>
     <main className="app-shell">
       <header className="hero">
         <div>
           <p className="eyebrow">{todayLabel} <span>· 나의 대시보드</span></p>
-          <h1>오늘도 반가워요! <span className="greeting-cloud" aria-hidden="true">☁</span></h1>
+          <h1>중요한 순간을 위한,<br /><span className="hero-accent">조금 더 여유로운 하루.</span></h1>
           <p className="hero-copy">
-            놓치면 아쉬운 순간, 미리 챙기고 가볍게 시작해요.
+            접수부터 예매, 제출까지. 일정을 한곳에 모으고<br className="desktop-break" /> 알림 준비 상황을 간편하게 확인하세요.
           </p>
         </div>
         <div className="header-tools">
-          <label className="search-field"><Icon name="search" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="어떤 일정을 찾고 있나요?" aria-label="일정 검색" /></label>
-          <button className="icon-button quick-add" onClick={() => { stopEditing(); focusForm() }} aria-label="새 일정 등록으로 이동"><Icon name="plus" /></button>
+          <div className="hero-calendar-mark" aria-hidden="true"><Icon name="calendar" /><span><Icon name="check" /></span></div>
+          <p className="hero-tool-caption">계획은 간단하게.<br /><strong>하루는 더 가볍게.</strong></p>
+          <button className="primary-button hero-cta" onClick={() => { stopEditing(); focusForm() }} aria-label="새 일정 등록으로 이동">새 일정 등록하기<Icon name="arrow" /></button>
         </div>
       </header>
       <div className="dashboard-status">
-        <span><Icon name="sparkle" />오늘의 작은 계획이 내일의 여유로</span>
+        <span><Icon name="grid" />나의 일정 한눈에 보기</span>
         <div className={`connection-pill connection-pill--${refreshError || !online ? 'error' : loadState}`} aria-live="polite">
           <span aria-hidden="true" />
           {!online ? '오프라인 · 이전 목록' : refreshError ? '최신 상태 확인 실패' : refreshing ? '최신 상태 확인 중' : loadState === 'loading' ? '서버 연결 중' : loadState === 'ready' ? '서버 연결됨' : '서버 연결 실패'}
@@ -594,13 +587,13 @@ function App() {
           <div className="clay-icon clay-icon--lavender"><Icon name="check" /></div>
           <div className="summary-content"><span>다가오는 일정</span>
           <strong>{loadState === 'ready' ? activeCount : '—'}<em>개</em></strong>
-          <small>함께 챙길 소중한 순간</small></div>
+          <small>앞으로 예정된 일정</small></div>
         </article>
         <article className="summary-card summary-card--pink">
           <div className="clay-icon clay-icon--pink"><Icon name="calendar" /></div>
           <div className="summary-content"><span>예약 준비</span>
           <strong>{loadState === 'ready' ? waitingCount : '—'}<em>개</em></strong>
-          <small>차근차근 준비하고 있어요</small></div>
+          <small>예약 처리 대기 중</small></div>
         </article>
         <article className="summary-card summary-card--mint">
           <div className="clay-icon clay-icon--mint"><Icon name="bell" /></div>
@@ -610,9 +603,9 @@ function App() {
         </article>
         <article className="summary-card summary-card--butter">
           <div className="clay-icon clay-icon--butter"><Icon name="clock" /></div>
-          <div className="summary-content"><span>우리의 시간</span>
+          <div className="summary-content"><span>기준 시간대</span>
           <strong className="summary-time">KST</strong>
-          <small>한국 시간에 맞춰 함께해요</small></div>
+          <small>서울 · UTC +09:00</small></div>
         </article>
       </section>
 
@@ -620,7 +613,7 @@ function App() {
         <section className="panel create-panel" id="new-deadline" aria-labelledby="create-heading">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">MAKE A LITTLE PLAN</p>
+              <p className="section-kicker">NEW DEADLINE</p>
               <h2 id="create-heading">{editingId ? '일정 수정' : '새 일정 등록'}</h2>
             </div>
             <span className="step-badge"><Icon name={editingId ? 'calendar' : 'plus'} /></span>
@@ -689,7 +682,7 @@ function App() {
         <section className="panel list-panel" aria-labelledby="list-heading">
           <div className="panel-heading">
             <div>
-              <p className="section-kicker">YOUR LITTLE PLANS</p>
+              <p className="section-kicker">MY SCHEDULE</p>
               <h2 id="list-heading">{viewTitles[view]} <span className="heading-count">{loadState === 'ready' ? filteredDeadlines.length : '—'}</span></h2>
             </div>
             <button className="text-button" type="button"
@@ -698,7 +691,8 @@ function App() {
               {refreshing ? '확인 중…' : loadState === 'error' ? '다시 불러오기' : '새로고침'}
             </button>
           </div>
-          <div className="list-toolbar"><span>{selectedDate ? `${selectedDate.replaceAll('-', '. ')}의 일정` : '다가오는 순간부터 차례로 보여드려요.'}</span>{(view !== 'all' || search || selectedDate) && <button className="text-button" onClick={resetFilters}>필터 초기화</button>}</div>
+          <label className="search-field"><Icon name="search" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="일정 제목으로 검색" aria-label="일정 검색" /></label>
+          <div className="list-toolbar"><span>{selectedDate ? `${selectedDate.replaceAll('-', '. ')}의 일정` : '등록한 일정과 알림 상태를 확인하세요.'}</span>{(view !== 'all' || search || selectedDate) && <button className="text-button" onClick={resetFilters}>필터 초기화</button>}</div>
           <div className="refresh-status" aria-live="polite">
             <span>{lastUpdatedAt ? <>마지막 확인 <time dateTime={lastUpdatedAt.toISOString()}>{formatHistoryTime(lastUpdatedAt.toISOString())}</time></> : '아직 확인한 일정이 없습니다.'}</span>
             <span>{!online ? '온라인 복귀 후 다시 확인합니다.' : refreshError ? '자동 갱신 일시 중지' : '화면을 보고 있을 때 30초마다 확인'}</span>
@@ -754,10 +748,9 @@ function App() {
         <aside className="dashboard-rail" aria-label="캘린더와 하루 안내">
           <DeadlineCalendar dates={deadlines.filter((deadline) => deadline.status !== 'CANCELLED').map((deadline) => deadline.startsAt)} selectedDate={selectedDate} onSelectDate={(date) => { setSelectedDate(date); setView('all') }} />
           <section className="panel gentle-reminder"><div className="gentle-title"><span className="mini-clay"><Icon name="bell" /></span><h2>잠깐, 기억해 주세요</h2></div><p>일정을 등록한 뒤 <strong>처리 이력</strong>에서<br />알림이 준비되었는지 확인할 수 있어요.</p><span className="gentle-footnote">예약과 발송 상태를 한눈에</span></section>
-          <section className="encouragement-card"><div><p className="section-kicker">ONE THING AT A TIME</p><h2>작은 계획도<br />반짝이는 시작이에요.</h2><p>나머지는 잠시 내려놓고,<br />오늘의 순간에 집중해요.</p><span className="encouragement-star" aria-hidden="true">✦</span></div><img src="/images/remi-bunny.png" alt="" /></section>
         </aside>
       </div>
-      <footer className="page-footer"><span>Made for your everyday moments <span aria-hidden="true">♡</span></span><span>모든 일정은 한국 시간 기준이에요.</span></footer>
+      <footer className="page-footer"><span>remi. <span>Deadline Companion</span></span><span>중요한 순간에 집중할 수 있도록 · 모든 일정은 한국 시간 기준</span></footer>
     </main>
     </div>
   )

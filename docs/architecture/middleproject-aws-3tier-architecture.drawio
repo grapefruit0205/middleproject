@@ -1,0 +1,969 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net" modified="2026-09-10T13:10:00.000Z" agent="Codex" version="24.7.17" type="device" pages="6">
+  <diagram id="p1-overview" name="01 전체 흐름">
+    <mxGraphModel dx="1100" dy="2333" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="2333" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="p1-0" />
+        <mxCell id="p1-1" parent="p1-0" />
+        <mxCell id="p1-title" value="&lt;b&gt;Middleproject AWS 3-Tier Architecture&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=28;fontColor=#172B4D;" vertex="1" parent="p1-1">
+          <mxGeometry x="30" y="20" width="1040" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-subtitle" value="01 · 전체 흐름 — 복잡성은 다음 페이지에서 계층 전환별로 설명" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#5E6C84;" vertex="1" parent="p1-1">
+          <mxGeometry x="30" y="65" width="1040" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-user" value="&lt;b&gt;User / Browser&lt;/b&gt;" style="shape=mxgraph.basic.person;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#172B4D;strokeWidth=2;fontSize=12;verticalLabelPosition=bottom;verticalAlign=top;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p1-1">
+          <mxGeometry x="505" y="105" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-cloud" value="&lt;b&gt;AWS Cloud — ap-northeast-2 (Seoul)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=10;spacingLeft=12;fillColor=#F3F8FC;strokeColor=#147EBA;strokeWidth=2;fontColor=#174A67;fontSize=15;" vertex="1" parent="p1-1">
+          <mxGeometry x="155" y="220" width="790" height="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-vpc" value="&lt;b&gt;VPC 10.20.0.0/16 · 2 Availability Zones&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fillColor=#F7FBF2;strokeColor=#248814;strokeWidth=2;fontColor=#1F5B16;fontSize=14;" vertex="1" parent="p1-1">
+          <mxGeometry x="195" y="270" width="710" height="1045" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-igw" value="&lt;b&gt;Internet Gateway&lt;/b&gt;" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.internet_gateway;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p1-1">
+          <mxGeometry x="515" y="305" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-public" value="&lt;b&gt;PUBLIC SUBNETS · AZ-A + AZ-C&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fillColor=#EAF7EA;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;" vertex="1" parent="p1-1">
+          <mxGeometry x="270" y="415" width="560" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-public-alb" value="&lt;b&gt;Public ALB&lt;/b&gt;&lt;br&gt;HTTPS 443" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p1-1">
+          <mxGeometry x="515" y="455" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-web" value="&lt;b&gt;PRIVATE WEB SUBNETS · AZ-A + AZ-C&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fillColor=#EAF3FC;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;" vertex="1" parent="p1-1">
+          <mxGeometry x="270" y="610" width="560" height="165" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-web-asg" value="&lt;b&gt;WEB ASG&lt;/b&gt;&lt;br&gt;Apache 2.4 · AZ-A + AZ-C" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2_auto_scaling;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p1-1">
+          <mxGeometry x="510" y="650" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-was" value="&lt;b&gt;PRIVATE WAS SUBNETS · AZ-A + AZ-C&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fillColor=#F2ECFA;strokeColor=#7657A9;fontColor=#45277A;fontSize=12;" vertex="1" parent="p1-1">
+          <mxGeometry x="270" y="815" width="560" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-internal-alb" value="&lt;b&gt;Internal ALB&lt;/b&gt;&lt;br&gt;HTTP 80" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p1-1">
+          <mxGeometry x="515" y="855" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-was-asg" value="&lt;b&gt;WAS ASG&lt;/b&gt;&lt;br&gt;Tomcat + Spring · AZ-A + AZ-C" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2_auto_scaling;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p1-1">
+          <mxGeometry x="510" y="985" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-db" value="&lt;b&gt;ISOLATED DB SUBNETS · Multi-AZ&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=9;spacingLeft=12;fillColor=#FCEBEC;strokeColor=#C62828;fontColor=#8E1717;fontSize=12;" vertex="1" parent="p1-1">
+          <mxGeometry x="270" y="1145" width="560" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-rds" value="&lt;b&gt;RDS PostgreSQL 16&lt;/b&gt;&lt;br&gt;encrypted gp3 · Multi-AZ" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;fillColor=#3B48CC;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p1-1">
+          <mxGeometry x="510" y="1180" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-note" value="&lt;b&gt;Supporting services&lt;/b&gt; — NAT · ACM · IAM / Secrets Manager / SSM · CloudWatch · S3 · Scheduler / SQS / DLQ / SES&lt;br&gt;&lt;b&gt;읽는 순서&lt;/b&gt; — 02 Internet→WEB · 03 WEB→WAS · 04 WAS→Data/Async · 05 Well-Architected" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacingLeft=14;fillColor=#FFF8E8;strokeColor=#D99000;fontColor=#5C4400;fontSize=12;" vertex="1" parent="p1-1">
+          <mxGeometry x="155" y="1400" width="790" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e1" value="01 · HTTPS" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p1-1" source="p1-user" target="p1-igw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680.0" y="145.0" />
+              <mxPoint x="680.0" y="340.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1-e2" value="02" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;endSize=13;fontSize=12;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p1-1" source="p1-igw" target="p1-public-alb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680.0" y="340.0" />
+              <mxPoint x="680.0" y="490.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1-e3" value="03 · HTTP 80" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p1-1" source="p1-public-alb" target="p1-web-asg">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="685.0" y="490.0" />
+              <mxPoint x="685.0" y="690.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1-e4" value="04" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;endSize=13;fontSize=12;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p1-1" source="p1-web-asg" target="p1-internal-alb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="685.0" y="690.0" />
+              <mxPoint x="685.0" y="890.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1-e5" value="05 · HTTP 8080" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p1-1" source="p1-internal-alb" target="p1-was-asg">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="685.0" y="890.0" />
+              <mxPoint x="685.0" y="1025.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1-e6" value="06 · JDBC 5432" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p1-1" source="p1-was-asg" target="p1-rds">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="685.0" y="1025.0" />
+              <mxPoint x="685.0" y="1220.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1-korean-guide" value="" style="rounded=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;" vertex="1" parent="p1-1">
+          <mxGeometry x="50" y="1560.0" width="1000.0" height="728" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-guide-title" value="&lt;b&gt;한글 흐름 설명&lt;/b&gt; · 그림의 화살표 번호와 함께 읽으세요" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=21;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p1-1">
+          <mxGeometry x="72" y="1578.0" width="956.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-guide-1" value="&lt;b&gt;01 사용자 접속&lt;/b&gt;&lt;br&gt;브라우저가 HTTPS로 접속하면 인터넷 게이트웨이를 통해 VPC에 연결됩니다. 인터넷 게이트웨이는 네트워크 출입구이며 요청을 처리하는 서버는 아닙니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p1-1">
+          <mxGeometry x="72.0" y="1632.0" width="956.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-guide-2" value="&lt;b&gt;02 HTTPS 종단&lt;/b&gt;&lt;br&gt;Public ALB가 443번 포트에서 요청을 받아 ACM 인증서로 TLS 연결을 처리합니다. ALB는 두 가용 영역에 걸쳐 동작합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p1-1">
+          <mxGeometry x="72.0" y="1734.0" width="956.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-guide-3" value="&lt;b&gt;03 WEB 계층 전달&lt;/b&gt;&lt;br&gt;ALB는 정상 상태의 Apache WEB 인스턴스로 HTTP 80 요청을 분산합니다. WEB 보안 그룹은 Public ALB에서 온 요청만 허용합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p1-1">
+          <mxGeometry x="72.0" y="1836.0" width="956.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-guide-4" value="&lt;b&gt;04 내부 서비스 진입&lt;/b&gt;&lt;br&gt;Apache가 애플리케이션 요청을 내부 ALB의 HTTP 80으로 프록시합니다. 내부 ALB는 private WAS 서브넷에 배치됩니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p1-1">
+          <mxGeometry x="72.0" y="1938.0" width="956.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-guide-5" value="&lt;b&gt;05 WAS 계층 실행&lt;/b&gt;&lt;br&gt;내부 ALB가 Tomcat/Spring Boot의 8080 포트로 요청을 전달합니다. WAS가 일정 등록·수정·취소와 조회를 처리합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p1-1">
+          <mxGeometry x="72.0" y="2040.0" width="956.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-guide-6" value="&lt;b&gt;06 데이터 저장&lt;/b&gt;&lt;br&gt;WAS가 RDS 엔드포인트의 5432 포트를 통해 PostgreSQL을 사용합니다. Multi-AZ 대기 인스턴스는 장애 조치를 위한 구성입니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p1-1">
+          <mxGeometry x="72.0" y="2142.0" width="956.0" height="94" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="p2-edge-web" name="02 Internet → WEB">
+    <mxGraphModel dx="1500" dy="1614" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1614" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="p2-0" />
+        <mxCell id="p2-1" parent="p2-0" />
+        <mxCell id="p2-title" value="&lt;b&gt;02 · Internet / Public → WEB Tier&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=27;fontColor=#172B4D;" vertex="1" parent="p2-1">
+          <mxGeometry x="40" y="25" width="1400" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-sub" value="외부 HTTPS가 Public ALB에서 종단되고, Security Group으로 WEB 80번 포트에만 전달되는 구간" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontColor=#5E6C84;" vertex="1" parent="p2-1">
+          <mxGeometry x="42" y="70" width="1400" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-cloud" value="&lt;b&gt;AWS Cloud / VPC&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingTop=10;spacingLeft=12;fillColor=#F3F8FC;strokeColor=#147EBA;strokeWidth=2;fontColor=#174A67;fontSize=15;" vertex="1" parent="p2-1">
+          <mxGeometry x="70" y="130" width="1010" height="900" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-aza" value="&lt;b&gt;Availability Zone A&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=top;spacingTop=8;fillColor=#FFFFFF;strokeColor=#147EBA;strokeWidth=2;dashed=1;fontColor=#147EBA;fontSize=14;" vertex="1" parent="p2-1">
+          <mxGeometry x="110" y="250" width="430" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-azc" value="&lt;b&gt;Availability Zone C&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=top;spacingTop=8;fillColor=#FFFFFF;strokeColor=#147EBA;strokeWidth=2;dashed=1;fontColor=#147EBA;fontSize=14;" vertex="1" parent="p2-1">
+          <mxGeometry x="590" y="250" width="430" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-public-a" value="PUBLIC SUBNET A" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#EAF7EA;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;" vertex="1" parent="p2-1">
+          <mxGeometry x="135" y="310" width="380" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-public-c" value="PUBLIC SUBNET C" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#EAF7EA;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;" vertex="1" parent="p2-1">
+          <mxGeometry x="615" y="310" width="380" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-web-a-box" value="PRIVATE WEB SUBNET A" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#EAF3FC;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;" vertex="1" parent="p2-1">
+          <mxGeometry x="135" y="590" width="380" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-web-c-box" value="PRIVATE WEB SUBNET C" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#EAF3FC;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;" vertex="1" parent="p2-1">
+          <mxGeometry x="615" y="590" width="380" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-user" value="&lt;b&gt;User&lt;/b&gt;" style="shape=mxgraph.basic.person;html=1;fillColor=#FFFFFF;strokeColor=#172B4D;strokeWidth=2;fontSize=12;verticalLabelPosition=bottom;verticalAlign=top;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p2-1">
+          <mxGeometry x="245" y="120" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-igw" value="&lt;b&gt;Internet Gateway&lt;/b&gt;" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.internet_gateway;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p2-1">
+          <mxGeometry x="530" y="170" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-nat" value="&lt;b&gt;NAT Gateway&lt;/b&gt;&lt;br&gt;outbound egress" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.nat_gateway;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p2-1">
+          <mxGeometry x="220" y="385" width="65" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-alb" value="&lt;b&gt;Public ALB&lt;/b&gt;&lt;br&gt;nodes span AZ-A + AZ-C&lt;br&gt;HTTPS 443" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p2-1">
+          <mxGeometry x="530" y="390" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-web-a" value="&lt;b&gt;WEB01&lt;/b&gt;&lt;br&gt;Apache 2.4&lt;br&gt;ASG / IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p2-1">
+          <mxGeometry x="285" y="675" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-web-c" value="&lt;b&gt;WEB02&lt;/b&gt;&lt;br&gt;Apache 2.4&lt;br&gt;ASG / IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p2-1">
+          <mxGeometry x="765" y="675" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-panel" value="&lt;font style=&quot;font-size: 19px;&quot;&gt;&lt;b&gt;Controls and evidence&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Ingress&lt;/b&gt;&lt;br&gt;• ACM certificate + TLS 1.3 policy&lt;br&gt;• internet → ALB: 443 only&lt;br&gt;• ALB → WEB: 80, SG restricted&lt;br&gt;• Public ALB blocks /api/mcp paths&lt;br&gt;&lt;br&gt;&lt;b&gt;Operations&lt;/b&gt;&lt;br&gt;• private/versioned artifact S3&lt;br&gt;• ALB access-log S3 + CloudWatch alarms&lt;br&gt;• SSM managed access, no SSH ingress&lt;br&gt;• encrypted gp3 + IMDSv2&lt;br&gt;&lt;br&gt;&lt;b&gt;Egress&lt;/b&gt;&lt;br&gt;• private WEB routes through NAT&lt;br&gt;• dev: single zonal NAT / HA: regional NAT&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;Gap: AWS WAF and VPC endpoints are not deployed.&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#FFF8E8;strokeColor=#D99000;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p2-1">
+          <mxGeometry x="1120" y="160" width="340" height="760" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-e1" value="01 · HTTPS 443" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p2-1" source="p2-user" target="p2-igw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p2-e2" value="02" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;endSize=13;fontSize=12;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p2-1" source="p2-igw" target="p2-alb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="701.0" y="205.0" />
+              <mxPoint x="701.0" y="428.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p2-e3" value="03 · HTTP 80" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p2-1" source="p2-alb" target="p2-web-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="495.0" y="428.0" />
+              <mxPoint x="495.0" y="640.0" />
+              <mxPoint x="323.0" y="640.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p2-e4" value="04 · HTTP 80" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p2-1" source="p2-alb" target="p2-web-c">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="641.0" y="428.0" />
+              <mxPoint x="641.0" y="640.0" />
+              <mxPoint x="803.0" y="640.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p2-e5" value="05 · HTTPS egress" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#15803D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#15803D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=0;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p2-1" source="p2-web-a" target="p2-nat">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p2-korean-guide" value="" style="rounded=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;" vertex="1" parent="p2-1">
+          <mxGeometry x="50" y="1105.0" width="1400.0" height="464" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-guide-title" value="&lt;b&gt;한글 흐름 설명&lt;/b&gt; · 그림의 화살표 번호와 함께 읽으세요" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=21;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p2-1">
+          <mxGeometry x="72" y="1123.0" width="1356.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-guide-1" value="&lt;b&gt;01 외부 요청&lt;/b&gt;&lt;br&gt;사용자가 HTTPS 443으로 접속합니다. 인터넷 게이트웨이는 VPC의 인터넷 경로를 제공하고 실제 TLS 처리는 ALB가 담당합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p2-1">
+          <mxGeometry x="72.0" y="1177.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-guide-2" value="&lt;b&gt;02 Public ALB&lt;/b&gt;&lt;br&gt;두 public 서브넷에 걸친 ALB가 ACM 인증서와 TLS 정책을 적용합니다. /api/mcp 경로는 외부 ALB에서 차단됩니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p2-1">
+          <mxGeometry x="72.0" y="1293.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-guide-3" value="&lt;b&gt;03 가용 영역 A의 WEB&lt;/b&gt;&lt;br&gt;ALB가 상태 확인을 통과한 WEB01로 HTTP 80 요청을 보냅니다. 해당 연결은 ALB 보안 그룹에서 WEB 보안 그룹으로 제한됩니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p2-1">
+          <mxGeometry x="72.0" y="1409.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-guide-4" value="&lt;b&gt;04 가용 영역 C의 WEB&lt;/b&gt;&lt;br&gt;WEB02도 같은 대상 그룹에서 요청을 받습니다. 두 인스턴스는 ASG의 대표 배치이며 ALB는 요청마다 정상 대상을 선택합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p2-1">
+          <mxGeometry x="760.0" y="1177.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-guide-5" value="&lt;b&gt;05 외부로 나가는 통신&lt;/b&gt;&lt;br&gt;초록 점선은 WEB의 외부 HTTPS 통신을 나타냅니다. 개발 구성은 단일 zonal NAT, HA 구성은 regional NAT를 사용합니다. 다른 private 인스턴스의 동일한 egress 경로는 대표선으로 읽습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p2-1">
+          <mxGeometry x="760.0" y="1293.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-guide-6" value="&lt;b&gt;지원 구성 읽기&lt;/b&gt;&lt;br&gt;ACM은 인증서, S3는 배포 파일과 ALB 접근 로그, SSM은 관리 접속, CloudWatch는 로그·알람을 제공합니다. 이 항목은 요청 경로 옆의 보조 설명에 정리되어 있습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p2-1">
+          <mxGeometry x="760.0" y="1409.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="p3-web-was" name="03 WEB → WAS">
+    <mxGraphModel dx="1500" dy="1614" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1614" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="p3-0" />
+        <mxCell id="p3-1" parent="p3-0" />
+        <mxCell id="p3-title" value="&lt;b&gt;03 · WEB → Internal ALB → WAS Tier&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=27;fontColor=#172B4D;" vertex="1" parent="p3-1">
+          <mxGeometry x="40" y="25" width="1400" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-sub" value="Apache reverse proxy가 내부 ALB로 전달하고, 내부 ALB가 WAS 8080으로 분산하는 구간" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontColor=#5E6C84;" vertex="1" parent="p3-1">
+          <mxGeometry x="42" y="70" width="1400" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-vpc" value="&lt;b&gt;VPC · private subnets only&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#F7FBF2;strokeColor=#248814;strokeWidth=2;fontColor=#1F5B16;fontSize=15;" vertex="1" parent="p3-1">
+          <mxGeometry x="70" y="130" width="1010" height="900" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-aza" value="&lt;b&gt;Availability Zone A&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=top;spacingTop=8;fillColor=#FFFFFF;strokeColor=#147EBA;strokeWidth=2;dashed=1;fontColor=#147EBA;fontSize=14;" vertex="1" parent="p3-1">
+          <mxGeometry x="110" y="210" width="430" height="740" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-azc" value="&lt;b&gt;Availability Zone C&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=top;spacingTop=8;fillColor=#FFFFFF;strokeColor=#147EBA;strokeWidth=2;dashed=1;fontColor=#147EBA;fontSize=14;" vertex="1" parent="p3-1">
+          <mxGeometry x="590" y="210" width="430" height="740" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-web-a-box" value="PRIVATE WEB SUBNET A" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#EAF3FC;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;" vertex="1" parent="p3-1">
+          <mxGeometry x="135" y="270" width="380" height="235" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-web-c-box" value="PRIVATE WEB SUBNET C" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#EAF3FC;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;" vertex="1" parent="p3-1">
+          <mxGeometry x="615" y="270" width="380" height="235" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-was-a-box" value="PRIVATE WAS SUBNET A" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#F2ECFA;strokeColor=#7657A9;fontColor=#45277A;fontSize=12;" vertex="1" parent="p3-1">
+          <mxGeometry x="135" y="590" width="380" height="285" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-was-c-box" value="PRIVATE WAS SUBNET C" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fillColor=#F2ECFA;strokeColor=#7657A9;fontColor=#45277A;fontSize=12;" vertex="1" parent="p3-1">
+          <mxGeometry x="615" y="590" width="380" height="285" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-web-a" value="&lt;b&gt;WEB01&lt;/b&gt;&lt;br&gt;Apache reverse proxy" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p3-1">
+          <mxGeometry x="285" y="340" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-web-c" value="&lt;b&gt;WEB02&lt;/b&gt;&lt;br&gt;Apache reverse proxy" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p3-1">
+          <mxGeometry x="765" y="340" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-ialb" value="&lt;b&gt;Internal ALB&lt;/b&gt;&lt;br&gt;nodes span AZ-A + AZ-C&lt;br&gt;listener HTTP 80" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p3-1">
+          <mxGeometry x="530" y="505" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-was-a" value="&lt;b&gt;WAS01&lt;/b&gt;&lt;br&gt;Tomcat 10.1 + Spring Boot&lt;br&gt;ASG / IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p3-1">
+          <mxGeometry x="285" y="680" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-was-c" value="&lt;b&gt;WAS02&lt;/b&gt;&lt;br&gt;Tomcat 10.1 + Spring Boot&lt;br&gt;ASG / IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p3-1">
+          <mxGeometry x="765" y="680" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-panel" value="&lt;font style=&quot;font-size: 19px;&quot;&gt;&lt;b&gt;Controls and evidence&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Traffic boundary&lt;/b&gt;&lt;br&gt;• WEB → internal ALB: HTTP 80&lt;br&gt;• internal ALB → WAS: HTTP 8080&lt;br&gt;• both paths are SG restricted&lt;br&gt;• WAS has no internet-facing listener&lt;br&gt;&lt;br&gt;&lt;b&gt;Availability&lt;/b&gt;&lt;br&gt;• WEB/WAS ASGs span AZ-A and AZ-C&lt;br&gt;• default min/desired/max: 2&lt;br&gt;• ALB health checks + rolling refresh&lt;br&gt;&lt;br&gt;&lt;b&gt;Observability&lt;/b&gt;&lt;br&gt;• Apache/Tomcat/application log groups&lt;br&gt;• target health and 5xx alarms&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;Gaps&lt;/b&gt;&lt;/font&gt;&lt;br&gt;• metric-based target tracking not deployed&lt;br&gt;• load profile is not yet proven&lt;br&gt;• internal TLS should be risk-reviewed" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#FFF8E8;strokeColor=#D99000;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p3-1">
+          <mxGeometry x="1120" y="160" width="340" height="760" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-e1" value="01 · HTTP 80" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p3-1" source="p3-web-a" target="p3-ialb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="396.0" y="378.0" />
+              <mxPoint x="396.0" y="470.0" />
+              <mxPoint x="568.0" y="470.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p3-e2" value="02 · HTTP 80" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p3-1" source="p3-web-c" target="p3-ialb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="730.0" y="378.0" />
+              <mxPoint x="730.0" y="470.0" />
+              <mxPoint x="568.0" y="470.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p3-e3" value="03 · HTTP 8080" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p3-1" source="p3-ialb" target="p3-was-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="495.0" y="543.0" />
+              <mxPoint x="495.0" y="645.0" />
+              <mxPoint x="323.0" y="645.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p3-e4" value="04 · HTTP 8080" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p3-1" source="p3-ialb" target="p3-was-c">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="641.0" y="543.0" />
+              <mxPoint x="641.0" y="645.0" />
+              <mxPoint x="803.0" y="645.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p3-korean-guide" value="" style="rounded=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;" vertex="1" parent="p3-1">
+          <mxGeometry x="50" y="1105.0" width="1400.0" height="464" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-guide-title" value="&lt;b&gt;한글 흐름 설명&lt;/b&gt; · 그림의 화살표 번호와 함께 읽으세요" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=21;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p3-1">
+          <mxGeometry x="72" y="1123.0" width="1356.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-guide-1" value="&lt;b&gt;01 WEB01 → 내부 ALB&lt;/b&gt;&lt;br&gt;가용 영역 A의 Apache가 애플리케이션 요청을 내부 ALB의 HTTP 80 리스너로 전달합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p3-1">
+          <mxGeometry x="72.0" y="1177.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-guide-2" value="&lt;b&gt;02 WEB02 → 내부 ALB&lt;/b&gt;&lt;br&gt;가용 영역 C의 Apache도 같은 내부 ALB를 사용합니다. 각 WEB이 특정 WAS 한 대에 고정되는 구조가 아닙니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p3-1">
+          <mxGeometry x="72.0" y="1293.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-guide-3" value="&lt;b&gt;03 내부 ALB → WAS01&lt;/b&gt;&lt;br&gt;내부 ALB가 정상 상태의 WAS01을 선택하면 HTTP 8080으로 전달합니다. WAS 보안 그룹은 내부 ALB에서 온 요청만 받습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p3-1">
+          <mxGeometry x="72.0" y="1409.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-guide-4" value="&lt;b&gt;04 내부 ALB → WAS02&lt;/b&gt;&lt;br&gt;WAS02도 같은 방식으로 요청을 처리합니다. ASG와 두 AZ 배치는 가용성의 기반이며 지표에 따라 자동 증감하는 정책은 별도 보완 항목입니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p3-1">
+          <mxGeometry x="760.0" y="1177.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-guide-5" value="&lt;b&gt;응답과 상태 확인&lt;/b&gt;&lt;br&gt;응답은 같은 연결의 역방향으로 돌아갑니다. 그림은 요청 방향만 표시합니다. ALB 상태 확인은 장애 대상을 제외하는 데 사용됩니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p3-1">
+          <mxGeometry x="760.0" y="1293.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p3-guide-6" value="&lt;b&gt;운영 지원과 한계&lt;/b&gt;&lt;br&gt;Apache·Tomcat·애플리케이션 로그와 대상 상태/5xx 알람이 정의되어 있습니다. 내부 구간은 현재 HTTP이며 TLS 도입 필요성과 부하 기반 확장은 후속 검토 대상입니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p3-1">
+          <mxGeometry x="760.0" y="1409.0" width="668.0" height="108" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="p4-data-async" name="04 WAS → Data · Async">
+    <mxGraphModel dx="1550" dy="1750" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1550" pageHeight="1750" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="p4-0" />
+        <mxCell id="p4-1" parent="p4-0" />
+        <mxCell id="p4-title" value="&lt;b&gt;04 · WAS → Data and Asynchronous Delivery&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=27;fontColor=#172B4D;" vertex="1" parent="p4-1">
+          <mxGeometry x="40" y="25" width="1450" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-sub" value="동기 DB 경로와 Outbox 기반 비동기 알림 경로를 분리해 장애 전파 범위를 줄이는 구간" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontColor=#5E6C84;" vertex="1" parent="p4-1">
+          <mxGeometry x="42" y="70" width="1450" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-was" value="&lt;b&gt;WAS ASG&lt;/b&gt;&lt;br&gt;command / outbox / queue consumer&lt;br&gt;AZ-A + AZ-C" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2_auto_scaling;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="735" y="115" width="82" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-data-box" value="&lt;b&gt;DATA PATH&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#FCEBEC;strokeColor=#C62828;strokeWidth=2;fontColor=#8E1717;fontSize=15;" vertex="1" parent="p4-1">
+          <mxGeometry x="70" y="260" width="690" height="790" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-async-box" value="&lt;b&gt;ASYNCHRONOUS REMINDER DELIVERY&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#F6F1FA;strokeColor=#7657A9;strokeWidth=2;fontColor=#45277A;fontSize=15;" vertex="1" parent="p4-1">
+          <mxGeometry x="795" y="260" width="690" height="790" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-secrets" value="&lt;b&gt;Secrets Manager&lt;/b&gt;&lt;br&gt;runtime / migration / owner" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;fillColor=#DD344C;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="175" y="385" width="74" height="74" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-flyway" value="&lt;b&gt;Ephemeral Flyway EC2&lt;/b&gt;&lt;br&gt;no inbound · scoped role" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="385" y="385" width="74" height="74" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-endpoint" value="&lt;b&gt;RDS endpoint&lt;/b&gt;&lt;br&gt;JDBC 5432 · SG restricted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B48CC;strokeWidth=2;fontColor=#243B7A;fontSize=12;" vertex="1" parent="p4-1">
+          <mxGeometry x="245" y="560" width="330" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-rds-primary" value="&lt;b&gt;RDS PostgreSQL 16&lt;/b&gt;&lt;br&gt;primary · encrypted gp3" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;fillColor=#3B48CC;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="190" y="735" width="82" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-rds-standby" value="&lt;b&gt;RDS standby&lt;/b&gt;&lt;br&gt;Multi-AZ" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;fillColor=#3B48CC;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="535" y="735" width="82" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-db-note" value="7-day automated backup · deletion protection default · DB route tables local-only&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;Not yet proven: restore/failover test, RTO/RPO, DR game day&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#FFFFFF;strokeColor=#C62828;fontColor=#5E1A1A;fontSize=12;" vertex="1" parent="p4-1">
+          <mxGeometry x="120" y="900" width="590" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-scheduler" value="&lt;b&gt;EventBridge Scheduler&lt;/b&gt;&lt;br&gt;project schedule group" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eventbridge;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="900" y="375" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-queue" value="&lt;b&gt;SQS reminder queue&lt;/b&gt;&lt;br&gt;managed SSE" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sqs;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="1120" y="375" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-dlq" value="&lt;b&gt;DLQ&lt;/b&gt;&lt;br&gt;after 5 receives&lt;br&gt;14-day retention" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sqs;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="1330" y="375" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-consumer" value="&lt;b&gt;WAS queue consumer&lt;/b&gt;&lt;br&gt;idempotent processing" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2_auto_scaling;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="1120" y="590" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-ses" value="&lt;b&gt;Amazon SES&lt;/b&gt;&lt;br&gt;optional SendEmail" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.simple_email_service_ses;fillColor=#3B48CC;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="1120" y="800" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-cw" value="&lt;b&gt;CloudWatch&lt;/b&gt;&lt;br&gt;queue age / visible / DLQ / delivery failure alarms" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p4-1">
+          <mxGeometry x="1340" y="790" width="76" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-async-note" value="Outbox create/update/delete → Scheduler → SQS → idempotent consumer → SES&lt;br&gt;큐가 발송 장애를 요청 처리와 격리하고, DLQ가 반복 실패를 보존" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#FFFFFF;strokeColor=#7657A9;fontColor=#45277A;fontSize=12;" vertex="1" parent="p4-1">
+          <mxGeometry x="845" y="925" width="590" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-e1" value="01 · runtime credentials" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-secrets" target="p4-was">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e2" value="02 · JDBC 5432" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-was" target="p4-endpoint">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700.0" y="156.0" />
+              <mxPoint x="700.0" y="525.0" />
+              <mxPoint x="410.0" y="525.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e3" value="03" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;endSize=13;fontSize=12;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-endpoint" target="p4-rds-primary">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210.0" y="597.5" />
+              <mxPoint x="210.0" y="700.0" />
+              <mxPoint x="231.0" y="700.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e4" value="04 · Flyway 5432" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-flyway" target="p4-rds-primary">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350.0" y="422.0" />
+              <mxPoint x="350.0" y="700.0" />
+              <mxPoint x="231.0" y="700.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e5" value="05 · 동기 복제 → 대기 DB" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=none;startFill=0;endArrow=block;endFill=1;strokeColor=#475569;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#475569;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-rds-primary" target="p4-rds-standby">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e6" value="06 · outbox" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-was" target="p4-scheduler">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="852.0" y="156.0" />
+              <mxPoint x="852.0" y="340.0" />
+              <mxPoint x="938.0" y="340.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e7" value="07 · scheduled message" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-scheduler" target="p4-queue">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e8" value="08 · after 5 receives" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C62828;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#C62828;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-queue" target="p4-dlq">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e9" value="09 · poll" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-queue" target="p4-consumer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1295.0" y="413.0" />
+              <mxPoint x="1295.0" y="630.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e10" value="10 · SendEmail" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-consumer" target="p4-ses">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1295.0" y="630.0" />
+              <mxPoint x="1295.0" y="838.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-e11" value="11 · metrics / alarms" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p4-1" source="p4-queue" target="p4-cw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1231.0" y="413.0" />
+              <mxPoint x="1231.0" y="755.0" />
+              <mxPoint x="1378.0" y="755.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4-korean-guide" value="" style="rounded=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;" vertex="1" parent="p4-1">
+          <mxGeometry x="50" y="1125.0" width="1450.0" height="580" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-title" value="&lt;b&gt;한글 흐름 설명&lt;/b&gt; · 그림의 화살표 번호와 함께 읽으세요" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=21;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="72" y="1143.0" width="1406.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-1" value="&lt;b&gt;01 자격 증명 조회&lt;/b&gt;&lt;br&gt;WAS는 허용된 런타임 비밀을 Secrets Manager에서 조회합니다. 런타임·마이그레이션·소유자용 비밀의 접근 권한은 분리됩니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="72.0" y="1197.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-2" value="&lt;b&gt;02~03 동기 데이터 접근&lt;/b&gt;&lt;br&gt;WAS가 RDS 엔드포인트의 5432 포트로 연결하면 활성 기본 인스턴스에서 조회와 트랜잭션을 수행합니다. 대기 인스턴스는 일반 읽기 분산 대상이 아닙니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="72.0" y="1313.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-3" value="&lt;b&gt;04 스키마 변경&lt;/b&gt;&lt;br&gt;일시적으로 실행되는 Flyway EC2가 제한된 마이그레이션 권한으로 스키마를 적용합니다. 운영 WAS의 일반 요청 처리와 구분됩니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="72.0" y="1429.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-4" value="&lt;b&gt;05 Multi-AZ 복제&lt;/b&gt;&lt;br&gt;기본 DB의 변경이 다른 가용 영역의 대기 DB로 동기 복제됩니다. 기본/대기 AZ는 개념 배치이며 실제 배치와 장애 조치 후 역할은 달라질 수 있습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="72.0" y="1545.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-5" value="&lt;b&gt;06~07 예약 등록과 전달&lt;/b&gt;&lt;br&gt;WAS의 Outbox 작업이 Scheduler 예약 생성·수정·삭제를 진행합니다. 예약 시각이 되면 Scheduler가 SQS에 메시지를 넣습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="785.0" y="1197.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-6" value="&lt;b&gt;08 반복 실패 분리&lt;/b&gt;&lt;br&gt;설정된 수신 횟수 5회를 넘긴 반복 실패 메시지는 DLQ로 이동하고 14일간 보관됩니다. 운영자는 실패 원인을 확인할 수 있습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="785.0" y="1313.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-7" value="&lt;b&gt;09~10 소비와 발송&lt;/b&gt;&lt;br&gt;WAS 소비자가 큐를 폴링하고 중복 처리 방지 로직을 거쳐, 활성화된 경우 SES에 발송을 요청합니다. 소비자 아이콘은 위 WAS와 같은 애플리케이션 역할입니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="785.0" y="1429.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p4-guide-8" value="&lt;b&gt;11 관측과 결과 해석&lt;/b&gt;&lt;br&gt;CloudWatch는 큐 지연·적체·DLQ·발송 실패를 관측합니다. SES 수락은 수신함 도착과 같지 않으며 결과를 알 수 없는 발송은 성공으로 표시하거나 무조건 재시도하지 않습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p4-1">
+          <mxGeometry x="785.0" y="1545.0" width="693.0" height="108" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="p5-well-architected" name="05 Well-Architected">
+    <mxGraphModel dx="1200" dy="2228" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="2228" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="p5-0" />
+        <mxCell id="p5-1" parent="p5-0" />
+        <mxCell id="p5-title" value="&lt;b&gt;05 · AWS Well-Architected Source Review&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=27;fontColor=#172B4D;" vertex="1" parent="p5-1">
+          <mxGeometry x="40" y="25" width="1120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-banner" value="저장소 소스에서 확인한 설계 통제와 보완점을 요약한 검토입니다. AWS 인증이나 현재 운영 환경의 준수 보장이 아닙니다." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacingLeft=14;fillColor=#FFF4CE;strokeColor=#E3B341;fontColor=#5C4400;fontSize=13;" vertex="1" parent="p5-1">
+          <mxGeometry x="40" y="85" width="1120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-ops" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;1. Operational Excellence&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#176B2C&quot;&gt;&lt;b&gt;확인&lt;/b&gt;&lt;/font&gt; Terraform, CloudWatch logs/alarms, SSM, rolling refresh&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;보완&lt;/b&gt;&lt;/font&gt; 운영 런북·자동 대응·복구 리허설의 최신 증거" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#EEF6FF;strokeColor=#147EBA;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p5-1">
+          <mxGeometry x="50" y="190" width="530" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-security" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;2. Security&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#176B2C&quot;&gt;&lt;b&gt;확인&lt;/b&gt;&lt;/font&gt; private/isolated tiers, SG chain, IAM/Secrets, encryption, IMDSv2, no SSH&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;보완&lt;/b&gt;&lt;/font&gt; WAF, VPC endpoints, internal TLS 위험 검토" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#FFF0F2;strokeColor=#DD344C;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p5-1">
+          <mxGeometry x="620" y="190" width="530" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-reliability" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;3. Reliability&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#176B2C&quot;&gt;&lt;b&gt;확인&lt;/b&gt;&lt;/font&gt; 2-AZ ASGs, RDS Multi-AZ default, backups, SQS/DLQ, Outbox/idempotency&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;보완&lt;/b&gt;&lt;/font&gt; restore/failover test, RTO/RPO, DR game day" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#F2F8EC;strokeColor=#248814;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p5-1">
+          <mxGeometry x="50" y="530" width="530" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-performance" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;4. Performance Efficiency&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#176B2C&quot;&gt;&lt;b&gt;확인&lt;/b&gt;&lt;/font&gt; ALB/ASG 확장 발판, tier health checks, managed RDS, async queue&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;보완&lt;/b&gt;&lt;/font&gt; metric target tracking과 부하 테스트 기준선" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#F6F1FA;strokeColor=#7657A9;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p5-1">
+          <mxGeometry x="620" y="530" width="530" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-cost" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;5. Cost Optimization&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#176B2C&quot;&gt;&lt;b&gt;확인&lt;/b&gt;&lt;/font&gt; capacity variables, dev/HA NAT strategy, ephemeral migration, S3 lifecycle, cost tags&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;보완&lt;/b&gt;&lt;/font&gt; budgets/anomaly alerts와 사용량 기반 right-sizing" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#FFF8E8;strokeColor=#D99000;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p5-1">
+          <mxGeometry x="50" y="870" width="530" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-sustainability" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;b&gt;6. Sustainability&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#176B2C&quot;&gt;&lt;b&gt;확인&lt;/b&gt;&lt;/font&gt; managed services, Graviton RDS default, lifecycle, ephemeral workload&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#B42318&quot;&gt;&lt;b&gt;보완&lt;/b&gt;&lt;/font&gt; demand-based scale-in과 사용률/효율 측정" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=16;fillColor=#EEF8F1;strokeColor=#2E7D32;strokeWidth=2;fontColor=#172B4D;fontSize=13;" vertex="1" parent="p5-1">
+          <mxGeometry x="620" y="870" width="530" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-priority" value="&lt;b&gt;권장 순서&lt;/b&gt; ① restore/failover로 복구 가능성 입증 → ② WAF/endpoints로 노출·egress 축소 → ③ 부하 측정 후 metric scaling → ④ 비용·지속가능성 측정 자동화" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacingLeft=16;fillColor=#E8F0FE;strokeColor=#4C6FFF;fontColor=#243B7A;fontSize=14;" vertex="1" parent="p5-1">
+          <mxGeometry x="50" y="1225" width="1100" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-source" value="Official basis: AWS Well-Architected Framework — Six Pillars · Reliability — Workload Architecture / Fault Isolation / Shared Responsibility for Resiliency" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#5E6C84;" vertex="1" parent="p5-1">
+          <mxGeometry x="50" y="1340" width="1100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-korean-guide" value="" style="rounded=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;" vertex="1" parent="p5-1">
+          <mxGeometry x="50" y="1455.0" width="1100.0" height="728" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-guide-title" value="&lt;b&gt;한글 흐름 설명&lt;/b&gt; · 그림의 화살표 번호와 함께 읽으세요" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=21;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p5-1">
+          <mxGeometry x="72" y="1473.0" width="1056.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-guide-1" value="&lt;b&gt;운영 우수성과 보안&lt;/b&gt;&lt;br&gt;Terraform과 로그·알람은 반복 가능한 운영의 기반입니다. private/isolated 서브넷, 보안 그룹, IAM 역할과 비밀 분리는 접근 범위를 제한합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p5-1">
+          <mxGeometry x="72.0" y="1527.0" width="1056.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-guide-2" value="&lt;b&gt;신뢰성&lt;/b&gt;&lt;br&gt;두 AZ의 ASG, RDS Multi-AZ, 백업, SQS/DLQ는 장애 대응의 구성 요소입니다. 실제 복구 능력은 복원·장애 조치 시험과 RTO/RPO 측정으로 확인해야 합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p5-1">
+          <mxGeometry x="72.0" y="1629.0" width="1056.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-guide-3" value="&lt;b&gt;성능 효율성&lt;/b&gt;&lt;br&gt;ALB와 ASG는 확장할 수 있는 구조를 제공합니다. 실제 트래픽 기준선과 목표 지표를 정한 뒤 자동 확장 정책을 연결하는 순서입니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p5-1">
+          <mxGeometry x="72.0" y="1731.0" width="1056.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-guide-4" value="&lt;b&gt;비용과 지속가능성&lt;/b&gt;&lt;br&gt;용량 변수, 로그 보관 기간, 일시 작업 노드는 낭비를 줄이는 수단입니다. 실제 사용량과 비용을 측정해야 적절한 크기를 판단할 수 있습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p5-1">
+          <mxGeometry x="72.0" y="1833.0" width="1056.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-guide-5" value="&lt;b&gt;이 페이지의 의미&lt;/b&gt;&lt;br&gt;초록 표시는 소스에서 확인한 구성, 빨간 표시는 미구현 또는 증거가 필요한 항목입니다. 각 권장 서비스의 도입 여부는 요구사항과 비용을 함께 보고 결정합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p5-1">
+          <mxGeometry x="72.0" y="1935.0" width="1056.0" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="p5-guide-6" value="&lt;b&gt;검토 범위&lt;/b&gt;&lt;br&gt;이 도식은 현재 저장소를 설명합니다. 운영 중인 AWS 환경을 조회하거나 Well-Architected 심사를 수행한 결과는 아닙니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p5-1">
+          <mxGeometry x="72.0" y="2037.0" width="1056.0" height="94" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="p6-all-in-one" name="06 통합 상세도">
+    <mxGraphModel dx="2000" dy="2966" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2966" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="p6-0" />
+        <mxCell id="p6-1" parent="p6-0" />
+        <mxCell id="p6-title" value="&lt;b&gt;06 · Middleproject AWS 3-Tier — All-in-One Detail&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=28;fontColor=#172B4D;" vertex="1" parent="p6-1">
+          <mxGeometry x="40" y="20" width="1920" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-sub" value="1페이지의 세로 흐름에 네트워크·보안·배포·관측·비동기·데이터 구성을 모두 겹쳐 표시한 통합 검토용 페이지" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#5E6C84;" vertex="1" parent="p6-1">
+          <mxGeometry x="40" y="65" width="1920" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-user" value="&lt;b&gt;User / Browser&lt;/b&gt;" style="shape=mxgraph.basic.person;html=1;fillColor=#FFFFFF;strokeColor=#172B4D;strokeWidth=2;fontSize=12;verticalLabelPosition=bottom;verticalAlign=top;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="960" y="105" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-cloud" value="&lt;b&gt;AWS Cloud — ap-northeast-2 (Seoul)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#F3F8FC;strokeColor=#147EBA;strokeWidth=2;fontColor=#174A67;fontSize=15;" vertex="1" parent="p6-1">
+          <mxGeometry x="90" y="220" width="1820" height="1880" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-vpc" value="&lt;b&gt;VPC 10.20.0.0/16 · ap-northeast-2a + ap-northeast-2c&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#F7FBF2;strokeColor=#248814;strokeWidth=2;fontColor=#1F5B16;fontSize=14;" vertex="1" parent="p6-1">
+          <mxGeometry x="405" y="285" width="1190" height="1610" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-az-head-a" value="&lt;b&gt;Availability Zone A&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F0FE;strokeColor=#147EBA;fontColor=#0D47A1;fontSize=13;" vertex="1" parent="p6-1">
+          <mxGeometry x="520" y="345" width="410" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-az-head-c" value="&lt;b&gt;Availability Zone C&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F0FE;strokeColor=#147EBA;fontColor=#0D47A1;fontSize=13;" vertex="1" parent="p6-1">
+          <mxGeometry x="1070" y="345" width="410" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-igw" value="&lt;b&gt;Internet Gateway&lt;/b&gt;" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.internet_gateway;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="965" y="250" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-public" value="&lt;b&gt;PUBLIC SUBNETS · AZ-A + AZ-C&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=11;fillColor=#EAF7EA;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;" vertex="1" parent="p6-1">
+          <mxGeometry x="475" y="410" width="1050" height="255" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-nat" value="&lt;b&gt;NAT Gateway&lt;/b&gt;&lt;br&gt;dev: single zonal&lt;br&gt;HA: regional" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.nat_gateway;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="645" y="485" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-public-alb" value="&lt;b&gt;Public ALB&lt;/b&gt;&lt;br&gt;AZ-A + AZ-C&lt;br&gt;HTTPS 443 · TLS 1.3 policy&lt;br&gt;/api/mcp blocked" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="960" y="480" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-web" value="&lt;b&gt;PRIVATE WEB SUBNETS&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=11;fillColor=#EAF3FC;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;" vertex="1" parent="p6-1">
+          <mxGeometry x="475" y="705" width="1050" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-web-a" value="&lt;b&gt;WEB01 · AZ-A&lt;/b&gt;&lt;br&gt;Apache 2.4 reverse proxy&lt;br&gt;ASG · encrypted gp3 · IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="680" y="780" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-web-c" value="&lt;b&gt;WEB02 · AZ-C&lt;/b&gt;&lt;br&gt;Apache 2.4 reverse proxy&lt;br&gt;ASG · encrypted gp3 · IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1240" y="780" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-was" value="&lt;b&gt;PRIVATE WAS SUBNETS&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=11;fillColor=#F2ECFA;strokeColor=#7657A9;fontColor=#45277A;fontSize=12;" vertex="1" parent="p6-1">
+          <mxGeometry x="475" y="1025" width="1050" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-internal-alb" value="&lt;b&gt;Internal ALB&lt;/b&gt;&lt;br&gt;AZ-A + AZ-C · HTTP 80" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#8C4FFF;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="960" y="1080" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-was-a" value="&lt;b&gt;WAS01 · AZ-A&lt;/b&gt;&lt;br&gt;Tomcat 10.1 + Spring Boot&lt;br&gt;ASG · encrypted gp3 · IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="680" y="1245" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-was-c" value="&lt;b&gt;WAS02 · AZ-C&lt;/b&gt;&lt;br&gt;Tomcat 10.1 + Spring Boot&lt;br&gt;ASG · encrypted gp3 · IMDSv2" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1240" y="1245" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-flyway" value="&lt;b&gt;Ephemeral Flyway runner&lt;/b&gt;&lt;br&gt;EC2 · no inbound · scoped migration role" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;fillColor=#ED7100;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="960" y="1355" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-db" value="&lt;b&gt;ISOLATED DB SUBNETS · local routes only&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=11;fillColor=#FCEBEC;strokeColor=#C62828;fontColor=#8E1717;fontSize=12;" vertex="1" parent="p6-1">
+          <mxGeometry x="475" y="1535" width="1050" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-rds-primary" value="&lt;b&gt;RDS PostgreSQL 16&lt;/b&gt;&lt;br&gt;primary · encrypted gp3&lt;br&gt;7-day backup · deletion protection default" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;fillColor=#3B48CC;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="680" y="1630" width="86" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-rds-standby" value="&lt;b&gt;RDS 대기 DB&lt;/b&gt;&lt;br&gt;다른 AZ · 장애 조치 대상&lt;br&gt;AZ 배치는 개념 예시" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;fillColor=#3B48CC;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1240" y="1630" width="86" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-acm" value="&lt;b&gt;ACM&lt;/b&gt;&lt;br&gt;provided certificate ARN" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.certificate_manager;fillColor=#DD344C;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="180" y="445" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-artifacts" value="&lt;b&gt;Artifact S3&lt;/b&gt;&lt;br&gt;private · versioned · SSE-S3" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;fillColor=#3F8624;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="180" y="745" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-iam" value="&lt;b&gt;IAM roles&lt;/b&gt;&lt;br&gt;WEB / WAS / migration / scheduler" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.identity_and_access_management_iam;fillColor=#DD344C;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="180" y="1015" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-ssm" value="&lt;b&gt;Systems Manager&lt;/b&gt;&lt;br&gt;managed access · no SSH" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.systems_manager;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="180" y="1240" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-secrets" value="&lt;b&gt;Secrets Manager&lt;/b&gt;&lt;br&gt;runtime / migration / owner" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;fillColor=#DD344C;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="180" y="1480" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-log-s3" value="&lt;b&gt;ALB access-log S3&lt;/b&gt;&lt;br&gt;encrypted · versioned&lt;br&gt;30-day lifecycle" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;fillColor=#3F8624;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1740" y="455" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-cw" value="&lt;b&gt;CloudWatch&lt;/b&gt;&lt;br&gt;logs · metrics · alarms" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1740" y="760" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-scheduler" value="&lt;b&gt;EventBridge Scheduler&lt;/b&gt;&lt;br&gt;project schedule group" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eventbridge;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1700" y="1035" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-queue" value="&lt;b&gt;SQS reminder queue&lt;/b&gt;&lt;br&gt;managed SSE · idempotent consumer" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sqs;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1700" y="1220" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-dlq" value="&lt;b&gt;DLQ&lt;/b&gt;&lt;br&gt;5 receives · 14 days" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sqs;fillColor=#E7157B;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1815" y="1375" width="64" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-ses" value="&lt;b&gt;Amazon SES&lt;/b&gt;&lt;br&gt;optional SendEmail" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.simple_email_service_ses;fillColor=#3B48CC;gradientColor=none;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;fontSize=12;fontColor=#172B4D;labelBackgroundColor=#FFFFFF;spacingTop=6;" vertex="1" parent="p6-1">
+          <mxGeometry x="1665" y="1515" width="72" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-gaps" value="&lt;b&gt;PRIORITY GAPS — NOT DEPLOYED / NOT YET PROVEN&lt;/b&gt;&lt;br&gt;AWS WAF · VPC endpoints · metric-based scaling · load baseline · restore/failover test · explicit RTO/RPO · DR game day" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacingLeft=16;fillColor=#FFF0F0;strokeColor=#C62828;strokeWidth=2;fontColor=#8E1717;fontSize=13;" vertex="1" parent="p6-1">
+          <mxGeometry x="250" y="2015" width="1500" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-legend" value="주황 실선: 동기 요청/DB 경로 · 보라 점선: 비동기 경로 · 초록 점선: 배포/egress · 분홍 점선: 보안·관측 지원" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#5E6C84;" vertex="1" parent="p6-1">
+          <mxGeometry x="250" y="2120" width="1500" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-e1" value="01 · HTTPS" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-user" target="p6-igw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1135.0" y="145.0" />
+              <mxPoint x="1135.0" y="285.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e2" value="02 · 443" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-igw" target="p6-public-alb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1135.0" y="285.0" />
+              <mxPoint x="1135.0" y="520.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e3" value="03 · HTTP 80 · SG restricted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-public-alb" target="p6-web-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="925.0" y="520.0" />
+              <mxPoint x="925.0" y="745.0" />
+              <mxPoint x="720.0" y="745.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e4" value="04 · HTTP 80 · SG restricted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-public-alb" target="p6-web-c">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1075.0" y="520.0" />
+              <mxPoint x="1075.0" y="745.0" />
+              <mxPoint x="1280.0" y="745.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e5" value="05 · reverse proxy" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-web-a" target="p6-internal-alb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="795.0" y="820.0" />
+              <mxPoint x="795.0" y="1045.0" />
+              <mxPoint x="1000.0" y="1045.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e6" value="06 · reverse proxy" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-web-c" target="p6-internal-alb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1205.0" y="820.0" />
+              <mxPoint x="1205.0" y="1045.0" />
+              <mxPoint x="1000.0" y="1045.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e7" value="07 · HTTP 8080 · SG restricted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-internal-alb" target="p6-was-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="925.0" y="1120.0" />
+              <mxPoint x="925.0" y="1210.0" />
+              <mxPoint x="720.0" y="1210.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e8" value="08 · HTTP 8080 · SG restricted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-internal-alb" target="p6-was-c">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1075.0" y="1120.0" />
+              <mxPoint x="1075.0" y="1210.0" />
+              <mxPoint x="1280.0" y="1210.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e9" value="09 · JDBC 5432 · SG restricted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-was-a" target="p6-rds-primary">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="861.0" y="1285.0" />
+              <mxPoint x="861.0" y="1673.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e10" value="10 · JDBC via RDS endpoint" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C2410C;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#C2410C;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-was-c" target="p6-rds-primary">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1360" y="1285" />
+              <mxPoint x="1360" y="1515" />
+              <mxPoint x="725" y="1515" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e11" value="11 · 동기 복제 → 대기 DB" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=none;startFill=0;endArrow=block;endFill=1;strokeColor=#475569;strokeWidth=4;fontSize=12;endSize=13;fontStyle=1;fontColor=#475569;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=1 0;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-rds-primary" target="p6-rds-standby">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e12" value="12 · Flyway 5432" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-flyway" target="p6-rds-primary">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="925.0" y="1391.0" />
+              <mxPoint x="925.0" y="1595.0" />
+              <mxPoint x="723.0" y="1595.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e13" value="13 · TLS certificate" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-acm" target="p6-public-alb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="355" y="481" />
+              <mxPoint x="355" y="450" />
+              <mxPoint x="1000" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e14" value="14 · versioned artifacts" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#15803D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#15803D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-artifacts" target="p6-web-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e15" value="15 · versioned artifacts" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#15803D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#15803D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-artifacts" target="p6-was-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="781" />
+              <mxPoint x="330" y="1215" />
+              <mxPoint x="720" y="1215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e16" value="16 · HTTPS egress" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#15803D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#15803D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=0;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-web-a" target="p6-nat">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e17" value="17 · roles" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-iam" target="p6-was-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="287.0" y="1051.0" />
+              <mxPoint x="287.0" y="1210.0" />
+              <mxPoint x="720.0" y="1210.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e18" value="18 · managed access" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-ssm" target="p6-web-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="1276" />
+              <mxPoint x="300" y="965" />
+              <mxPoint x="620" y="965" />
+              <mxPoint x="620" y="820" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e19" value="19 · scoped reads" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-secrets" target="p6-was-a">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e20" value="20 · migration credentials" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=1;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-secrets" target="p6-flyway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="1516" />
+              <mxPoint x="360" y="1470" />
+              <mxPoint x="995" y="1470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e21" value="21 · access logs" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#15803D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#15803D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-public-alb" target="p6-log-s3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1625" y="520" />
+              <mxPoint x="1625" y="491" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e22" value="22 · logs / metrics / alarms" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-web-c" target="p6-cw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e23" value="23 · outbox create/update/delete" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-was-c" target="p6-scheduler">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1570" y="1285" />
+              <mxPoint x="1570" y="1071" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e24" value="24 · scheduled message" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-scheduler" target="p6-queue">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1867.0" y="1071.0" />
+              <mxPoint x="1867.0" y="1256.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e25" value="25 · poll + idempotent consume" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-queue" target="p6-was-c">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1635" y="1256" />
+              <mxPoint x="1635" y="1210" />
+              <mxPoint x="1280" y="1210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e26" value="26 · after 5 receives" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#C62828;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#C62828;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-queue" target="p6-dlq">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1807.0" y="1256.0" />
+              <mxPoint x="1807.0" y="1340.0" />
+              <mxPoint x="1847.0" y="1340.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e27" value="27 · optional SendEmail" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#6D28D9;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#6D28D9;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=1;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-was-c" target="p6-ses">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1550" y="1325" />
+              <mxPoint x="1550" y="1551" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-e28" value="28 · queue / DLQ alarms" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#BE185D;strokeWidth=3;dashed=1;fontSize=12;endSize=13;fontStyle=1;fontColor=#BE185D;labelBackgroundColor=#FFFFFF;labelBorderColor=#CBD5E1;rounded=1;arcSize=16;jettySize=26;jumpStyle=arc;jumpSize=10;dashPattern=8 5;exitX=1;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;" edge="1" parent="p6-1" source="p6-queue" target="p6-cw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1880" y="1256" />
+              <mxPoint x="1880" y="796" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p6-korean-guide" value="" style="rounded=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;" vertex="1" parent="p6-1">
+          <mxGeometry x="50" y="2225.0" width="1900.0" height="696" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-title" value="&lt;b&gt;한글 흐름 설명&lt;/b&gt; · 그림의 화살표 번호와 함께 읽으세요" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=21;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="72" y="2243.0" width="1856.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-1" value="&lt;b&gt;01~04 인터넷 → WEB&lt;/b&gt;&lt;br&gt;사용자 요청이 IGW를 거쳐 Public ALB에 도착합니다. ALB는 HTTPS를 처리하고 두 AZ의 정상 WEB 대상으로 HTTP 80 요청을 분산합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="72.0" y="2297.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-2" value="&lt;b&gt;05~08 WEB → WAS&lt;/b&gt;&lt;br&gt;각 Apache가 내부 ALB로 프록시하고 내부 ALB가 WAS01/02에 HTTP 8080으로 전달합니다. 주황색 경로를 위에서 아래로 먼저 읽습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="72.0" y="2413.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-3" value="&lt;b&gt;09~11 WAS → DB&lt;/b&gt;&lt;br&gt;두 WAS 모두 RDS 엔드포인트를 통해 기본 DB를 사용합니다. 회색 화살표는 대기 DB로의 동기 복제이며 별도 읽기 서비스나 두 활성 DB를 뜻하지 않습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="72.0" y="2529.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-4" value="&lt;b&gt;12 스키마 적용&lt;/b&gt;&lt;br&gt;Flyway 전용 EC2가 마이그레이션 역할로 스키마를 적용합니다. 도식의 기본/대기 DB AZ는 개념 배치입니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="72.0" y="2645.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-5" value="&lt;b&gt;13~16 인증서·배포·egress&lt;/b&gt;&lt;br&gt;ACM은 ALB 인증서를 제공하고 S3는 배포 파일을 제공합니다. NAT는 private 인스턴스의 외부 통신 경로입니다. WEB/WAS의 동일한 지원 경로는 대표선으로 묶었습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="72.0" y="2761.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-6" value="&lt;b&gt;17~20 권한·관리·비밀&lt;/b&gt;&lt;br&gt;IAM 역할이 서비스별 권한을 제한하고 SSM이 관리 접속을 제공합니다. Secrets Manager는 WAS와 Flyway가 허용된 비밀만 읽도록 연결됩니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="1010.0" y="2297.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-7" value="&lt;b&gt;21~22 기록과 관측&lt;/b&gt;&lt;br&gt;ALB 접근 로그는 S3에 저장되고 WEB/WAS 및 관련 서비스의 로그·지표는 CloudWatch에서 확인합니다. 연결선은 동일 역할 인스턴스의 대표선입니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="1010.0" y="2413.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-8" value="&lt;b&gt;23~25 비동기 예약 처리&lt;/b&gt;&lt;br&gt;WAS Outbox가 Scheduler 예약을 조정하고, 예약 시각에 SQS 메시지가 생성됩니다. WAS는 큐를 폴링해 중복 처리를 방지하며 소비합니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="1010.0" y="2529.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-9" value="&lt;b&gt;26~28 실패·발송·알람&lt;/b&gt;&lt;br&gt;반복 실패는 DLQ로 분리됩니다. SES가 활성화된 경우 WAS가 발송을 요청하며 CloudWatch가 큐와 실패 상태를 관측합니다. 불명확한 발송 결과는 무조건 재전송하지 않습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="1010.0" y="2645.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p6-guide-10" value="&lt;b&gt;지원 경로 읽는 법&lt;/b&gt;&lt;br&gt;좌우의 점선은 중앙 요청 흐름을 지원합니다. 같은 역할 전체에 적용되는 권한·배포·관리·관측은 대표 연결로 표시했습니다. 하단 개선 항목은 현재 구현과 구분해 읽습니다." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=16;fontColor=#172B4D;spacing=5;overflow=hidden;" vertex="1" parent="p6-1">
+          <mxGeometry x="1010.0" y="2761.0" width="918.0" height="108" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

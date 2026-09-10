@@ -44,6 +44,8 @@ This favors duplicate-mail prevention. A future provider-status lookup or explic
 
 ## D-009 · Apply the supplied pastel dashboard visual direction — 2026-09-08 (user)
 
+→ superseded by D-014 (2026-09-10)
+
 The user asked to change the web design to the feel of the attached dashboard image. Apply its warm cream background, lavender navigation, rounded pastel cards, soft dimensional details and friendly illustration to the existing reminder web service. This authorizes the frontend redesign while preserving the existing reminder workflow.
 
 ## D-010 · Publish the current service implementation and redesign — 2026-09-08 (user)
@@ -63,3 +65,11 @@ The user accepted the next frontend implementation and asked to remove access-co
 The user explicitly requested committing and pushing the current pending changes. This grants one-time Git commit and push authority for the D-012 automatic-refresh/local-direct-access implementation, the user-edited architecture README, and their accompanying project records on the existing `codex/service-mvp-pastel-dashboard` branch.
 
 This is not standing publication authority and does not authorize a main-branch merge, AWS provisioning or teardown, DNS changes, live email, credentials, or unrelated future changes.
+
+## D-014 · Apply a Calendly-inspired service visual direction — 2026-09-10 (user)
+
+Supersedes D-009. The user requested redesigning the local service at `http://127.0.0.1:8088/` with `https://calendly.com/` as the reference. Apply a white/navy/blue palette, generous spacing, top navigation, clear calls to action and structured schedule cards while preserving the existing reminder workflows and local access model. This authorizes local implementation and preview refresh.
+
+## D-015 · Publish accumulated changes and deploy Daylight static preview — 2026-09-10 (user)
+
+The user explicitly requested committing/pushing the work so far and deploying the current Daylight site to the connected AWS account. This grants one-time publication of the pending service visual changes, architecture/design documents, Daylight source and associated records on the existing service branch, plus a separate AWS static Daylight deployment. Preserve the existing architecture atlas site. This does not authorize a main merge, full 3-Tier provisioning, live email delivery or treating the prototype's member selector as authentication. The static site contains no seeded personal events and still stores visitor data only in their own browser.

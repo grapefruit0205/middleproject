@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design Calendar · 주간 캘린더</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v5m8-5v5M4 11h16m-11 4h2m3 0h2m-7 3h2"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8m-4-4h8"/></symbol>
+    <symbol id="inbox" viewBox="0 0 24 24"><path d="m4 5-2 10v5h20v-5L20 5Z"/><path d="M2 15h6l2 3h4l2-3h6"/></symbol>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 6-2 7-2 8h16c0-1-2-2-2-8M10 21h4"/></symbol>
+    <symbol id="chat" viewBox="0 0 24 24"><path d="M20 14V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v13l4-4Z"/><path d="M8 17v2h9l4 3V9"/></symbol>
+    <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+    <symbol id="menu" viewBox="0 0 24 24"><path d="M4 8h16M4 15h16"/></symbol>
+    <symbol id="close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  </svg>
+  <div class="calendar-app">
+    <aside class="sidebar" aria-label="캘린더 메뉴">
+      <header class="brand"><span><b>Design</b> Calendar</span><svg class="icon"><use href="#menu"/></svg></header>
+      <div class="profile"><span class="avatar avatar-large">W</span><div><strong>Walter</strong><small>Product designer</small></div><svg class="icon"><use href="#chevron"/></svg></div>
+      <button class="new-event" id="new-event"><svg class="icon"><use href="#plus"/></svg>새 일정 만들기</button>
+      <nav class="navigation" aria-label="보기">
+        <button id="inbox-button"><svg class="icon"><use href="#inbox"/></svg>받은 알림<span class="nav-counter">2</span></button>
+        <button class="active" id="calendar-button" aria-current="page"><svg class="icon"><use href="#calendar"/></svg>캘린더</button>
+      </nav>
+      <section class="favorites">
+        <h2>카테고리 <svg class="icon"><use href="#chevron"/></svg></h2>
+        <div class="category-list" aria-label="표시할 카테고리">
+          <label><input type="checkbox" checked value="meetings"><span class="swatch peach"></span>미팅 · 통화</label>
+          <label><input type="checkbox" checked value="branding"><span class="swatch blue"></span>브랜딩 · 아이덴티티</label>
+          <label><input type="checkbox" checked value="wireframe"><span class="swatch mint"></span>와이어프레임</label>
+          <label><input type="checkbox" checked value="research"><span class="swatch yellow"></span>사용자 리서치</label>
+          <label><input type="checkbox" checked value="mockup"><span class="swatch pink"></span>하이파이 목업</label>
+          <label><input type="checkbox" checked value="prototype"><span class="swatch aqua"></span>인터랙티브 프로토타입</label>
+        </div>
+      </section>
+      <p class="preview-note"><span></span>디자인 미리보기 · 샘플 일정</p>
+    </aside>
+    <main class="workspace">
+      <header class="toolbar">
+        <div class="breadcrumb">Projects <span>›</span><span>July 2023</span></div>
+        <div class="toolbar-actions">
+          <button class="icon-button" id="search-button" aria-label="일정 검색"><svg class="icon"><use href="#search"/></svg></button>
+          <button class="icon-button" id="messages-button" aria-label="메시지"><svg class="icon"><use href="#chat"/></svg></button>
+          <button class="icon-button" id="notifications-button" aria-label="알림"><svg class="icon"><use href="#bell"/></svg></button>
+          <span class="workspace-name"><span class="workspace-logo">◉</span>My workspace <svg class="icon"><use href="#chevron"/></svg></span>
+        </div>
+      </header>
+      <div class="search-container" hidden><label for="event-search">일정 검색</label><input type="search" id="event-search" placeholder="일정 제목 입력"><button id="search-close" class="icon-button" aria-label="검색 닫기"><svg class="icon"><use href="#close"/></svg></button></div>
+      <div class="week-scroll" aria-label="7월 17일부터 22일까지 주간 일정" tabindex="0">
+        <div class="week-canvas">
+          <div class="week-header">
+            <div class="timezone">GMT+9</div>
+            <div class="day-heading"><strong>17</strong><span>Mon</span><i></i></div>
+            <div class="day-heading selected"><strong>18</strong><span>Tue</span><i></i></div>
+            <div class="day-heading"><strong>19</strong><span>Wed</span><i></i></div>
+            <div class="day-heading"><strong>20</strong><span>Thu</span><i></i></div>
+            <div class="day-heading"><strong>21</strong><span>Fri</span><i></i></div>
+            <div class="day-heading"><strong>22</strong><span>Sat</span><i></i></div>
+          </div>
+          <div class="schedule">
+            <div class="time-labels" aria-hidden="true"><span>08 AM</span><span>09 AM</span><span>10 AM</span><span>11 AM</span><span>12 PM</span><span>01 PM</span><span>02 PM</span><span>03 PM</span></div>
+            <div class="day-column">
+              <button class="event peach" data-category="meetings" data-day="7월 17일 월요일" data-slot="0800-0900"><span class="event-time">8:00 AM <span>ⓘ</span></span><strong>John과 킥오프 미팅</strong></button>
+              <button class="event blue" data-category="branding" data-day="7월 17일 월요일" data-slot="1030-1130"><span class="event-time">10:30–11:30 AM</span><strong>브랜드 로고 디자인</strong></button>
+              <button class="event yellow" data-category="research" data-day="7월 17일 월요일" data-slot="1330-1500"><span class="event-time">1:30–3:00 PM</span><strong>사용자 인터뷰 정리</strong></button>
+            </div>
+            <div class="day-column">
+              <button class="event mint featured-event" data-category="wireframe" data-day="7월 18일 화요일" data-description="레이아웃의 마지막 디테일을 다듬습니다. 컴포넌트 색상을 정리하고, 소개 페이지의 로고와 이미지를 업데이트한 뒤 모바일과 데스크톱에서 다시 확인합니다." data-slot="0830-1300"><span class="event-time">8:30 AM–1:00 PM</span><strong>최종 레이아웃 다듬기</strong><span class="event-progress">progress ↟ <b>86%</b></span></button>
+              <button class="event pink" data-category="mockup" data-day="7월 18일 화요일" data-slot="1330-1430"><span class="event-time">1:30–2:30 PM</span><strong>모바일 목업 리뷰</strong></button>
+            </div>
+            <div class="day-column">
+              <button class="event peach" data-category="meetings" data-day="7월 19일 수요일" data-slot="0930-1200"><span class="event-time">9:30 AM–12:00 PM</span><strong>디자인 방향성<br>팀 워크숍</strong><span class="attendees"><span class="avatar">J</span><span class="avatar">W</span></span></button>
+              <button class="event aqua" data-category="prototype" data-day="7월 19일 수요일" data-slot="1300-1500"><span class="event-time">1:00–3:00 PM</span><strong>프로토타입 연결</strong></button>
+            </div>
+            <div class="day-column">
+              <button class="event blue" data-category="branding" data-day="7월 20일 목요일" data-slot="0830-1500"><span class="event-time">8:30 AM–3:00 PM</span><strong>Design Onboarding</strong><p>새로운 앱의 온보딩을 준비해요. 화면 흐름과 핵심 컴포넌트를 함께 정리합니다.</p><span class="attendees"><span class="avatar">A</span><span class="avatar">K</span><span class="avatar">W</span></span></button>
+            </div>
+            <div class="day-column">
+              <button class="event pink" data-category="mockup" data-day="7월 21일 금요일" data-slot="1200-1330"><span class="event-time">12:00–1:30 PM</span><strong>최종 시안 확인</strong></button>
+            </div>
+            <div class="day-column">
+              <button class="event peach" data-category="meetings" data-day="7월 22일 토요일" data-slot="0800-1030"><span class="event-time">8:00–10:30 AM</span><strong>John C.와<br>사용자 인터뷰</strong><span class="attendees"><span class="avatar">J</span><span class="avatar">A</span></span></button>
+              <button class="event mint" data-category="prototype" data-day="7월 22일 토요일" data-slot="1130-1330"><span class="event-time">11:30 AM–1:30 PM</span><strong>앱 프로토타입<br>사용성 테스트</strong><span class="attendees"><span class="avatar">A</span><span class="avatar">W</span></span></button>
+            </div>
+            <div class="current-time" aria-label="샘플 기준 시각 오전 11시 34분"><span>11:34 AM</span></div>
+          </div>
+        </div>
+      </div>
+      <dialog class="event-dialog" id="event-dialog" open aria-labelledby="detail-title">
+        <div class="cover-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="detail-body">
+          <div class="detail-heading"><h1 id="detail-title">최종 레이아웃 다듬기</h1><button class="icon-button" id="close-detail" aria-label="일정 상세 닫기"><svg class="icon"><use href="#close"/></svg></button></div>
+          <div class="detail-meta"><span><svg class="icon"><use href="#clock"/></svg><span id="detail-time">8:30 AM–1:00 PM</span></span><span><svg class="icon"><use href="#calendar"/></svg><span id="detail-day">7월 18일 화요일</span></span></div>
+          <h2>Description</h2>
+          <p id="detail-description">레이아웃의 마지막 디테일을 다듬습니다. 컴포넌트 색상을 정리하고, 소개 페이지의 로고와 이미지를 업데이트한 뒤 모바일과 데스크톱에서 다시 확인합니다.</p>
+          <button class="confirm-button" id="confirm-event">일정 확인</button>
+        </div>
+      </dialog>
+      <dialog class="create-dialog" id="create-dialog" aria-labelledby="create-title">
+        <form id="create-form">
+          <div class="detail-heading"><h2 id="create-title">새 샘플 일정</h2><button type="button" class="icon-button" id="close-create" aria-label="등록 닫기"><svg class="icon"><use href="#close"/></svg></button></div>
+          <label>일정 제목<input name="title" required maxlength="80" placeholder="예: 디자인 리뷰"></label>
+          <label>요일<select name="day"><option value="0">월요일 · 17일</option><option value="1">화요일 · 18일</option><option value="2">수요일 · 19일</option><option value="3">목요일 · 20일</option><option value="4">금요일 · 21일</option><option value="5">토요일 · 22일</option></select></label>
+          <label>시작 시간<select name="hour"><option value="0">08:00</option><option value="1">09:00</option><option value="2">10:00</option><option value="3">11:00</option><option value="4">12:00</option><option value="5">13:00</option><option value="6">14:00</option></select></label>
+          <p class="form-note">1시간짜리 미팅을 추가합니다. 새로고침하면 샘플이 초기화됩니다.</p>
+          <button class="confirm-button" type="submit">샘플 일정 추가</button>
+        </form>
+      </dialog>
+      <div class="toast" role="status" hidden></div>
+    </main>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

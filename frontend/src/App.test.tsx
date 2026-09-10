@@ -34,7 +34,7 @@ describe('App', () => {
     render(<App />)
     expect(screen.getByLabelText('일정 불러오는 중')).toBeInTheDocument()
     expect(await screen.findByText('아직 등록한 일정이 없어요.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /오늘도 반가워요/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     expect(screen.getByLabelText('일정 제목')).toBeInTheDocument()
     expect(screen.getByText('서버 연결됨')).toBeInTheDocument()
     expect(screen.queryByLabelText('본인용 접근 키')).not.toBeInTheDocument()
