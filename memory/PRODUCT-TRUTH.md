@@ -89,6 +89,8 @@ Checked: 2026-09-10 — Chromium rendered desktop/mobile previews, verified deta
 
 ## Daylight static AWS hosting — state: observed operational — 2026-09-10
 
+- Later local-only UI follow-up: larger desktop typography/controls and mobile drawer date/search/team shortcuts are implemented in repository/scratch source and browser-checked (`/tmp/daylight-layout-check.mjs`, `/tmp/daylight-large-desktop.png`, `/tmp/daylight-mobile-tools.png`). These layout changes are not yet deployed; the published site remains at manual job 2's transparent-navigation revision.
+
 - Public URL: `https://main.d1za53r0rfy3x6.amplifyapp.com/`. Separate Amplify app `d1za53r0rfy3x6`, Seoul region, branch `main`, manual job `1` returned `SUCCEED`. The existing architecture atlas app was not modified.
 - Evidence: all four deployed files returned HTTP 200 and matched the SHA-256 of the repository `daylight/` assets. This confirms static deployment only; team authentication, server persistence and live email remain unimplemented for Daylight.
 

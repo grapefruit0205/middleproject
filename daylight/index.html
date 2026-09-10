@@ -30,6 +30,13 @@
         <button id="inbox-button"><svg class="icon"><use href="#inbox"/></svg>받은 알림<span class="nav-counter">0</span></button>
         <button class="active" id="calendar-button" aria-current="page"><svg class="icon"><use href="#calendar"/></svg>캘린더</button>
       </nav>
+      <section class="mobile-calendar-tools" id="mobile-calendar-tools" aria-label="모바일 캘린더 도구">
+        <h2>날짜 이동 · 일정 검색</h2>
+        <div id="mobile-date-slot"></div>
+        <div id="mobile-search-slot"></div>
+        <button type="button" class="mobile-tool-button" id="mobile-view-calendar">선택한 날짜 보기 <span aria-hidden="true">→</span></button>
+        <button type="button" class="mobile-tool-button" id="mobile-edit-team"><svg class="icon"><use href="#edit"/></svg>팀원 이름·역할 관리</button>
+      </section>
       <section class="favorites">
         <div class="category-header">
           <h2>카테고리</h2>
@@ -51,11 +58,12 @@
           <button class="icon-button" id="notifications-button" aria-label="알림"><svg class="icon"><use href="#bell"/></svg></button>
         </div>
       </header>
-      <section class="calendar-controls" aria-label="날짜 선택">
+      <div id="desktop-calendar-tools"><section class="calendar-controls" aria-label="날짜 선택">
         <div class="date-selectors"><select id="calendar-year" aria-label="년도"></select><select id="calendar-month" aria-label="월"></select><select id="calendar-day" aria-label="일"></select></div>
         <div class="date-navigation"><button type="button" id="previous-week" aria-label="이전 주">‹</button><button type="button" id="today-button">오늘</button><button type="button" id="next-week" aria-label="다음 주">›</button><span id="week-range"></span></div>
       </section>
       <div class="search-container" hidden><label for="event-search">일정 검색</label><input type="search" id="event-search" placeholder="일정 제목 입력"><button id="search-close" class="icon-button" aria-label="검색 닫기"><svg class="icon"><use href="#close"/></svg></button></div>
+      </div>
       <div class="week-scroll" aria-label="주간 일정" tabindex="0">
         <div class="week-canvas">
           <div class="week-header"></div>

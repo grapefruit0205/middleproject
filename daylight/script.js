@@ -24,6 +24,22 @@ const sidebarClose = document.querySelector('#sidebar-close');
 const sidebarBackdrop = document.querySelector('#sidebar-backdrop');
 const workspace = document.querySelector('.workspace');
 const mobileMenu = window.matchMedia('(max-width: 700px)');
+const calendarControls = document.querySelector('.calendar-controls');
+const searchContainer = document.querySelector('.search-container');
+let desktopSearchOpen = false;
+function relocateCalendarControls() {
+  if (mobileMenu.matches) {
+    desktopSearchOpen = !searchContainer.hidden;
+    document.querySelector('#mobile-date-slot').append(calendarControls);
+    document.querySelector('#mobile-search-slot').append(searchContainer);
+    searchContainer.hidden = false;
+  } else {
+    document.querySelector('#desktop-calendar-tools').append(calendarControls, searchContainer);
+    searchContainer.hidden = !desktopSearchOpen && !search.value;
+  }
+}
+relocateCalendarControls();
+mobileMenu.addEventListener('change', relocateCalendarControls);
 let sidebarOpen = !mobileMenu.matches;
 try {
   const saved = localStorage.getItem('daylight_sidebar_open');
@@ -50,6 +66,8 @@ sidebarClose.addEventListener('click', () => setSidebarOpen(false));
 sidebarBackdrop.addEventListener('click', () => setSidebarOpen(false));
 mobileMenu.addEventListener('change', () => setSidebarOpen(sidebarOpen, false));
 setSidebarOpen(sidebarOpen, false);
+document.querySelector('#mobile-view-calendar').addEventListener('click', () => setSidebarOpen(false));
+document.querySelector('#mobile-edit-team').addEventListener('click', () => document.querySelector('#edit-team').click());
 
 // 기본 카테고리 데이터 (프로젝트 및 클라이언트 공유용)
 const DEFAULT_CATEGORIES = [

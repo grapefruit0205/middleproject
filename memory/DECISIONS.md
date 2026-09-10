@@ -73,3 +73,7 @@ Supersedes D-009. The user requested redesigning the local service at `http://12
 ## D-015 · Publish accumulated changes and deploy Daylight static preview — 2026-09-10 (user)
 
 The user explicitly requested committing/pushing the work so far and deploying the current Daylight site to the connected AWS account. This grants one-time publication of the pending service visual changes, architecture/design documents, Daylight source and associated records on the existing service branch, plus a separate AWS static Daylight deployment. Preserve the existing architecture atlas site. This does not authorize a main merge, full 3-Tier provisioning, live email delivery or treating the prototype's member selector as authentication. The static site contains no seeded personal events and still stores visitor data only in their own browser.
+
+## D-016 · Publish Daylight sizing and mobile-menu follow-up — 2026-09-10 (user)
+
+The user explicitly requested committing and pushing all current changes and instructions for adding three GitHub collaborators. Publish the pending transparent navigation, larger desktop sizing, mobile-menu controls and their records on the existing service branch. Explain collaborator invitations but do not grant access without identified recipients and an invitation request. This turn does not request a main merge or a new AWS deployment.

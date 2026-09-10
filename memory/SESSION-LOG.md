@@ -201,6 +201,9 @@ One short section per working session: what was worked on, what was decided (wit
 
 ## 2026-09-10 — Daylight four-member team calendar prototype
 
+- `confirmed` later layout request: PC browser 100% should look approximately like the prior 130%, and mobile should expose PC tools in the left hamburger menu. `observed`: expanded desktop canvas/typography/controls without browser zoom or transforms; actual sidebar/time-row dimensions increase. Mobile relocates the existing date/search controls (no duplicate state), and includes calendar-return and team-management actions alongside existing creation, inbox and category tools. Repository `daylight/` and scratch preview files match.
+- `observed`: `/tmp/daylight-layout-check.mjs` passed focused checks at widths 320, 390, 700, 1024, 1440 and 1920 for sizing, control relocation, date/search/team interactions and no page overflow/errors. Corrected only the test's missing asynchronous media-change wait after its first run. Visually inspected desktop and mobile-menu screenshots. No Git publication or AWS deployment was performed for this layout follow-up.
+
 - `confirmed` follow-up: requested transparent date selectors. `observed`: removed the year/month/day controls' visible background and border in the scratch `styles.css`, retained readable option backgrounds and keyboard focus outline. Focused browser check passed all three transparent computed styles and month selection. No behavior or backend changes.
 
 - `confirmed`: the user requested four selectable team members with editable names/roles, removal of My workspace, and a calendar driven by the current year with year/month/day selectors. They proposed notifying selected team members upon registration.
@@ -210,6 +213,12 @@ One short section per working session: what was worked on, what was decided (wit
 - `confirmed`: the follow-up asks whether cross-device email notifications can be added; this is a capability question, not authorization to send live email or provision AWS. Click Evidence instructions were followed with ordinary host tools; `click-gate` was unavailable, so no Click-specific receipt is claimed.
 
 ## 2026-09-10 — Git publication preparation and Daylight AWS deployment
+
+- `confirmed` later publication follow-up (D-016): requested committing/pushing the current transparent navigation and desktop/mobile layout work plus instructions for inviting three GitHub collaborators. Current application source is unchanged since the passing responsive browser checks, so those results are reused without another broad test run. Invitations, main merge and AWS redeployment are not performed in this follow-up.
+
+- `confirmed` subsequent styling request: make `‹ 오늘 ›` transparent as well. `observed`: updated repository and scratch CSS to remove navigation button backgrounds/borders, including hover borders; keyboard focus retained. This follow-up is local only, not a new Git publication or AWS deployment.
+
+- `confirmed` next follow-up: the user explicitly requested deploying that styling update and asked about other visitors' access. `observed`: submitted manual Amplify job `2` to the same Daylight app; unauthenticated public CSS returned HTTP 200 and its SHA-256 matched the updated repository stylesheet. Access is public, but browser-local calendar data remains separate per visitor. No new Git commit/push was requested in this follow-up.
 
 - `confirmed`: D-015 authorizes publication of accumulated changes and the current Daylight static site to the connected AWS account.
 - `observed`: copied the four scratch source files byte-for-byte into versioned `daylight/`, added scope/hosting documentation and a manual deployment script with account checking and a four-file upload allowlist. No credentials, presigned URLs, user browser data or backend data are packaged. The pending React redesign and architecture/design artifacts are included in the publication scope.

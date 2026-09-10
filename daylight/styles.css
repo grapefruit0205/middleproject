@@ -735,9 +735,9 @@ dialog::backdrop { background: #22223826; }
 .calendar-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 30px 16px; }
 .date-selectors, .date-navigation { display: flex; align-items: center; gap: 7px; }
 .calendar-controls select, .date-navigation button { min-height: 36px; background: #fff; border: 1px solid #e6ddd7; border-radius: 5px; color: var(--ink); font-size: 12px; padding: 6px 10px; }
-.calendar-controls select { background: transparent; border-color: transparent; border-radius: 0; cursor: pointer; }
+.calendar-controls select, .date-navigation button { background: transparent; border-color: transparent; border-radius: 0; cursor: pointer; }
 .calendar-controls select option { background: var(--canvas); color: var(--ink); }
-.date-navigation button:hover { border-color: var(--coral); }
+.date-navigation button:hover { color: var(--coral); }
 #week-range { font-size: 10px; color: var(--muted); margin-left: 5px; }
 .day-heading { border: 0; background: transparent; padding: 0; font: inherit; }
 .day-heading.is-today > span { color: #d33343; font-weight: 650; }
@@ -770,6 +770,94 @@ button:disabled { opacity: .5; cursor: default; }
   .date-navigation { gap: 4px; }
   .date-navigation button { padding: 6px 8px; }
   #team-fields fieldset { grid-template-columns: 1fr; }
+}
+
+.mobile-calendar-tools { display: none; }
+
+/* PC 100% 배율에서도 기존 130%에 가까운 글자·조작 크기. 캔버스 변형 없이 실제 레이아웃을 확장합니다. */
+@media (min-width: 701px) {
+  :root { --sidebar: 330px; --hour: 117px; --gutter: 96px; }
+  body { padding: 3vh 2vw; }
+  .calendar-app { width: min(1664px, 100%); height: 94vh; height: 94dvh; min-height: 540px; }
+  .brand { padding: 28px 30px; }
+  .brand b { font-size: 29px; }
+  .icon { width: 25px; height: 25px; }
+  .icon-button, .profile .icon-button, .detail-heading .icon-button { width: 40px; height: 40px; }
+  .profile { margin: 24px 28px 12px; gap: 12px; }
+  .profile .avatar-large { width: 40px; height: 49px; font-size: 22px; }
+  .profile-fields > label, .profile small { font-size: 12px; }
+  .profile-fields select { font-size: 17px; min-height: 39px; }
+  .team-caption { font-size: 13px; margin: 0 28px 24px; }
+  .new-event { font-size: 16px; min-height: 52px; padding: 16px 18px; margin-inline: 21px; }
+  .navigation button { font-size: 16px; min-height: 56px; gap: 15px; padding-inline: 30px; }
+  .nav-counter { font-size: 13px; }
+  .favorites { padding-inline: 30px; }
+  .category-header h2 { font-size: 16px; }
+  .category-item { font-size: 14px; min-height: 49px; }
+  .cat-icon-btn { width: 30px; height: 30px; }
+  .preview-note { font-size: 12px; line-height: 1.7; }
+  .toolbar { padding: 22px 30px; min-height: 90px; }
+  .breadcrumb { font-size: 15px; }
+  .calendar-controls select, .date-navigation button { font-size: 16px; min-height: 46px; padding: 8px 13px; }
+  #week-range { font-size: 13px; }
+  .week-canvas { min-width: 950px; }
+  .week-header { height: 160px; padding-top: 24px; }
+  .day-heading strong { font-size: 51px; }
+  .day-heading > span { font-size: 16px; }
+  .timezone { font-size: 12px; }
+  .time-labels { font-size: 14px; }
+  .event { padding: 12px; }
+  .event strong { font-size: 15px; }
+  .event-time { font-size: 13px; }
+  .calendar-empty { width: 360px; padding: 36px; }
+  .calendar-empty h1 { font-size: 25px; }
+  .calendar-empty p { font-size: 16px; }
+  .calendar-empty > .icon { width: 42px; height: 42px; }
+  .confirm-button, .danger-button { font-size: 16px; min-height: 52px; }
+  .create-dialog { width: 494px; padding: 32px; }
+  .team-dialog { width: 676px; }
+  .notifications-dialog { width: 598px; }
+  .event-dialog { width: 480px; }
+  .detail-heading h1, .detail-heading h2 { font-size: 20px; }
+  .create-dialog label, .recipient-field legend { font-size: 16px; }
+  .create-dialog input, .create-dialog select { font-size: 16px; min-height: 48px; }
+  #recipient-options input { min-height: 20px; width: 20px; height: 20px; }
+  .form-note, .detail-meta, .detail-body > p, .notification-item span { font-size: 14px; }
+  .notification-item strong { font-size: 17px; }
+  .search-container { font-size: 15px; }
+  .search-container input { min-height: 44px; }
+  .toast { font-size: 15px; }
+}
+
+@media (max-width: 700px) {
+  .calendar-app { min-height: 0; }
+  .sidebar { width: min(340px, 92vw); overscroll-behavior: contain; }
+  .sidebar .icon-button { width: 44px; height: 44px; flex-shrink: 0; }
+  .sidebar .brand { padding: 12px 20px; }
+  .profile { margin-inline: 20px; }
+  .profile-fields select { font-size: 16px; min-height: 44px; }
+  .profile-fields > label, .profile small, .team-caption { font-size: 12px; }
+  .new-event, .navigation button { min-height: 48px; font-size: 15px; }
+  .mobile-calendar-tools { display: grid; gap: 14px; padding: 20px; border-bottom: 1px solid #f0e8e2; }
+  .mobile-calendar-tools h2 { margin: 0; font-size: 13px; color: var(--muted); }
+  .mobile-calendar-tools .calendar-controls { display: grid; padding: 0; gap: 10px; }
+  .mobile-calendar-tools .date-selectors { justify-content: space-between; }
+  .mobile-calendar-tools select, .mobile-calendar-tools .date-navigation button { min-height: 44px; font-size: 16px; }
+  .mobile-calendar-tools .date-navigation { justify-content: space-between; }
+  .mobile-calendar-tools .search-container { display: grid; gap: 8px; margin: 0; }
+  .mobile-calendar-tools .search-container label { font-size: 13px; color: var(--muted); }
+  .mobile-calendar-tools .search-container input { width: 100%; font-size: 16px; min-height: 44px; border-radius: 5px; }
+  .mobile-calendar-tools #search-close { display: none; }
+  .mobile-tool-button { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 44px; border: 0; background: transparent; text-align: left; font-size: 14px; padding: 8px 0; }
+  #mobile-view-calendar { color: #d33343; font-weight: 650; }
+  .toolbar-actions { display: none; }
+  .toolbar .icon-button { width: 44px; height: 44px; }
+  .toolbar { min-height: 68px; padding: 8px 16px; }
+  .breadcrumb { font-size: 15px; }
+  .category-item { min-height: 44px; font-size: 14px; }
+  .cat-icon-btn { width: 36px; height: 36px; }
+  .category-actions { opacity: 1; }
+  .create-dialog input, .create-dialog select { font-size: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
