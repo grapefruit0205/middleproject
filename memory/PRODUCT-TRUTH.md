@@ -6,6 +6,18 @@ Rule: every entry carries evidence (code path, test, screenshot), a date, and th
 
 ## Implemented
 
+## Mobile day/week/month calendar views — state: verified local UI — 2026-09-10
+
+Evidence: `daylight/index.html`, `script.js`, `team-calendar.js`, `styles.css`, and `scripts/check-daylight-views.mjs`. Mobile defaults to daily full-width agenda cards; week uses a seven-day picker with date-grouped lists; month shows per-day matching event counts and the selected day's agenda. Desktop week retains the timeline. Visible period navigation adjusts one day/week/month, including month-end clamping; view preference alone may persist locally. Existing detail/history and registration handlers are reused.
+Checked: 2026-09-10 — deterministic read-only browser fixtures passed all three views at 320/390/430/700/1024/1440 pixels, no mobile calendar/page horizontal overflow, overlapping-time title visibility, detail opening, search/empty results, leap-month/year transitions and view reload persistence. Corrected an ambiguous test locator before the passing run; no second application implementation was needed. Inspected `/tmp/daylight-view-day.png`, `daylight-view-week.png`, `daylight-view-month.png`. Refreshed only the existing local WEB container; no DB writes, real email, AWS apply or Amplify upload. `click-gate` unavailable; ordinary host evidence, not a Click receipt.
+
+## Daylight frontend with Daylight API — state: verified locally; public deployment unchanged — 2026-09-10
+
+Evidence: `daylight/index.html`, `script.js`, `team-calendar.js`, `styles.css`, `infra/local/web.Dockerfile`, `docs/api/daylight.md`, and `scripts/check-daylight-api.mjs`. The HTML/CSS/JavaScript UI at local `/daylight/` uses existing `/api/deadlines` CRUD/cancel/history through Apache to WAS/PostgreSQL. Event and delivery state is no longer written to browser storage. API errors do not fall back to local saves. Source application/build identity is `daylight-api`; this configuration rename has not been rebuilt into the running WAS in this follow-up. Existing endpoint paths, owner auth and provider-disabled local settings remain unchanged.
+Checked: 2026-09-10 — one real local integration run passed create, commit-with-lost-response/same-key retry without duplicate, independent browser read, stale-version 409 without overwrite, successful update/reload/cancel, persisted DELETE outbox/history, disabled external providers, HTTP 503 fail-closed behavior and mobile overflow/no page errors. Test event `33ec2bec-7f16-4e29-bfcc-73819340c410` remains cancelled with audit history, not deleted. Final inline-retry-control follow-up passed a mock-response-only check without another DB write. Desktop/mobile screenshots were inspected. Source checks cover naming and WEB image copy; no new Docker image build was claimed. Static-only deployment guard rejects this version before AWS access. Click Evidence applies, but `click-gate` was unavailable and no Click receipt is claimed.
+
+Current boundary: four-member authentication, profile/recipient storage and team email remain unimplemented; controls unsupported by the single-owner API are disabled/excluded, not falsely persisted. Prior browser-local preview entries describe the previous source and still-public Amplify deployment; they are not the current connected local UI. No AWS deployment, live email, Git commit/push or main merge was performed in this change.
+
 ## Beginner architecture guide and project README — state: verified documentation, not runtime verification — 2026-09-10
 
 Evidence: `README.md` separates the Daylight browser-local prototype from the existing single-owner backend and infrastructure definitions. Notion hub `3d7d9d5f6b3a81359f18c9aeec3376ed` retains nine Phase pages; thirteen concept children and two presentation-script children were added, with existing detailed explanations retained in collapsible sections. Phase 9 now presents a 15-minute allocation, not a measured rehearsal result.
@@ -99,7 +111,25 @@ Checked: 2026-09-10 — Chromium rendered desktop/mobile previews, verified deta
 - Public URL: `https://main.d1za53r0rfy3x6.amplifyapp.com/`. Separate Amplify app `d1za53r0rfy3x6`, Seoul region, branch `main`, manual job `1` returned `SUCCEED`. The existing architecture atlas app was not modified.
 - Evidence: all four deployed files returned HTTP 200 and matched the SHA-256 of the repository `daylight/` assets. This confirms static deployment only; team authentication, server persistence and live email remain unimplemented for Daylight.
 
+### Latest public Daylight UI deployment — 2026-09-10
+
+- `observed`: Amplify app `d1za53r0rfy3x6`, branch `main`, manual job `3` reached `SUCCEED` at 15:59 KST. Public URL: https://main.d1za53r0rfy3x6.amplifyapp.com/.
+- `observed`: public browser DOM shows day/week/month controls, four preview members, and the browser-only/no-device-sharing notice. Local browser switches daily/monthly views successfully. All five published assets returned HTTP 200 and SHA-256 matched deployment inputs (HTML paths normalized by the uploader).
+- `observed`: source is `daylight/preview/` plus common CSS/UI script. This replaces the previous four-file static bundle, not the API runtime. Browser storage schema is retained; no seeded events or user data are uploaded. Mobile layouts reuse the previously checked CSS and date-view design; this deployment does not claim a new real-device test.
+- `confirmed`: D-023 limits this deployment to UI. Shared backend persistence, authentication and external email remain disconnected on this public preview. No backend/DNS infrastructure changed.
+
 ## Not implemented
+
+<!-- Latest UI correction is recorded above the remaining capability gaps. -->
+
+### Daylight design-preserving correction — 2026-09-10
+
+- `observed`: D-025 is implemented in API/preview adapters and shared CSS. Daily/weekly use the original one/seven-column time grid and pastel cards; monthly displays cards inside bordered date cells. The separate agenda-list design is removed. Mobile weekly intentionally allows horizontal scrolling while daily/monthly fit the content width.
+- `observed`: local browser checked a clearly named local-only design fixture through daily/monthly views and month-card detail. Responsive viewport check confirmed seven weekly columns and contained horizontal scroll. A test event remains only in localhost preview browser storage; it is not in source or Amplify.
+- `observed`: syntax and whitespace checks passed. Updated the standalone UI check script for the new expected structure; that full fixture suite was not rerun in this turn. Click executable was unavailable; ordinary host execution evidence is reported, not a Click receipt.
+- `observed`: Amplify manual job `4` reached `SUCCEED`; five public assets HTTP 200 and SHA-256 match. Public browser shows the one-day timeline and a 35-cell September month grid with no agenda cards. Backend/authentication/DNS scope is unchanged.
+
+## Remaining capability gaps
 
 
 <!-- Listed explicitly so absence is a fact, not a gap. Copy must not claim these.

@@ -1,1 +1,1 @@
-rootProject.name = "reminder-platform"
+rootProject.name = "daylight-api"

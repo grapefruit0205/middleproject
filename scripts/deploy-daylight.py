@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Explicit, manual deployment of the four public Daylight assets to Amplify.
+"""Explicit, manual deployment of allowlisted public Daylight assets to Amplify.
 
 Uses the caller's AWS CLI login; does not store credentials or deploy backend data.
 Run only when deployment to the named account has been authorized.
@@ -18,7 +18,12 @@ def main():
     parser.add_argument('--profile', required=True)
     parser.add_argument('--account', required=True)
     parser.add_argument('--region', default='ap-northeast-2')
+    parser.add_argument('--static-preview', action='store_true',
+                        help='Deploy the browser-local UI preview, not the API-connected application.')
     args = parser.parse_args()
+    source = Path(__file__).resolve().parents[1] / 'daylight'
+    if not args.static_preview and "'/api/deadlines'" in (source / 'team-calendar.js').read_text():
+        raise SystemExit('Daylight now requires its same-origin API. Static-only Amplify deployment is disabled; use an authenticated WEB/API deployment.')
     base = ['aws', '--profile', args.profile, '--region', args.region, '--output', 'json', '--no-cli-pager']
 
     def aws(*command):
@@ -27,11 +32,19 @@ def main():
     identity = aws('sts', 'get-caller-identity')
     if identity['Account'] != args.account:
         raise SystemExit('AWS account mismatch; nothing deployed.')
-    source = Path(__file__).resolve().parents[1] / 'daylight'
     archive = io.BytesIO()
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:
-        for name in ('index.html', 'styles.css', 'script.js', 'team-calendar.js'):
-            bundle.write(source / name, name)
+        if args.static_preview:
+            preview = source / 'preview'
+            html = (preview / 'index.html').read_text().replace('../styles.css', './styles.css').replace('../script.js', './script.js')
+            bundle.writestr('index.html', html)
+            for name in ('styles.css', 'script.js'):
+                bundle.write(source / name, name)
+            for name in ('team-calendar.js', 'calendar-views.js'):
+                bundle.write(preview / name, name)
+        else:
+            for name in ('index.html', 'styles.css', 'script.js', 'team-calendar.js'):
+                bundle.write(source / name, name)
     name = 'daylight-team-calendar'
     apps = [app for app in aws('amplify', 'list-apps')['apps'] if app['name'] == name]
     if len(apps) > 1:

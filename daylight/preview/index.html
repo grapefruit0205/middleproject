@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Daylight · 일정과 알림</title>
-  <link rel="stylesheet" href="./styles.css">
+  <title>Daylight · 캘린더 미리보기</title>
+  <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
   <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -23,11 +23,11 @@
   <div class="calendar-app">
     <aside class="sidebar" id="sidebar" aria-label="캘린더 메뉴">
       <header class="brand"><span><b>Daylight</b></span><button type="button" class="icon-button" id="sidebar-close" aria-label="메뉴 닫기"><svg class="icon"><use href="#close"/></svg></button></header>
-      <div class="profile"><span class="avatar avatar-large" id="profile-avatar">1</span><div class="profile-fields"><label for="member-select">현재 연결</label><select id="member-select" aria-label="현재 연결" disabled><option>로컬 소유자</option></select><small id="profile-role">Daylight API</small></div><button type="button" id="edit-team" class="icon-button" disabled aria-label="팀원 정보 수정"><svg class="icon"><use href="#edit"/></svg></button></div>
-      <p class="team-caption">팀 캘린더 준비 중 · 현재 단일 소유자</p>
+      <div class="profile"><span class="avatar avatar-large" id="profile-avatar">1</span><div class="profile-fields"><label for="member-select">현재 팀원 · 미리보기</label><select id="member-select" aria-label="현재 팀원 선택"></select><small id="profile-role"></small></div><button type="button" id="edit-team" class="icon-button" aria-label="팀원 정보 수정"><svg class="icon"><use href="#edit"/></svg></button></div>
+      <p class="team-caption">4명이 함께 쓰는 팀 캘린더</p>
       <button class="new-event" id="new-event"><svg class="icon"><use href="#plus"/></svg>새 일정 만들기</button>
       <nav class="navigation" aria-label="보기">
-        <button id="inbox-button"><svg class="icon"><use href="#inbox"/></svg>전체 일정 · 처리 이력<span class="nav-counter" hidden>0</span></button>
+        <button id="inbox-button"><svg class="icon"><use href="#inbox"/></svg>받은 알림<span class="nav-counter">0</span></button>
         <button class="active" id="calendar-button" aria-current="page"><svg class="icon"><use href="#calendar"/></svg>캘린더</button>
       </nav>
       <section class="mobile-calendar-tools" id="mobile-calendar-tools" aria-label="모바일 캘린더 도구">
@@ -35,9 +35,9 @@
         <div id="mobile-date-slot"></div>
         <div id="mobile-search-slot"></div>
         <button type="button" class="mobile-tool-button" id="mobile-view-calendar">선택한 날짜 보기 <span aria-hidden="true">→</span></button>
-        <button type="button" class="mobile-tool-button" id="mobile-edit-team" disabled><svg class="icon"><use href="#edit"/></svg>팀원 관리 · 연결 예정</button>
+        <button type="button" class="mobile-tool-button" id="mobile-edit-team"><svg class="icon"><use href="#edit"/></svg>팀원 이름·역할 관리</button>
       </section>
-      <section class="favorites" hidden>
+      <section class="favorites">
         <div class="category-header">
           <h2>카테고리</h2>
           <button type="button" class="icon-button" id="btn-add-category" aria-label="카테고리 추가" title="새 카테고리 추가">
@@ -47,7 +47,7 @@
         <!-- JavaScript에서 동적으로 렌더링되는 카테고리 목록 -->
         <div class="category-list" aria-label="표시할 카테고리"></div>
       </section>
-      <p class="preview-note"><span></span>일정·알림은 서버 저장 · 팀 권한 연결 예정</p>
+      <p class="preview-note"><span></span>이 브라우저에 저장 · 기기 간 공유 미연결</p>
     </aside>
     <button type="button" class="sidebar-backdrop" id="sidebar-backdrop" aria-label="메뉴 닫기" tabindex="-1" hidden></button>
     <main class="workspace">
@@ -69,7 +69,6 @@
       </section>
       <div class="search-container" hidden><label for="event-search">일정 검색</label><input type="search" id="event-search" placeholder="일정 제목 입력"><button id="search-close" class="icon-button" aria-label="검색 닫기"><svg class="icon"><use href="#close"/></svg></button></div>
       </div>
-      <section class="connection-bar" aria-label="서버 연결 상태"><p id="api-status" role="status">Daylight API에 연결하는 중입니다…</p><button type="button" id="refresh-deadlines">새로고침</button><button type="button" id="retry-write" hidden>같은 요청 다시 확인</button></section>
       <div class="week-scroll" aria-label="주간 일정" tabindex="0">
         <section id="calendar-overview" hidden aria-label="일정 보기"></section>
         <div class="week-canvas">
@@ -91,21 +90,21 @@
         <div class="detail-body">
           <div class="detail-heading"><h1 id="detail-title">일정 상세</h1><button class="icon-button" id="close-detail" aria-label="일정 상세 닫기"><svg class="icon"><use href="#close"/></svg></button></div>
           <div class="detail-meta"><span><svg class="icon"><use href="#clock"/></svg><span id="detail-time"></span></span><span><svg class="icon"><use href="#calendar"/></svg><span id="detail-day"></span></span></div>
-          <h2>알림 처리 상태</h2>
+          <h2>Description</h2>
           <p id="detail-description"></p>
-          <ul id="detail-history" aria-live="polite"></ul><div class="dialog-actions"><button type="button" id="edit-event" hidden>수정</button><button type="button" class="danger-button" id="cancel-event" hidden>일정 취소</button><button class="confirm-button" id="confirm-event">닫기</button></div>
+          <button class="confirm-button" id="confirm-event">일정 확인</button>
         </div>
       </dialog>
       <dialog class="create-dialog" id="create-dialog" aria-labelledby="create-title">
         <form id="create-form">
           <div class="detail-heading"><h2 id="create-title">새 일정</h2><button type="button" class="icon-button" id="close-create" aria-label="등록 닫기"><svg class="icon"><use href="#close"/></svg></button></div>
-          <label>일정 제목<input name="title" required maxlength="200" placeholder="예: 디자인 리뷰"></label>
-          <label hidden>카테고리<select name="category" id="create-category-select" disabled></select></label>
+          <label>일정 제목<input name="title" required maxlength="80" placeholder="예: 디자인 리뷰"></label>
+          <label>카테고리<select name="category" id="create-category-select"></select></label>
           <label>날짜<input type="date" name="date" required></label>
-          <div class="form-row"><label>시작 시간<input type="time" name="time" value="09:00" required></label><label>몇 분 전 알림<input type="number" name="leadMinutes" min="0" max="525600" step="1" value="60" required></label></div>
-          <p class="form-note">일정과 알림 설정을 Daylight API를 통해 서버에 저장합니다. 팀원별 수신자는 아직 연결되지 않았습니다. 실제 외부 발송 설정은 저장 후 처리 이력에서 확인하세요. 카드 높이는 표시용이며 종료 시각·카테고리는 저장하지 않습니다.</p><p id="form-error" class="api-error" role="alert"></p>
-          <button class="confirm-button" type="submit">서버에 저장</button>
-          <button type="button" id="retry-form-write" hidden>같은 요청 다시 확인</button>
+          <div class="form-row"><label>시작 시간<input type="time" name="time" value="09:00" required></label><label>진행 시간<select name="duration"><option value="30">30분</option><option value="60" selected>1시간</option><option value="90">1시간 30분</option><option value="120">2시간</option></select></label></div>
+          <fieldset class="recipient-field"><legend>등록 알림을 받을 팀원</legend><div id="recipient-options"></div></fieldset>
+          <p class="form-note">일정과 대상별 등록 알림을 이 브라우저에 저장합니다. 실제 팀원 기기로 전송하거나 예약 시각에 발송하는 기능은 아직 연결되지 않았습니다.</p>
+          <button class="confirm-button" type="submit">일정 추가</button>
         </form>
       </dialog>
 
@@ -140,11 +139,12 @@
       </dialog>
 
       <dialog class="create-dialog team-dialog" id="team-dialog" aria-labelledby="team-title"><form id="team-form"><div class="detail-heading"><h2 id="team-title">우리 팀 · 4명</h2><button type="button" class="icon-button" id="close-team" aria-label="팀원 수정 닫기"><svg class="icon"><use href="#close"/></svg></button></div><p class="form-note">팀원의 이름과 역할을 수정하세요. 팀원 선택은 화면 미리보기이며 로그인·권한 인증이 아닙니다.</p><div id="team-fields"></div><button type="submit" class="confirm-button">팀원 정보 저장</button></form></dialog>
-      <dialog class="create-dialog notifications-dialog" id="notifications-dialog" aria-labelledby="notifications-title"><div class="detail-heading"><h2 id="notifications-title">전체 일정 · 처리 이력</h2><button type="button" class="icon-button" id="close-notifications" aria-label="알림 닫기"><svg class="icon"><use href="#close"/></svg></button></div><p class="form-note">서버에 저장된 일정입니다. 과거·취소 일정도 조회할 수 있습니다. 선택하면 예약·발송 이력이 표시됩니다.</p><div id="notification-list"></div><button type="button" class="confirm-button" id="mark-all-read" hidden>모두 읽음 처리</button></dialog>
+      <dialog class="create-dialog notifications-dialog" id="notifications-dialog" aria-labelledby="notifications-title"><div class="detail-heading"><h2 id="notifications-title">받은 알림</h2><button type="button" class="icon-button" id="close-notifications" aria-label="알림 닫기"><svg class="icon"><use href="#close"/></svg></button></div><p class="form-note">이 브라우저의 등록 알림 미리보기 · 외부 발송 없음</p><div id="notification-list"></div><button type="button" class="confirm-button" id="mark-all-read">모두 읽음 처리</button></dialog>
       <div class="toast" role="status" hidden></div>
     </main>
   </div>
-  <script src="./script.js"></script>
+  <script src="../script.js"></script>
+  <script src="./calendar-views.js"></script>
   <script src="./team-calendar.js"></script>
 </body>
 </html>

@@ -7,6 +7,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // The legacy SPA must not replace Daylight or API navigations with its index.html.
+        navigateFallbackDenylist: [/^\/daylight(?:\/|$)/, /^\/api(?:\/|$)/, /^\/healthz(?:\/|$)/],
+      },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Reminder Platform',

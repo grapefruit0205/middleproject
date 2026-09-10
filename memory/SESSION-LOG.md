@@ -1,5 +1,30 @@
 # SESSION LOG — append, dated
 
+## 2026-09-10 — Publish accumulated Daylight work including design correction
+
+- `confirmed`: D-026 authorizes commit/push to `codex/service-mvp-pastel-dashboard` on the existing GitHub origin.
+- `observed`: 24 changed paths are the accumulated Daylight API/UI/preview, local routing, deployment tooling and documentation work. No browser state, build artifacts, environment files or credentials are staged. A limited credential-pattern scan of added diff lines found no matches; it is not a comprehensive security audit.
+- `observed`: retained prior implementation/browser/deployment evidence without rerunning broad reviews. This publication does not deploy infrastructure or merge main. Commit/push result is verified against the remote branch after execution.
+
+## 2026-09-10 — Preserve original Daylight design in all period views
+
+- `confirmed`: D-025 corrects the prior list-style interpretation. Kept the original shell/colors/card treatment; daily/weekly share timeline rendering and monthly places cards in date cells. Both API source and public preview are updated without changing storage/API contracts.
+- `observed`: local desktop/mobile browser checks covered a local-only test event, month detail, one/seven-column timelines and monthly cells. Syntax checks passed; no broad backend suite was run. Click CLI was absent, so no Click verification receipt is claimed.
+- `observed`: Amplify job 4 SUCCEED; all five public assets exactly match upload inputs. Public daily/monthly UI confirmed. No Git commit/push, DNS, backend provisioning or real email performed in this correction. Existing staged changes were preserved.
+
+## 2026-09-10 — Daylight Git publication follow-up
+
+- `confirmed`: D-024 authorizes committing/pushing accumulated Daylight work on `codex/service-mvp-pastel-dashboard` to the existing origin.
+- `observed`: pending files match the API integration, calendar views, static preview deployment and associated documentation from previous turns. No application logic is changed in this publication turn. Prior functionality/deployment observations remain historical evidence; publication checks focus on staged content, syntax and remote commit identity.
+- `observed`: Click Evidence skill applied; `click-gate` is unavailable on PATH. Execution uses host-authorized Git, without a Click-specific approval or verification receipt.
+
+## 2026-09-10 — UI-only Amplify follow-up
+
+- `confirmed`: D-023 defers authenticated 3-Tier deployment until the domain follow-up; requested current UI on Amplify only.
+- `observed`: kept API-connected source intact and added explicit `daylight/preview/` browser-local UI with current day/week/month views. Shared CSS/UI handlers retain desktop sizing, transparent navigation and mobile hamburger tools. Existing preview storage schema is unchanged; no user data is packaged.
+- `observed`: syntax/diff checks passed; local browser displayed month and day views. Manual Amplify job 3 SUCCEED. All five public assets HTTP 200/SHA-256 match; public browser has all three view buttons, four members and browser-local notice. Public tab retained for the user.
+- `observed`: only the named Daylight static app was deployed. No new infrastructure, DNS, emails, Git commit or push. Backend integration and the original 3-Tier direction remain pending, not replaced by static storage.
+
 One short section per working session: what was worked on, what was decided (with D-### links), what's pending. When context resets, this file is the recovery path — write it for the next session's reader.
 
 ---
@@ -196,6 +221,15 @@ One short section per working session: what was worked on, what was decided (wit
 - This is a reference image in a frame; its text, buttons and cards are not separate editable layers. No native layer reconstruction or HTML import is claimed.
 
 ## 2026-09-10 — Daylight supplied calendar prototype
+
+- `confirmed` D-022: retain physical 3-Tier; no consolidated profile. `observed`: user-browser CUA navigation to `127.0.0.1:8088/daylight/` displayed the legacy React SPA and old cached bundle, while direct HTTP returned current Daylight HTML. Added Workbox navigation exclusions for `/daylight`, `/api`, `/healthz`, disabled Apache fallback for the Daylight directory and disabled caching of service-worker registration/update scripts. Frontend build and Apache syntax passed; refreshed local files. The existing browser's old 127.0.0.1 origin still displayed the cached SPA during checks; the clean `localhost:8088/daylight/` origin visibly showed current Daylight, day/week/month controls and server DB connection. No browser storage was deleted. Do not claim the old origin cache was already cleared.
+- `observed`: no issued Seoul ACM certificates; a kinetra.site hosted zone exists but user has not approved its use. User asked whether a domain is necessary. Official CloudFront documentation confirms default-domain HTTPS without a purchased domain; origin protection/TLS is separate and needs Terraform changes. No domain purchase, DNS update, AWS provisioning, public deployment or Git publication in this follow-up.
+
+- `confirmed` D-020/D-021: mobile period-specific visibility plus authenticated functional Amplify deployment, low cost for four users, reusing Terraform. `observed`: mobile day/week/month layouts completed and tested with nonpersistent fixtures (see PRODUCT-TRUTH); existing dirty integration work preserved. Updated README view descriptions and the local WEB preview.
+- `observed`: read-only AWS checks found the existing Daylight static app but no Seoul ALB/RDS instances; other projects' Cognito pools were left untouched. Existing Terraform can scale WEB/WAS to one each and RDS to Single-AZ, but retains two ALBs and NAT. AWS Price List API rates yield USD 132.13/month for only those four core resource groups at 730 hours, before storage/network/auth/email/tax extras. Recorded source and breakdown in `docs/runbooks/daylight-deployment-assessment.md`. Physical consolidation is only a proposal pending Q-007; no billable provisioning or public-site replacement performed.
+
+- `confirmed` D-018/D-019: Daylight is the HTML/CSS/JavaScript face of the existing backend, and API name is now Daylight API. README must present one service rather than two independent products. `observed`: connected the existing single-owner CRUD/cancel/history endpoints at `/daylight/` in the local WEB container and image definition; kept the old React UI at `/`. Reused PostgreSQL/outbox/notification engine without enabling providers or changing auth. Unsupported team recipients/profiles and event metadata are not presented as saved.
+- `observed`: real browser/API integration passed once with one test event, including lost-response idempotent replay, cross-browser server read, conflict preservation, update/cancel and history. The test event is cancelled with audit records retained. Added only a focused mock-response check after the inline retry button follow-up. README links/fences, syntax, whitespace, API identity and packaging source checks passed; the static-only deploy guard rejected before AWS access. No broad code review loop, build/deployment, live email or Git publication. Runtime WAS still uses its preexisting artifact; Daylight API naming is updated in source/config/docs and will apply to WAS logs on its next rebuild.
 
 - `observed` documentation follow-up: rebuilt the root README around Daylight's purpose, the separate static prototype and single-owner backend, two vertical architecture flows, local startup, current limits and Notion learning/presentation links. All nine relative documentation links resolve, fenced code blocks are balanced, and `git diff --check` passes. No application code, AWS deployment or access settings changed; full runtime tests were intentionally not repeated for this documentation-only change. D-017 authorizes publication on the existing service branch.
 

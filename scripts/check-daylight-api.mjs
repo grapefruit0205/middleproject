@@ -1,0 +1,100 @@
+// Local-only integration check. Creates one clearly named event and cancels it;
+// the server audit record remains. Does not enable providers or delete data.
+import assert from 'node:assert/strict';
+import { pathToFileURL } from 'node:url';
+const { chromium } = await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE));
+const browser = await chromium.launch({executablePath:process.env.CHROME_BIN || '/opt/google/chrome/chrome', headless:true, args:['--no-sandbox']});
+const context = await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'Asia/Seoul'});
+const page = await context.newPage();
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+const base = 'http://127.0.0.1:8088';
+const title = '[Daylight API 연동 테스트] ' + Date.now();
+const tomorrow = new Date(Date.now()+3*86400000).toLocaleDateString('en-CA', {timeZone:'Asia/Seoul'});
+let id;
+try {
+  await page.goto(base+'/daylight/');
+  await page.locator('#api-status').filter({hasText:'서버 DB 연결'}).waitFor();
+  assert.equal(await page.locator('#member-select').isDisabled(),true);
+  assert.equal(await page.locator('.day-heading').count(),7);
+  await page.locator('#new-event').click();
+  await page.locator('[name=title]').fill(title);
+  await page.locator('[name=date]').fill(tomorrow);
+  await page.locator('[name=time]').fill('14:00');
+  await page.locator('[name=leadMinutes]').fill('60');
+  // Commit on the real server, then lose the response. Retry must not duplicate.
+  const keys=[];
+  const intercept = async route => {
+    if (route.request().method() !== 'POST') return route.continue();
+    keys.push(route.request().headers()['idempotency-key']);
+    if (keys.length === 1) { const result=await route.fetch(); assert.equal(result.status(),201); await route.abort(); }
+    else await route.continue();
+  };
+  await page.route('**/api/deadlines', intercept);
+  await page.locator('#create-form button[type=submit]').click();
+  await page.locator('#form-error').filter({hasText:'저장 여부가 불명확'}).waitFor();
+  await page.locator('#close-create').click();
+  await page.locator('#retry-write').click();
+  await page.locator('#retry-write').waitFor({state:'hidden'});
+  await page.unroute('**/api/deadlines', intercept);
+  assert.equal(keys.length,2); assert.equal(keys[0],keys[1]);
+  const rows = await (await context.request.get(base+'/api/deadlines')).json();
+  const matches = rows.filter(row=>row.title===title);
+  assert.equal(matches.length,1); id=matches[0].id;
+  assert.equal(await page.evaluate(()=>localStorage.getItem('daylight_team_calendar_v1')),null);
+  // An independent browser context reads the same server row, not localStorage.
+  const other=await browser.newContext();
+  const second=await other.newPage(); await second.goto(base+'/daylight/');
+  await second.locator('#api-status').filter({hasText:'서버 DB 연결'}).waitFor();
+  await second.locator('#inbox-button').click();
+  assert.equal(await second.locator('.notification-item').filter({hasText:title}).count(),1);
+  await other.close();
+  await page.locator('#inbox-button').click();
+  await page.locator('.notification-item').filter({hasText:title}).click();
+  await page.locator('#detail-description').filter({hasText:'비활성화'}).waitFor();
+  await page.locator('#edit-event').click();
+  // Simulate a concurrent API update; stale form must receive 409.
+  const original=matches[0];
+  const concurrent=await context.request.put(base+'/api/deadlines/'+id,{headers:{'Idempotency-Key':crypto.randomUUID()},data:{title:title+' concurrent',startsAt:original.startsAt,leadMinutes:60,expectedVersion:original.version,expectedEventVersion:original.eventVersion,expectedPolicyVersion:original.policyVersion}});
+  assert.equal(concurrent.status(),200);
+  await page.locator('[name=title]').fill(title+' stale');
+  await page.locator('#create-form button[type=submit]').click();
+  await page.locator('#create-dialog').waitFor({state:'hidden'});
+  const afterConflict=await (await context.request.get(base+'/api/deadlines/'+id)).json();
+  assert.equal(afterConflict.title,title+' concurrent');
+  await page.locator('#inbox-button').click();
+  await page.locator('.notification-item').filter({hasText:title+' concurrent'}).click();
+  await page.locator('#edit-event').click();
+  await page.locator('[name=title]').fill(title+' 수정');
+  await page.locator('#create-form button[type=submit]').click();
+  await page.locator('#create-dialog').waitFor({state:'hidden'});
+  await page.reload();
+  await page.locator('#api-status').filter({hasText:'서버 DB 연결'}).waitFor();
+  await page.locator('#inbox-button').click();
+  await page.locator('.notification-item').filter({hasText:title+' 수정'}).click();
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('#cancel-event').click();
+  await page.locator('#event-dialog').waitFor({state:'hidden'});
+  const cancelled=await (await context.request.get(base+'/api/deadlines/'+id)).json();
+  assert.equal(cancelled.status,'CANCELLED');
+  const history=await (await context.request.get(base+'/api/deadlines/'+id+'/history')).json();
+  assert.equal(history.deliveryMode,'DISABLED');
+  assert.ok(history.entries.some(entry=>entry.action==='DELETE'));
+  await page.route('**/api/deadlines',route=>route.fulfill({status:503,contentType:'application/json',body:'{}'}));
+  await page.locator('#refresh-deadlines').click();
+  await page.locator('#api-status').filter({hasText:'마지막 조회'}).waitFor();
+  assert.equal(await page.locator('#new-event').isDisabled(),true);
+  await page.unroute('**/api/deadlines');
+  await page.locator('#refresh-deadlines').click();
+  await page.locator('#new-event').waitFor({state:'visible'});
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForTimeout(100);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.screenshot({path:'/tmp/daylight-api-mobile.png'});
+  await page.setViewportSize({width:1440,height:1000});
+  await page.screenshot({path:'/tmp/daylight-api-desktop.png'});
+  assert.deepEqual(errors,[]);
+  console.log(JSON.stringify({result:'PASS',id,checks:['real API create','same-key retry','independent browser read','409 no overwrite','update','reload','cancel','history and disabled providers','API failure','mobile overflow','no page errors']}));
+} finally {
+  await browser.close();
+}

@@ -750,7 +750,7 @@ function App() {
           <section className="panel gentle-reminder"><div className="gentle-title"><span className="mini-clay"><Icon name="bell" /></span><h2>잠깐, 기억해 주세요</h2></div><p>일정을 등록한 뒤 <strong>처리 이력</strong>에서<br />알림이 준비되었는지 확인할 수 있어요.</p><span className="gentle-footnote">예약과 발송 상태를 한눈에</span></section>
         </aside>
       </div>
-      <footer className="page-footer"><span>remi. <span>Deadline Companion</span></span><span>중요한 순간에 집중할 수 있도록 · 모든 일정은 한국 시간 기준</span></footer>
+      <footer className="page-footer"><span>remi. <span>Daylight API · 기존 대시보드</span></span><span>중요한 순간에 집중할 수 있도록 · 모든 일정은 한국 시간 기준</span></footer>
     </main>
     </div>
   )

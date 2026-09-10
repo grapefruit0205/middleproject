@@ -25,6 +25,7 @@ const sidebarBackdrop = document.querySelector('#sidebar-backdrop');
 const workspace = document.querySelector('.workspace');
 const mobileMenu = window.matchMedia('(max-width: 700px)');
 const calendarControls = document.querySelector('.calendar-controls');
+document.querySelector('#view-navigation').append(document.querySelector('.date-navigation'));
 const searchContainer = document.querySelector('.search-container');
 let desktopSearchOpen = false;
 function relocateCalendarControls() {
@@ -82,7 +83,8 @@ const DEFAULT_CATEGORIES = [
 
 // 로컬스토리지에서 카테고리 불러오기
 function loadCategories() {
-  const saved = localStorage.getItem('design_calendar_categories');
+  let saved;
+  try { saved = localStorage.getItem('design_calendar_categories'); } catch { return DEFAULT_CATEGORIES; }
   if (saved) {
     try {
       return JSON.parse(saved);
@@ -318,6 +320,7 @@ function showEvent(event) {
   document.querySelector('#detail-description').textContent = event.dataset.description || '추가 설명이 없습니다.';
   if (detail.open) detail.close();
   detail.showModal();
+  if (event.dataset.id) loadDetail(event.dataset.id);
 }
 
 document.querySelector('.schedule').addEventListener('click', (event) => {
@@ -333,6 +336,7 @@ document.querySelector('#confirm-event').addEventListener('click', () => {
 
 // 새 일정 만들기 모달
 function openCreateDialog() {
+  if (document.querySelector('#new-event').disabled) return;
   if (mobileMenu.matches) setSidebarOpen(false);
   detail.close();
   prepareTeamEvent();
@@ -365,10 +369,14 @@ for (const dialog of [detail, create, categoryDialog]) {
 
 // 이벤트 필터링 (카테고리 및 검색어)
 function filterEvents() {
+  if (typeof renderCalendarOverview === 'function' && !document.querySelector('#calendar-overview').hidden) {
+    renderCalendarOverview();
+    return;
+  }
   const enabled = new Set(categories.filter(c => c.checked).map(c => c.id));
   const term = search.value.trim().toLocaleLowerCase();
 
-  document.querySelectorAll('.event').forEach(card => {
+  document.querySelectorAll('.schedule .event').forEach(card => {
     const isCategoryMatched = enabled.has(card.dataset.category) || !categories.some(c => c.id === card.dataset.category);
     const isSearchMatched = card.querySelector('strong').textContent.toLocaleLowerCase().includes(term);
     card.hidden = !isCategoryMatched || !isSearchMatched;
@@ -376,10 +384,11 @@ function filterEvents() {
 
   if (activeEvent?.hidden && detail.open) detail.close();
   const empty = document.querySelector('#calendar-empty');
-  const cards = document.querySelectorAll('.event');
+  const cards = document.querySelectorAll('.schedule .event');
   empty.hidden = [...cards].some(card => !card.hidden);
-  empty.querySelector('h1').textContent = cards.length ? '조건에 맞는 일정이 없어요' : '이번 주는 여유롭게';
-  empty.querySelector('p').textContent = cards.length ? '검색어나 카테고리 선택을 바꿔 보세요.' : '선택한 주에 등록된 일정이 없습니다. 팀의 첫 일정을 추가해 보세요.';
+  const period = document.querySelector('.week-canvas').classList.contains('daily-canvas') ? '날' : '주';
+  empty.querySelector('h1').textContent = cards.length ? '조건에 맞는 일정이 없어요' : '여유로운 하루의 시작';
+  empty.querySelector('p').textContent = cards.length ? '검색어나 카테고리 선택을 바꿔 보세요.' : `선택한 ${period}에 등록된 일정이 없습니다. 첫 일정을 추가해 보세요.`;
 }
 
 search.addEventListener('input', filterEvents);

@@ -81,3 +81,39 @@ The user explicitly requested committing and pushing all current changes and ins
 ## D-017 · Rebuild the GitHub README as an approachable project entry point — 2026-09-10 (user)
 
 During the Notion architecture-learning revision, the user requested a complete GitHub README overhaul. Reorganize and publish the README on the existing service branch with a beginner-readable service overview, current implementation boundaries, architecture flows and links to the updated 15-minute presentation. Distinguish Daylight's static/browser-local prototype from the existing single-owner 3-Tier backend. Do not change runtime code, merge main, deploy AWS or grant Notion/GitHub access as part of this documentation request.
+
+## D-018 · Use Daylight as the existing service's frontend — 2026-09-10 (user)
+
+The user clarified that Daylight may retain HTML/CSS/JavaScript, but its data, supported reminder workflows and notifications must use the Deadline Companion backend. The product direction is one service, not two separate products or permanent browser-local event storage. Preserve the existing PostgreSQL and asynchronous reminder engine. Public team authentication and recipient delivery still require explicit implementation; a profile selector must not grant identity or ownership. This does not authorize AWS deployment, external email, main merge or Git publication.
+
+## D-019 · Name the API Daylight — 2026-09-10 (user)
+
+The user additionally requested that the API name become Daylight and that the README reflect the integrated direction. Use Daylight API / daylight-api for the API documentation and application/build identity. Keep existing resource URLs, Java packages, persisted data, infrastructure names and authentication contracts compatible; no endpoint or AWS-resource migration is requested.
+
+## D-020 · Make mobile day/week/month calendars readable — 2026-09-10 (user)
+
+The user requested clear mobile calendar layouts when selecting daily, weekly and monthly views. Add visible view controls and layouts suited to each period while preserving existing API workflows.
+
+## D-021 · Deploy working authenticated Daylight using Terraform, cost-conscious for four users — 2026-09-10 (user)
+
+The user requested Amplify deployment, selected authenticated-backend functional deployment instead of a static-only preview, specified low cost for four users, and requested reuse of repository Terraform. No precise budget cap or change to the standing physical three-tier architecture was chosen. Resolve the cost/architecture trade-off before provisioning costly resources; do not expose the unauthenticated local API, embed a shared owner token in static assets or change unrelated projects' identity resources.
+
+## D-022 · Retain the existing physical 3-Tier deployment — 2026-09-10 (user)
+
+The user explicitly rejected the proposed consolidated runtime and wants operations based on the existing 3-Tier Terraform. Preserve WEB/WAS/RDS separation and the existing load-balancing architecture; do not pursue the single-server alternative. Cost optimization remains within that structure. A question about whether a purchased domain is necessary does not authorize using another project's hosted zone or purchasing a domain. The proposed daylight-api.kinetra.site hostname remains unapproved.
+
+## D-023 · Deploy only the updated UI to Amplify for now — 2026-09-10 (user)
+
+Confirmed: the user explicitly requested updating only the Amplify UI now and continuing further changes after buying a domain. This defers D-021's functional backend deployment for this run without superseding D-018/D-022's integrated physical 3-Tier direction. Publish the latest calendar views through a separate browser-local preview adapter, preserving existing preview storage and clearly stating that sharing/authentication/email are not connected. Do not provision backend resources, modify DNS, upload tokens, migrate browser data or change the architecture atlas app. No new Git commit/push was requested in this turn.
+
+## D-024 · Publish accumulated Daylight integration and UI deployment work — 2026-09-10 (user)
+
+Confirmed: the follow-up explicitly requests Git commit and push. Publish the current Daylight API integration/name changes, responsive calendar views, static Amplify preview/deployment script, local WEB/PWA routing corrections, targeted check scripts and accompanying documentation/records on the existing service branch. No main merge, infrastructure change, credential publication or additional deployment is requested.
+
+## D-025 · Preserve Daylight's original design across calendar views — 2026-09-10 (user)
+
+Confirmed: the user corrected the previous UI interpretation: daily, weekly and monthly views must preserve the existing design. Keep Daylight's cream/coral shell, sidebar, typography, rectangular pastel event cards and timeline styling. Use a one-day timeline, seven-day timeline, and month grid containing event cards, not a separate agenda-list design. This corrects D-020's implementation; D-023's UI-only Amplify deployment scope and deferred backend integration remain unchanged.
+
+## D-026 · Publish the final design-preserving Daylight changes — 2026-09-10 (user)
+
+Confirmed: the user explicitly requested Git commit and push after the D-025 design correction and Amplify deployment. Publish the accumulated Daylight implementation, current design-preserving views and accompanying records to the existing service branch. Do not merge main or perform another AWS deployment.
