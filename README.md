@@ -1,256 +1,216 @@
-# Deadline Companion
+# Daylight
 
-놓치기 쉬운 접수·예매·제출 일정을 등록하면, 서버가 예약부터 발송까지 전 과정을 추적·관리하는 **개인용 일정 알림 웹서비스**입니다.
+**4명이 함께 일정을 관리하고, 필요한 팀원에게 알림을 보내는 팀 캘린더를 만들고 있습니다.**
 
-> **핵심 설계**: 클라이언트 요청과 실제 알림 발송을 분리합니다. 일정 저장 완료, 외부 프로바이더의 발송 접수, 실제 수신 확인을 서로 다른 단계로 구분하고 시스템이 관찰한 상태만 영속화합니다.
+현재는 **Daylight 화면 시안**과 **Deadline Companion 백엔드**가 각각 구현되어 있습니다. 두 부분을 연결해 팀 공유·이메일 알림으로 확장하는 단계입니다.
 
-## 한눈에 보기
+[🌤 Daylight 체험](https://main.d1za53r0rfy3x6.amplifyapp.com/) · [📖 아키텍처 쉽게 읽기](https://app.notion.com/p/3d7d9d5f6b3a81359f18c9aeec3376ed) · [🎤 15분 발표](https://app.notion.com/p/3d7d9d5f6b3a813090b5cbeb9af817b2)
 
-### Daylight · 4인 팀 캘린더 시안
+> **체험 사이트는 정적 미리보기입니다.** 일정은 각자의 브라우저에만 저장됩니다. 다른 팀원과 데이터가 공유되거나 실제 이메일이 발송되지는 않습니다. 팀원 선택도 로그인 기능은 아닙니다. 노션 자료는 별도 열람 권한이 필요할 수 있습니다.
 
-[배포 사이트 열기](https://main.d1za53r0rfy3x6.amplifyapp.com/) · [소스 및 기능 범위](daylight/README.md)
+## 1. 무엇을 만드는 프로젝트인가요?
 
-팀원 이름·역할 수정, 현재 날짜 기반 캘린더, 일정별 알림 대상 선택을 체험할 수 있는 **별도의 정적 미리보기**입니다. 데이터는 각자의 브라우저에만 저장되며, 기기 간 공유·로그인·실제 이메일 발송은 아직 연결되지 않았습니다. 아래의 기존 3-Tier 서비스와는 배포·구현 범위가 다릅니다.
+팀원의 일정을 한곳에서 보고, 등록·예약·발송 상태를 확인할 수 있는 서비스가 목표입니다.
 
-### 기존 서비스 구성
+예를 들어 **내일 14시 접수 마감 → 60분 전인 13시 알림**을 등록합니다. 사용자가 저장 후 계속 화면을 켜 두지 않아도 서버가 후속 작업을 처리하는 방향입니다.
 
-| 항목 | 구성 |
+이 저장소에는 다음 두 부분이 있습니다.
+
+| 구분 | Daylight | Deadline Companion |
+| --- | --- | --- |
+| 역할 | 새 팀 캘린더 화면 시안 | 기존 일정·예약 알림 서비스 기반 |
+| 화면 소스 | [daylight/](daylight) — HTML·CSS·JavaScript | [frontend/](frontend) — React·TypeScript |
+| 데이터 | 각 브라우저의 localStorage | [backend/](backend)를 통한 PostgreSQL 저장 |
+| 사용 범위 | 4명 프로필·일정·알림 대상 미리보기 | 단일 소유자의 일정 등록·조회·수정·취소·이력 |
+| 알림 | 브라우저 안의 등록 알림 | Scheduler·SQS·SES 연동 코드, 실제 수신 검증은 별도 |
+| 연결 상태 | **백엔드 미연결** | 로컬 WEB→WAS→DB 동작 확인 |
+
+**같은 저장소에 있다고 이미 하나의 서비스로 연결된 것은 아닙니다.**
+
+## 2. 지금 어디까지 되나요?
+
+기준: **2026-09-10**. 소스 구현, 로컬 확인, 공개 배포를 구분합니다.
+
+| 기능 | 현재 상태 |
 | --- | --- |
-| 사용자 화면 | React · TypeScript · PWA |
-| WEB 계층 | Apache 2.4 (정적 리소스 서빙 및 `/api/` 리버스 프록시) |
-| WAS 계층 | Java 21 · Spring Boot · 외장 Tomcat 10.1 (단일 WAR) |
-| 데이터 계층 | PostgreSQL 16 · Flyway |
-| 배포 환경 | 로컬 Docker Compose / AWS (Terraform 기반 IaC) |
-| 아키텍처 | 물리적 WEB–WAS–DB 3-Tier 기반 계층형 모놀리스 |
-| 현재 상태 | 로컬 3-Tier 검증 완료 (AWS 스택 및 실메일 수신은 미검증) |
+| 팀원 4명 선택·이름·역할 수정 | Daylight에서 가능. 인증·가입은 아님 |
+| 현재 날짜, 연·월·일 선택, 주간 일정 | Daylight에서 가능 |
+| 일정 등록·카테고리 관리·대상별 등록 알림 | 브라우저 내 저장·미리보기 |
+| PC 확대 레이아웃·모바일 메뉴 도구 | 최신 소스에 반영. 공개 사이트에는 아직 미배포 |
+| 기존 서비스 일정 수정·취소·처리 이력 | 로컬 3-Tier에서 확인 |
+| 예약 생성·큐 소비·메일 요청 | 백엔드 코드 구현. 운영 설정·실수신 확인 필요 |
+| 팀원 간 공유·다중 사용자 인증 | **미구현** |
+| 실제 팀원 이메일 발송 | **미연결·미검증** |
+| CloudWatch → SNS 운영자 통보 | 알람 정의는 있으나 **SNS 연결 미구현** |
+| AWS 3-Tier 운영·장애 조치 검증 | 현재 서비스의 운영 검증은 남아 있음 |
 
-## 주요 기능
+Daylight 공개 사이트는 AWS Amplify의 **수동 배포**입니다. GitHub에 푸시해도 사이트가 자동 갱신되지는 않습니다. 현재 배포본에는 날짜 선택과 `‹ 오늘 ›`의 투명 스타일까지 반영되어 있습니다.
 
-* **일정 라이프사이클 관리**: 등록, 조회, 수정, 취소
-* **중복 요청 방지**: Idempotency Key 기반 멱등성 보장
-* **동시성 제어**: 낙관적 잠금(Optimistic Locking)을 통한 화면 덮어쓰기 방지 (`409 Conflict`)
-* **영속적 이력 추적**: 예약 반영 및 알림 발송 시도 내역 저장
-* **비동기 알림 파이프라인**: Outbox 패턴 → Scheduler → Queue 기반 처리
-* **반응형 대시보드**: 검색, 상태 필터링, 월간 캘린더 및 날짜별 조회
-* **화면 자동 동기화**: 활성 화면 30초 주기 자동 갱신, 브라우저 탭 활성화 및 네트워크 복구 시 즉시 갱신
-* **발송 상태 세분화**: 알림 비활성, 발송 접수 완료, 발송 실패, 결과 불명확(`DELIVERY_UNKNOWN`) 상태 분리 기록
+## 3. 아키텍처는 두 가지 길로 이해합니다
 
-## 로컬 실행 방법
+아래는 **기존 백엔드와 Terraform이 정의하는 구조**입니다. Daylight 정적 사이트가 이 모든 서비스를 사용 중이라는 뜻은 아닙니다.
 
-사전 요구사항: Docker Engine 및 Docker Compose v2
+### 길 ① 지금 일정을 저장하는 길
 
-### 1. 환경 변수 설정
+```mermaid
+flowchart TD
+    U["사용자: 일정 등록"] -->|"HTTPS"| P["공개 ALB: WEB으로 분산"]
+    P --> W["WEB · Apache<br/>화면 제공 / API 요청 전달"]
+    W --> I["내부 ALB: WAS로 분산"]
+    I --> A["WAS · Spring / Tomcat<br/>입력 확인 / 업무 처리"]
+    A --> D[("RDS PostgreSQL<br/>일정 / 후속 작업 / 처리 이력")]
+```
+
+- **WEB은 전달합니다.** 화면 파일을 제공하고 업무 요청을 WAS로 넘깁니다.
+- **WAS는 판단합니다.** 입력과 소유자를 확인하고 알림 시각을 계산합니다.
+- **DB는 기억합니다.** 일정과 처리 상태를 저장합니다.
+
+저장 결과는 WAS·WEB과 ALB를 거쳐 사용자에게 돌아옵니다. 사용자가 DB에 직접 접속하지 않습니다. 화면 파일 요청은 WEB에서 응답할 수 있어 모든 요청이 DB까지 내려가는 것도 아닙니다.
+
+ALB는 요청을 나누는 장치입니다. ALB가 두 개라고 업무 계층이 5개가 되는 것은 아닙니다.
+
+### 길 ② 나중에 알림을 처리하는 길
+
+```mermaid
+flowchart TD
+    D[("DB: 일정과 예약할 일 함께 저장")] -->|"후속 코드가 조회"| W["WAS Worker"]
+    W -->|"예약 API 호출"| S["EventBridge Scheduler<br/>언제 실행할지 관리"]
+    S -->|"예약 시각에 메시지 전송"| Q["SQS<br/>처리할 일 보관"]
+    Q -->|"WAS가 가져감"| C["WAS Consumer<br/>버전·중복·현재 상태 확인"]
+    C -->|"이메일 발송 요청"| E["SES"]
+    C -->|"결과 기록"| R[("DB: 발송 시도·처리 상태")]
+    R --> V["조회 API를 통해 화면에서 확인"]
+    Q -.->|"반복 소비 실패"| L["DLQ: 조사할 메시지 격리"]
+```
+
+| 이름 | 쉬운 설명 |
+| --- | --- |
+| Outbox | 일정과 함께 DB에 적어 두는 **후속 작업 목록** |
+| Worker / Consumer | 목록·큐를 처리하는 **WAS 안의 코드**. 별도 서버가 아님 |
+| Scheduler | 미래 시각에 작업을 실행하도록 예약 |
+| SQS | 서버가 가져갈 작업을 보관하는 대기 줄 |
+| SES | 이메일 발송을 요청하는 서비스 |
+| DLQ | 반복 실패한 메시지를 분리해 조사하는 큐. 자동 수리 기능은 아님 |
+
+일정 등록 응답은 미래의 메일 발송 완료를 기다리지 않습니다. 외부 연동과 서버가 정상 작동하는 조건에서 후속 처리가 진행됩니다.
+
+**저장 완료 ≠ 예약 완료 ≠ 발송 요청 수락 ≠ 메일 수신·열람**입니다. 사용자는 서버에 기록된 상태를 조회하며, 실제 메일 도착·읽음까지 확인하는 연동은 없습니다.
+
+SQS 메시지는 읽었다고 바로 삭제되지 않습니다. 처리 결과가 재시도 대상인지에 따라 삭제 여부를 정합니다. 외부 메일 발송과 DB 기록은 하나의 원자적 작업이 아니므로 모든 장애에서 정확히 한 번 발송을 보장하지는 않습니다.
+
+## 4. 보안·장애·운영은 어떻게 받쳐 주나요?
+
+| 관점 | 현재 코드가 준비한 구조 | 주의할 점 |
+| --- | --- | --- |
+| 통신 제한 | 공개 ALB → 사설 WEB·WAS → 격리 DB, 계층별 Security Group | Private 배치만으로 사용자 인증이 해결되지는 않음 |
+| AWS 권한·비밀 | IAM 역할, Secrets Manager, DB 계정 분리 | 코드·Git에 실제 비밀값을 넣지 않음 |
+| 고가용성 | 2개 AZ의 WEB·WAS, ALB·ASG, RDS Multi-AZ 설정 | 실제 전환 시간·남은 서버 용량은 시험 필요 |
+| 실패 추적 | Outbox 기록, 큐·DLQ, 발송 시도 이력 | 불명확한 발송을 무조건 재시도하면 중복 위험 |
+| 운영 관찰 | CloudWatch 로그·지표·알람 정의 | SNS 통보 연결과 수신 확인은 별도 |
+| 재현성 | Terraform, Docker Compose, Flyway | 정적 검사 통과가 운영 배포 완료를 뜻하지 않음 |
+
+현재 WAS는 API와 Worker를 포함한 **단일 Spring 애플리케이션**입니다. 독립 마이크로서비스나 전체 서버리스 구조는 아닙니다. 외부 HTTPS와 달리 내부 WEB–WAS 구간은 현재 HTTP이며, ASG의 기본 수량 유지와 부하 기반 자동 증설 정책도 구분해야 합니다.
+
+자세한 포트·서브넷·장애 경로는 [아키텍처 안내](docs/architecture/middleproject-aws-3tier-architecture.md)와 [다이어그램 원본](docs/architecture/middleproject-aws-3tier-architecture.drawio)에 있습니다.
+
+## 5. 내 PC에서 실행하기
+
+### Daylight 화면만 보기
+
+필요한 것: Python 3. 저장소 루트에서 실행합니다.
 
 ```bash
-cp .env.example .env
-openssl rand -hex 24
-
+python3 -m http.server 8093 --bind 127.0.0.1 --directory daylight
 ```
 
-`.env` 파일 내 세 가지 DB 암호에 각각 고유한 임의값을 지정합니다. 기존 DB 볼륨을 재사용할 경우 `LOCAL_OWNER_ID` 값은 유지해야 합니다.
+[로컬 Daylight 열기](http://127.0.0.1:8093/) · 이미 사용 중인 포트라면 다른 번호를 선택하세요.
 
-```dotenv
-LOCAL_DB_ADMIN_PASSWORD=<관리자_암호>
-LOCAL_DB_MIGRATION_PASSWORD=<마이그레이션_암호>
-LOCAL_DB_APP_PASSWORD=<애플리케이션_암호>
-LOCAL_OWNER_ID=local-owner
+서버 DB를 사용하지 않으며, 브라우저 저장소를 지우면 일정도 사라집니다. 로컬 주소와 AWS 주소의 저장소는 별개입니다.
 
-```
+### 기존 백엔드와 DB까지 실행하기
 
-### 2. 빌드 및 컨테이너 실행
+필요한 것: Docker Engine, Docker Compose v2.
+
+1. `.env`가 없을 때만 `.env.example`을 복사합니다. 기존 파일은 덮어쓰지 마세요.
+2. `LOCAL_DB_ADMIN_PASSWORD`, `LOCAL_DB_MIGRATION_PASSWORD`, `LOCAL_DB_APP_PASSWORD`에 서로 다른 암호를 설정합니다. 기존 DB를 사용한다면 `LOCAL_OWNER_ID`를 유지합니다.
+3. 저장소 루트에서 실행합니다.
 
 ```bash
 docker compose up -d --build
 docker compose ps
 curl --fail http://127.0.0.1:8088/healthz
-
 ```
 
-브라우저에서 [http://127.0.0.1:8088](http://127.0.0.1:8088)에 접속합니다. 로컬 미리보기 모드는 별도의 인증 코드를 요구하지 않습니다.
+[기존 서비스 열기](http://127.0.0.1:8088/) · 이 주소는 Daylight가 아니라 React 기반 기존 대시보드입니다.
 
-### 3. 컨테이너 종료
+로컬은 접속 코드 없이 사용하며 AWS 예약·큐·메일은 기본 비활성입니다. **무인증 로컬 API를 외부 공개하거나 터널링하지 마세요.**
+
+종료는 `docker compose down`입니다. DB 볼륨은 유지됩니다. `-v`를 추가하면 데이터가 삭제되므로 일반 종료에는 사용하지 마세요. 자세한 설정은 [실행·배포 런북](docs/runbooks/service-mvp.md)을 확인합니다.
+
+## 6. 발표·학습 자료
+
+README는 전체 흐름을 파악하는 입구입니다. 세부 설명은 아래 문서에서 이어집니다.
+
+- [노션 전체 목차](https://app.notion.com/p/3d7d9d5f6b3a81359f18c9aeec3376ed): Phase 1~9 아래에 쉬운 설명 13개와 발표 대본 2개
+- [Phase 9 · 15분 발표](https://app.notion.com/p/3d7d9d5f6b3a813090b5cbeb9af817b2): 시간 배분, 전반부·후반부 대본, 그림을 가리킬 순서
+- [아키텍처 아틀라스 HTML](docs/architecture/architecture-atlas.html): 전체 구조와 구간별 설명
+- [구현 사실·제약](memory/PRODUCT-TRUTH.md): 소스 구현과 운영 검증의 구분
+- [기존 서비스 진행 기록](progress.json): 백엔드 구현 트랙. Daylight 팀 연동 완료표는 아님
+
+15분 발표는 **목적 → 등록 → 예약·발송 → 보안 → 장애 대응 → 현재 한계** 순서로 구성합니다. 설정값을 전부 읽기보다 화살표마다 “무엇을 넘기고, 왜 다음 단계가 필요한지” 설명합니다.
+
+## 7. 팀원이 코드를 찾는 곳
+
+```text
+middleproject/
+├── daylight/               새 팀 캘린더 정적 시안
+├── frontend/               기존 React 대시보드
+├── backend/                Spring 업무·예약·발송 코드와 DB 마이그레이션
+├── infra/local/            Apache·Tomcat·PostgreSQL 로컬 구성
+├── infra/terraform/        AWS 3-Tier 인프라 정의
+├── scripts/                Daylight 수동 배포 도구
+├── docs/architecture/      아키텍처 그림·설명
+└── docs/runbooks/           실행·배포·복구 절차
+```
+
+현재 작업 브랜치는 `codex/service-mvp-pastel-dashboard`입니다. 기본 `main`에 최신 변경이 모두 병합된 상태는 아닙니다. 팀원은 작업 브랜치를 확인하고 각자 브랜치에서 변경한 뒤 PR로 공유하세요.
+
+## 8. 다음에 연결할 것
+
+1. **팀 인증·권한:** 화면의 팀원 선택과 실제 로그인·멤버십을 분리
+2. **공유 저장:** 팀·일정·알림 수신자를 서버 DB에 저장하고 Daylight API 연결
+3. **이메일 알림:** 등록 알림과 사전 예약 알림을 구분하고, 수신자별 비동기 처리·결과 기록 연결
+4. **운영 확인:** AWS 사용자 흐름·실메일 수신·실패 대응·운영자 통보 검증
+
+Bedrock·SageMaker 같은 AI 기능은 위의 핵심 흐름을 대신하지 않으며 현재 연결되어 있지 않습니다.
+
+<details>
+<summary>개발자용 검사 명령</summary>
+
+화면이나 문서만 바꿀 때마다 아래 전체 검사를 반복할 필요는 없습니다. 변경 범위에 맞는 검사를 선택합니다.
 
 ```bash
-docker compose down
-
-```
-
-`docker compose down` 실행 시 PostgreSQL 볼륨 데이터는 유지됩니다. 저장된 일정 데이터를 완전히 초기화하려면 `docker compose down -v` 옵션을 사용합니다.
-
-> **보안 주의사항**: 로컬 무인증 모드는 `127.0.0.1`(Loopback) 전용입니다. 포트를 외부에 바인딩하거나 터널링하지 마십시오. 구체적인 런타임 제약 및 보안 수칙은 [Service MVP Runbook](docs/runbooks/service-mvp.md)을 참조하십시오.
-
-## 아키텍처
-
-본 프로젝트는 **배포 경계와 코드 경계를 분리**합니다. 인프라는 WEB, WAS, DB의 3-Tier로 물리적 분리를 적용하되, WAS 내부의 비즈니스 로직은 단일 애플리케이션(모놀리스)으로 패키징 및 배포합니다.
-
-### 로컬 3-Tier 구조
-
-```mermaid
-flowchart LR
-    user["브라우저<br/>React · TypeScript"]
-    web["WEB<br/>Apache 2.4<br/>정적 파일 · API 프록시"]
-    was["WAS<br/>Tomcat 10.1 · Spring Boot<br/>ROOT.war"]
-    db[("DB<br/>PostgreSQL 16<br/>일정 · Outbox · 이력")]
-
-    user -->|"127.0.0.1:8088"| web
-    web -->|"내부 WEB–WAS 네트워크"| was
-    was -->|"내부 WAS–DB 네트워크"| db
-
-```
-
-로컬 환경에서는 호스트의 Loopback 포트에 WEB 컨테이너만 노출됩니다. WAS 및 DB는 외부 포트를 개방하지 않으며 내부 브리지 네트워크를 통해서만 통신합니다. 로컬 기본 설정에서는 AWS EventBridge Scheduler, SQS, SES 연동 기능이 비활성화됩니다.
-
-### AWS 3-Tier 목표 구조
-
-```mermaid
-flowchart LR
-    user["사용자"] -->|"HTTPS"| alb["Public ALB"]
-    alb --> web["WEB ASG<br/>Apache · Private Subnet"]
-    web --> ialb["Internal ALB"]
-    ialb --> was["WAS ASG<br/>Tomcat · Spring Boot<br/>Private Subnet"]
-    was --> db[("RDS PostgreSQL<br/>격리 DB Subnet")]
-
-    was -.->|"Outbox 반영"| scheduler["EventBridge Scheduler"]
-    scheduler -.->|"예약 시각"| queue["SQS · DLQ"]
-    queue -.->|"polling"| was
-    was -.->|"발송 요청"| ses["Amazon SES"]
-
-```
-
-AWS 인프라는 Terraform으로 구성되며, 서울 리전(ap-northeast-2) 내 2개 가용 영역(AZ)에 걸쳐 배치됩니다. WEB/WAS Auto Scaling Group 용량 및 RDS Multi-AZ 여부는 Terraform 변수로 제어할 수 있습니다. 현재는 인프라 코드만 유지된 상태이며, **실행 중인 AWS 리소스와 실제 이메일 수신은 아직 검증하지 않았습니다.**
-
-### 계층별 역할 정의
-
-| 계층 | 주요 역할 | 구현 위치 |
-| --- | --- | --- |
-| **WEB** | React/PWA 정적 에셋 서빙, Same-Origin API 리버스 프록시, 공개 엔드포인트 | [`frontend`](frontend), [`infra/local/httpd`](infra/local/httpd), [`web.sh.tftpl`](infra/terraform/templates/web.sh.tftpl) |
-| **WAS** | 사용자 인증, 요청 검증, 트랜잭션 처리, 스케줄링 동기화, 큐 폴링 및 발송 이력 기록 | [`backend`](backend), [`was.sh.tftpl`](infra/terraform/templates/was.sh.tftpl) |
-| **DB** | 일정, 알림, Outbox 이벤트, 발송 이력, 멱등성 메타데이터 영속화 | [Flyway migration](backend/src/main/resources/db/migration), [`tier.tf`](infra/terraform/tier.tf) |
-
-S3, IAM, Secrets Manager, SSM, CloudWatch, NAT Gateway는 인프라 운영을 지원하는 보조 리소스이며, 독립적인 비즈니스 계층으로 구분하지 않습니다.
-
-### 일정 등록 및 비동기 발송 흐름
-
-```mermaid
-sequenceDiagram
-    participant B as Browser
-    participant W as WEB
-    participant A as WAS API
-    participant D as PostgreSQL
-    participant K as WAS Worker
-    participant E as Scheduler / SQS
-    participant P as Email Provider
-
-    B->>W: 일정 등록 요청
-    W->>A: POST /api/deadlines 프록시
-    A->>D: 일정, 알림, Outbox 단일 트랜잭션 커밋
-    A-->>B: 생성 결과 응답 (201 Created)
-    K->>D: 미처리 Outbox 이벤트 폴링
-    K->>E: 예약 작업 등록·수정·취소
-    E-->>K: 스케줄 시각 도달 시 메시지 수신
-    K->>P: 메일 발송 API 호출
-    K->>D: 발송 시도 및 결과 영속화
-    B->>A: 최신 상태 및 이력 폴링
-
-```
-
-클라이언트와의 HTTP 트랜잭션은 메일 발송 완료를 대기하지 않고 즉시 종료됩니다. 외부 연동이 활성화되면 WAS 백그라운드 워커가 큐를 통해 발송 작업을 비동기로 처리하므로, 브라우저 세션이 종료되어도 서버 측 작업은 정상 진행됩니다. 프로바이더 응답 타임아웃 발생 시 무조건적인 재시도로 인한 중복 발송을 방지하기 위해 상태를 `DELIVERY_UNKNOWN`으로 격리합니다.
-
-### WAS 내부 패키지 구조
-
-| 패키지 | 역할 |
-| --- | --- |
-| `web` | REST API 엔드포인트, HTTP 요청 검증 및 응답 매핑 |
-| `application` | 유스케이스 구현, 트랜잭션 경계 설정, 백그라운드 워커 관리 |
-| `domain` | 핵심 도메인 모델(일정, 알림) 및 비즈니스 불변식(Invariant) 규칙 |
-| `port` | 외부 시스템 연동을 위한 인터페이스 규격 |
-| `infrastructure` | Spring JDBC/JdbcTemplate, AWS 연동(Scheduler, SQS, SES) 구현체 |
-
-일부 애플리케이션 서비스가 `JdbcTemplate`에 직접 의존하므로 순수 헥사고날 아키텍처는 아닙니다. 현재 프로젝트 규모와 생산성을 고려하여 유지보수성과 책임 분리를 절충한 계층형 모놀리스 구조를 채택했습니다.
-
-## 보안 아키텍처
-
-* **로컬 보안 경계**: 로컬 환경은 단일 개발자 PC 환경을 전제로 한 무인증 모드입니다. Apache가 Host 헤더와 Same-Origin 요청을 제한하지만, 동일 로컬 머신 내 타 프로세스의 악의적 접근을 방어하는 다중 사용자 인증 계층은 아닙니다.
-* **AWS 인증 체계**: AWS 배포 환경에서는 단일 소유자 전용 Bearer 토큰 인증을 적용합니다. (다중 사용자 회원가입 및 OAuth 미지원)
-* **네트워크 격리**: AWS Security Group은 `Public ALB → WEB → Internal ALB → WAS → DB` 계층 순서에 필요한 트래픽만 허용하도록 정의합니다.
-* **데이터베이스 권한 분리**: 관리자(Admin), 마이그레이션(Flyway), 런타임 애플리케이션(App) 계정을 엄격히 분리합니다. WAS 런타임은 RDS 관리자 및 Flyway 자격증명에 접근할 수 없습니다.
-* **엔드포인트 보호**: Public ALB 레벨에서 레거시 엔드포인트(`/api/mcp`) 접근을 기본 차단(`404 Not Found`)합니다.
-* **시크릿 관리**: 자격증명, `.env`, Terraform State/Plan 파일, 빌드 산출물은 형상 관리 대상에서 전면 제외합니다.
-
-## 구현 현황
-
-2026-09-08 기준 구현 및 검증 현황입니다.
-
-| 영역 | 상태 | 상세 내용 |
-| --- | --- | --- |
-| 일정 도메인 (CRUD · 동시성 · 이력) | ✅ 로컬 검증 완료 | 브라우저 → Apache → Tomcat → PostgreSQL 전체 파이프라인 정상 동작 확인 |
-| 대시보드 UI 및 자동 동기화 | ✅ 로컬 검증 완료 | 프론트엔드 단위/통합 테스트(23개 항목), 타입 검사, PWA 빌드 파이프라인 통과 |
-| AWS 3-Tier IaC (Terraform) | 🟡 코드베이스 구현 | 인프라 정의 및 과거 배포 이력은 있으나 현재 실 리소스는 철거된 상태 |
-| 운영 환경 HTTPS E2E 흐름 | ⏳ 검증 대기 | 도메인, SSL 인증서 발급, 계정 권한 확인 후 통합 테스트 예정 |
-| 실제 이메일 발송 연동 | ⏳ 검증 대기 | Amazon SES 설정, 승인된 수신 주소 및 실발송 승인을 통한 E2E 수신 테스트 필요 |
-| AI 기반 자연어 파서 고도화 | ⏸ 검토 보류 | 현재는 제한된 규칙 기반 파서를 사용하며, Bedrock/SageMaker 연동은 기능 검증 후 순차 도입 |
-
-세부 마일스톤 및 완료 기준은 [`progress.json`](progress.json)과 [PRODUCT TRUTH](memory/PRODUCT-TRUTH.md)에 기술되어 있으며, 이전 마일스톤 기록은 [`docs/phases`](docs/phases)에서 확인할 수 있습니다.
-
-## 향후 작업 계획
-
-1. **단일 문장 기반 일정 초안 작성**: 기존 규칙 기반 파서(`POST /api/reminder-commands/parse`)를 등록 화면과 연동하여 파싱 결과 사전 검토 및 수정 UX 구현
-2. **외부 연동 상태 모니터링**: 민감 정보를 제외한 외부 리소스(Scheduler, SQS, SES)의 연결 상태 대시보드 시각화
-3. **AWS 프로덕션 환경 종합 검증**: HTTPS 실환경 구성 후 브라우저 흐름 및 SES 실메일 발송 종단 간(E2E) 테스트
-
-현재 자연어 파싱은 정규화된 규칙 기반 엔진으로 구현되어 있습니다. LLM(Bedrock/SageMaker) 도입은 현재 워크플로우의 가치가 검증된 후 별도의 어댑터 패턴으로 점진 통합합니다.
-
-## 테스트 및 검증 절차
-
-### Frontend
-
-```bash
+# 기존 React 프론트엔드
 cd frontend
 npm ci --include=dev
-npm test -- --run
 npm run typecheck
+npm test
 npm run build
-
 ```
 
-### Backend
-
 ```bash
+# 저장소 루트에서 시작, JDK 21 필요
 cd backend
-./gradlew clean test bootWar --no-daemon
-
+./gradlew test bootWar --no-daemon
 ```
 
-### Terraform 정적 검증
-
 ```bash
+# 저장소 루트에서 Terraform 정적 검사
 terraform -chdir=infra/terraform fmt -check
 terraform -chdir=infra/terraform init -backend=false
 terraform -chdir=infra/terraform validate
-
 ```
 
-정적 검증 명령어는 클라우드 리소스를 프로비저닝하지 않습니다. 실제 `plan`, `apply`, DNS 레코드 갱신 및 외부 발송 테스트는 작업 범위와 비용 승인 절차를 거친 후 실행합니다.
+실제 AWS 생성·변경, DNS 변경, 외부 메일 발송은 정적 검사와 다른 작업입니다. 대상·권한·비용과 실행 범위를 확인한 뒤 진행합니다.
 
-## 디렉터리 구조
-
-| 경로 | 설명 |
-| --- | --- |
-| [`frontend`](frontend) | React/TypeScript 기반 웹 대시보드 및 PWA 구성 |
-| [`backend`](backend) | Spring Boot 애플리케이션 소스, Flyway 마이그레이션 스크립트, 테스트 코드 |
-| [`infra/local`](infra/local) | 로컬 컨테이너 실행 환경 (Apache, Tomcat, PostgreSQL) |
-| [`infra/terraform`](infra/terraform) | AWS VPC, WEB/WAS/RDS 및 인프라 운영 리소스 IaC |
-| [`docs/architecture`](docs/architecture) | 아키텍처 원칙, 제약 사항 및 불변식 정의서 |
-| [`docs/runbooks`](docs/runbooks) | 로컬 환경 셋업, AWS 배포 및 장애 복구 매뉴얼 |
-| [`docs/phases`](docs/phases) | 단계별 개발 및 검증 산출물 이력 |
-| [`memory`](memory) | 프로젝트 주요 의사결정 기록(ADR) 및 제품 컨텍스트 |
-
-## 관련 문서
-
-* [Service MVP 실행 및 배포 런북](docs/runbooks/service-mvp.md)
-* [Project Invariants (프로젝트 불변식)](docs/architecture/project-invariants.md)
-* [Architecture v1.2 설계서](docs/architecture/architecture-v1.2.md)
-* [Phase 11 HA 검증 런북](docs/runbooks/phase-11-ha-test.md)
-* [진행 현황 트래커](progress.json)
-
-프로젝트의 모든 기술적 기준과 형상은 Git 저장소를 단일 진실 공급원(Single Source of Truth)으로 삼습니다.
+</details>

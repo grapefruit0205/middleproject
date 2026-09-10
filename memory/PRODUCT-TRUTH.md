@@ -6,6 +6,11 @@ Rule: every entry carries evidence (code path, test, screenshot), a date, and th
 
 ## Implemented
 
+## Beginner architecture guide and project README — state: verified documentation, not runtime verification — 2026-09-10
+
+Evidence: `README.md` separates the Daylight browser-local prototype from the existing single-owner backend and infrastructure definitions. Notion hub `3d7d9d5f6b3a81359f18c9aeec3376ed` retains nine Phase pages; thirteen concept children and two presentation-script children were added, with existing detailed explanations retained in collapsible sections. Phase 9 now presents a 15-minute allocation, not a measured rehearsal result.
+Checked: 2026-09-10 — Notion readbacks confirmed the updated hierarchy and content. README relative links and fence balance passed, as did `git diff --check`. No new runtime, hosting or email-delivery claim is established by these documentation checks.
+
 <!-- ## <capability> — <state: implemented|wired|operational|verified> — <YYYY-MM-DD>
 Evidence: <code path / test / screenshot>
 Checked: <YYYY-MM-DD> — re-confirm against the code once this is over 90 days old -->

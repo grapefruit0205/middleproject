@@ -77,3 +77,7 @@ The user explicitly requested committing/pushing the work so far and deploying t
 ## D-016 · Publish Daylight sizing and mobile-menu follow-up — 2026-09-10 (user)
 
 The user explicitly requested committing and pushing all current changes and instructions for adding three GitHub collaborators. Publish the pending transparent navigation, larger desktop sizing, mobile-menu controls and their records on the existing service branch. Explain collaborator invitations but do not grant access without identified recipients and an invitation request. This turn does not request a main merge or a new AWS deployment.
+
+## D-017 · Rebuild the GitHub README as an approachable project entry point — 2026-09-10 (user)
+
+During the Notion architecture-learning revision, the user requested a complete GitHub README overhaul. Reorganize and publish the README on the existing service branch with a beginner-readable service overview, current implementation boundaries, architecture flows and links to the updated 15-minute presentation. Distinguish Daylight's static/browser-local prototype from the existing single-owner 3-Tier backend. Do not change runtime code, merge main, deploy AWS or grant Notion/GitHub access as part of this documentation request.

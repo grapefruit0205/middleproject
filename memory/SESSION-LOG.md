@@ -123,6 +123,9 @@ One short section per working session: what was worked on, what was decided (wit
 
 ## 2026-09-10 — Notion architecture learning publication
 
+- `confirmed` subsequent learning revision: Phase 9 must support a 15-minute presentation and the explanations should be easier and subdivided by architecture flow. `observed`: revised the same hub and all nine Phase pages with simple introductions; preserved original technical material in collapsed reference blocks and all native child-page relationships. Created 13 concept subpages and 2 timed presentation-script subpages. Phase 9 is now `Phase 9 · 전체 흐름과 15분 발표` at https://app.notion.com/p/3d7d9d5f6b3a813090b5cbeb9af817b2 .
+- `observed`: new pages isolate WEB entry, WAS/DB responses, NAT egress, security, HA, Outbox, Scheduler, SQS read/delete/retry/DLQ, SES versus receipt, CloudWatch/SNS, recovery and costs. They distinguish the deployed Daylight static preview from the unverified 3-Tier operational path, and SNS notification wiring remains explicitly unimplemented. Parent readbacks confirmed 9 Phase children and 15 nested subpages; inspected key child readbacks. Notion sharing permissions and application/infrastructure state were unchanged. Fifteen minutes is a rehearsal allocation, not a measured narration duration.
+
 - `confirmed`: after reconnecting Notion to a new workspace, the user authorized creating a new top-level page and the previously specified Phase 1–9 architecture learning documents. Existing workspace pages, application code, infrastructure, deployment, and Git publication remain outside this action.
 - `observed`: Notion self reported workspace ID ff4d9d5f-6b3a-8145-b31b-0003b39787d4, different from the earlier connection. Created hub https://app.notion.com/p/3d7d9d5f6b3a81359f18c9aeec3376ed and nine child pages with Korean explanations, vertical Mermaid flows, tables, source links at commit 40dc9ea7e23f20fc611391b88e2d02b1a2ca8a5d, and AWS official references.
 - `observed`: source inspection distinguishes absent SNS/alarm_actions, Outbox FAILED versus reminder status, SQS-consumer DLQ versus Scheduler target DLQ, provider acceptance versus receipt, and the non-atomic SES-success/DB-commit failure window. No code fixes or live AWS tests were performed.
@@ -193,6 +196,8 @@ One short section per working session: what was worked on, what was decided (wit
 - This is a reference image in a frame; its text, buttons and cards are not separate editable layers. No native layer reconstruction or HTML import is claimed.
 
 ## 2026-09-10 — Daylight supplied calendar prototype
+
+- `observed` documentation follow-up: rebuilt the root README around Daylight's purpose, the separate static prototype and single-owner backend, two vertical architecture flows, local startup, current limits and Notion learning/presentation links. All nine relative documentation links resolve, fenced code blocks are balanced, and `git diff --check` passes. No application code, AWS deployment or access settings changed; full runtime tests were intentionally not repeated for this documentation-only change. D-017 authorizes publication on the existing service branch.
 
 - `confirmed`: the user requested Daylight branding, a menu open/close control, and an empty existing-notification state in the three supplied files under `/home/grapefruit/.gemini/antigravity/scratch/calendar-app/`.
 - `observed`: updated those files directly; removed hardcoded demo events, the initial open detail dialog, fabricated notification text/count and fixed sample current-time marker. Kept category editing/storage. Added desktop/mobile sidebar controls, Escape/backdrop closing and persisted menu preference. Corrected claims of live integration and persistent event storage.
